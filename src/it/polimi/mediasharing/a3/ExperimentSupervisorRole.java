@@ -1,6 +1,7 @@
 package it.polimi.mediasharing.a3;
 
 import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.mediasharing.sockets.Client;
 import it.polimi.mediasharing.sockets.Server;
 
 import java.io.IOException;
@@ -13,6 +14,8 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 	private int currentExperiment;
 	private boolean startExperiment;
 	private Server server;
+	private Client client;
+	private long lcat;
 	
 	public ExperimentSupervisorRole() {
 		// TODO Auto-generated constructor stub
@@ -23,6 +26,7 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		// TODO Auto-generated method stub
 		
+		client = new Client();
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		startExperiment = true;		
 	}	
@@ -54,6 +58,18 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 		case MainActivity.MEDIA_DATA:
 			message.reason = MainActivity.MEDIA_DATA_SHARE;
 			channel.sendBroadcast(message);
+			break;
+			
+		case MainActivity.RFS:
+			String [] msgs = ((String) message.object).split("#");
+			lcat = Long.parseLong(msgs[0]);
+			String supervisorAddress = msgs[1];
+			String remoteAddress = msgs[1];
+			try {
+				client.sendMessage(remoteAddress, 4444, MainActivity.SID, supervisorAddress);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			break;
 			
 		case MainActivity.START_EXPERIMENT:

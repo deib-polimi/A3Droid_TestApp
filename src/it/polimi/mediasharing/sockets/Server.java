@@ -5,10 +5,12 @@ import it.polimi.mediasharing.activities.MainActivity;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.Date;
 
 import a3.a3droid.A3Message;
 
@@ -43,7 +45,9 @@ public class Server extends Thread{
 
         Socket socket = null;
         BufferedInputStream bis = null;
+        DataInputStream dis = null;
         ByteArrayOutputStream baos = null;
+        byte[] buffer = new byte[8192];
 
         int count = 0;
         while(count >= -1){
@@ -52,36 +56,39 @@ public class Server extends Thread{
 	        } catch (IOException ex) {
 	            System.out.println("Can't accept client connection. ");
 	        }
-	
 	        try {
 	            bis = new BufferedInputStream(socket.getInputStream());
+	            dis = new DataInputStream(bis);
+	            baos = new ByteArrayOutputStream();
 	        } catch (IOException ex) {
 	            System.out.println("Can't get socket input stream. ");
 	        }
-	
-	        /* try {
-	        	File file = new File(Environment.getExternalStorageDirectory() + "/a3droid/image.jpg");
-	            if (!file.exists()) {
-					file.createNewFile();
-				}
-	            System.out.println("Time diff: " + (new Date().getTime() - file.lastModified())/1000);
-	            out = new FileOutputStream(file);*/
-	        baos = new ByteArrayOutputStream();
-	        /*} catch (FileNotFoundException ex) {
-	            System.out.println("File not found. ");
-	        }*/
-	
-	        byte[] buffer = new byte[8192];
 	        
-	        while ((count = bis.read(buffer)) > 0) {
-	        	baos.write(buffer, 0, count);
-	        }
-	
-	        //out.close();
-	        bis.close();
-	        A3Message content = new A3Message(MainActivity.MEDIA_DATA, Arrays.toString(baos.toByteArray()));
-	        role.receiveApplicationMessage(content);
+	        int reason = dis.readInt();
+	        switch (reason) {
+			case MainActivity.RFS:
+				long time = dis.readLong();
+				A3Message rfs = new A3Message(MainActivity.RFS, 
+						time + "#" + 
+						socket.getLocalAddress() + "#" +
+						socket.getRemoteSocketAddress());
+		        role.receiveApplicationMessage(rfs);
+				break;
+			case MainActivity.MC:
+				while ((count = bis.read(buffer)) > 0) {
+		        	baos.write(buffer, 0, count);
+		        }		        
+		        StringBuilder stringContent = new StringBuilder();
+		        stringContent.append(Arrays.toString(baos.toByteArray()));
+		        A3Message content = new A3Message(MainActivity.MEDIA_DATA, stringContent);
+		        role.receiveApplicationMessage(content);
+		        break;
+			default:
+				break;
+			}
+	        
         }
+        bis.close();
         socket.close();
         serverSocket.close();
     }
