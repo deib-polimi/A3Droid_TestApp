@@ -55,28 +55,28 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 			channel.sendUnicast(message, message.senderAddress);
 			break;
 			
-		case MainActivity.MEDIA_DATA:
-			message.reason = MainActivity.MEDIA_DATA_SHARE;
-			channel.sendBroadcast(message);
-			break;
-			
 		case MainActivity.RFS:
 			String [] msgs = ((String) message.object).split("#");
 			lcat = Long.parseLong(msgs[0]);
-			String supervisorAddress = msgs[1];
-			String remoteAddress = msgs[1];
+			String supervisorAddress = msgs[1].replaceAll("/|:\\d*", "");
+			String remoteAddress = msgs[2].replaceAll("/|:\\d*", "");
 			try {
 				client.sendMessage(remoteAddress, 4444, MainActivity.SID, supervisorAddress);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			break;
+		
+		case MainActivity.MEDIA_DATA:
+			message.reason = MainActivity.MEDIA_DATA_SHARE;
+			channel.sendBroadcast(message);
+			break;
 			
 		case MainActivity.START_EXPERIMENT:
 			if(startExperiment){
 				startFileServer();
 				startExperiment = false;
-				//channel.sendBroadcast(message);
+				channel.sendBroadcast(message);
 			}
 			else
 				startExperiment = true;
@@ -84,12 +84,12 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 			break;
 			
 		case MainActivity.STOP_EXPERIMENT:
-			server.interrupt();
+			server.stopServer();
 			break;
 			
 		case MainActivity.LONG_RTT:
 			
-			server.interrupt();
+			server.stopServer();
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 			break;
 		}

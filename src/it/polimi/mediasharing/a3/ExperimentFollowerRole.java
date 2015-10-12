@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
@@ -70,12 +71,13 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
 
+		long rtt;
 		switch(message.reason){
 		case MainActivity.PONG:
 			// TODO Auto-generated method stub
 			sentCont ++;
 			
-			long rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
+			rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
 
 			if(rtt > rttThreshold && experimentIsRunning){
 				experimentIsRunning = false;
@@ -91,6 +93,20 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 			break;
 			
 		case MainActivity.MEDIA_DATA_SHARE:
+			
+			// TODO Auto-generated method stub
+			sentCont ++;
+			
+			rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
+
+			if(rtt > rttThreshold && experimentIsRunning){
+				experimentIsRunning = false;
+				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
+			}
+			
+			if(sentCont % 100 == 0)
+				showOnScreen(sentCont + " mex spediti.");
+			
 			try {
 				OutputStream out;
 	        	File file = new File(Environment.getExternalStorageDirectory() + "/a3droid/image.jpg");
@@ -106,6 +122,7 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 	            }
 	            out.write(bytes);
 	            out.close();
+	          
 	        } catch (FileNotFoundException ex) {
 	            System.out.println("File not found. ");
 	        } catch (IOException e) {
@@ -120,7 +137,7 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 			sentCont = 0;
 
 			experimentIsRunning = true;
-			sendMessage();
+			//sendMessage();
 			break;
 
 		case MainActivity.STOP_EXPERIMENT_COMMAND:
@@ -144,7 +161,7 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 	private String getTimestamp() {
 		try{
 		// TODO Auto-generated method stub
-			return Long.toString(System.nanoTime());
+			return new Date().getTime() + "";
 		}catch(Exception e){showOnScreen("getTimestamp(): " + e.getLocalizedMessage());}
 		return "0";
 	}
