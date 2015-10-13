@@ -94,10 +94,12 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 			
 		case MainActivity.MEDIA_DATA_SHARE:
 			
+			String response [] = ((String)message.object).split("#");
+			
 			// TODO Auto-generated method stub
 			sentCont ++;
 			
-			rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
+			rtt = roundTripTime(response[0], getTimestamp());
 
 			if(rtt > rttThreshold && experimentIsRunning){
 				experimentIsRunning = false;
@@ -113,9 +115,8 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 	            if (!file.exists()) {
 					file.createNewFile();
 				}
-	            out = new FileOutputStream(file);
-	            String response = (String)message.object;
-	            String[] byteValues = response.substring(1, response.length() - 1).split(",");
+	            out = new FileOutputStream(file);	            	            
+	            String[] byteValues = response[1].substring(1, response[1].length() - 1).split(",");
 	            byte[] bytes = new byte[byteValues.length];
 	            for (int i=0, len=bytes.length; i<len; i++) {
 	            	bytes[i] = Byte.parseByte(byteValues[i].trim());     
@@ -123,10 +124,11 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 	            out.write(bytes);
 	            out.close();
 	          
+			} catch (NumberFormatException nfe){
+				nfe.printStackTrace();
 	        } catch (FileNotFoundException ex) {
 	            System.out.println("File not found. ");
 	        } catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			break;
@@ -144,10 +146,10 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 			
 			experimentIsRunning = false;
 			long runningTime = roundTripTime(startTimestamp, getTimestamp());
-			float frequency = sentCont / ((float)(runningTime / 1000000000));
+			float frequency = sentCont / ((float)(runningTime / 1000));
 			
 			node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
-					(runningTime/ 1000000000) + " " + frequency), "control");
+					(runningTime/ 1000) + " " + frequency), "control");
 			break;
 		}
 	}

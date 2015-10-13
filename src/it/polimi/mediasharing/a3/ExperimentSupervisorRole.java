@@ -5,6 +5,7 @@ import it.polimi.mediasharing.sockets.Client;
 import it.polimi.mediasharing.sockets.Server;
 
 import java.io.IOException;
+import java.util.Date;
 
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
@@ -57,7 +58,7 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 			
 		case MainActivity.RFS:
 			String [] msgs = ((String) message.object).split("#");
-			lcat = Long.parseLong(msgs[0]);
+			lcat = new Date().getTime();// Long.parseLong(msgs[0]);
 			String supervisorAddress = msgs[1].replaceAll("/|:\\d*", "");
 			String remoteAddress = msgs[2].replaceAll("/|:\\d*", "");
 			try {
@@ -69,6 +70,7 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 		
 		case MainActivity.MEDIA_DATA:
 			message.reason = MainActivity.MEDIA_DATA_SHARE;
+			message.object = lcat + "#" + (String)message.object;
 			channel.sendBroadcast(message);
 			break;
 			
