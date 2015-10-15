@@ -1,4 +1,4 @@
-package it.polimi.mediasharing.a3;
+package it.polimi.mediasharing.a3.roles;
 
 import it.polimi.mediasharing.activities.MainActivity;
 
@@ -15,7 +15,7 @@ import a3.a3droid.Timer;
 import a3.a3droid.TimerInterface;
 import android.os.Environment;
 
-public class ExperimentFollowerRole extends A3FollowerRole implements TimerInterface{
+public class SensorFollowerRole extends A3FollowerRole implements TimerInterface{
 
 	private int currentExperiment;
 	private long rttThreshold;
@@ -25,7 +25,7 @@ public class ExperimentFollowerRole extends A3FollowerRole implements TimerInter
 	private int sentCont;
 	private String startTimestamp;
 	
-	public ExperimentFollowerRole() {
+	public SensorFollowerRole() {
 		// TODO Auto-generated constructor stub
 		super();		
 	}

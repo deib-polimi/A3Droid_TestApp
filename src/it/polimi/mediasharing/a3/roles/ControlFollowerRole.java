@@ -1,4 +1,4 @@
-package it.polimi.mediasharing.a3;
+package it.polimi.mediasharing.a3.roles;
 
 import it.polimi.mediasharing.activities.MainActivity;
 import a3.a3droid.A3FollowerRole;

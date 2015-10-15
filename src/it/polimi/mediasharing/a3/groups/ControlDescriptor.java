@@ -1,6 +1,7 @@
-package it.polimi.mediasharing.a3;
+package it.polimi.mediasharing.a3.groups;
 
-import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.mediasharing.a3.roles.ControlFollowerRole;
+import it.polimi.mediasharing.a3.roles.ControlSupervisorRole;
 import a3.a3droid.GroupDescriptor;
 
 /**
@@ -12,7 +13,7 @@ import a3.a3droid.GroupDescriptor;
 public class ControlDescriptor extends GroupDescriptor{
 
 	public ControlDescriptor(){
-		super("control", MainActivity.PACKAGE_NAME + ".ControlSupervisorRole", MainActivity.PACKAGE_NAME + ".ControlFollowerRole");
+		super("control", ControlSupervisorRole.class.getName(), ControlFollowerRole.class.getName());
 	}
 
 	@Override

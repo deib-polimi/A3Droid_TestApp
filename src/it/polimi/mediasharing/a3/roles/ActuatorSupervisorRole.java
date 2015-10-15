@@ -1,24 +1,16 @@
-package it.polimi.mediasharing.a3;
+package it.polimi.mediasharing.a3.roles;
 
 import it.polimi.mediasharing.activities.MainActivity;
-import it.polimi.mediasharing.sockets.Client;
-import it.polimi.mediasharing.sockets.Server;
-
-import java.io.IOException;
-import java.util.Date;
-
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
 
-public class ExperimentSupervisorRole extends A3SupervisorRole {
+public class ActuatorSupervisorRole extends A3SupervisorRole {
 
-	private int currentExperiment;
+	//private int currentExperiment;
 	private boolean startExperiment;
-	private Server server;
-	private Client client;
 	private long lcat;
 	
-	public ExperimentSupervisorRole() {
+	public ActuatorSupervisorRole() {
 		// TODO Auto-generated constructor stub
 		super();		
 	}
@@ -27,19 +19,9 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		// TODO Auto-generated method stub
 		
-		client = new Client();
-		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
+		//currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		startExperiment = true;		
 	}	
-	
-	private void startFileServer(){
-		try {
-			server = new Server(4444, this);
-			server.start();
-		} catch (IOException e) {
-			showOnScreen("Error creating the file server.");
-		}
-	}
 
 	@Override
 	public void logic() {
@@ -55,18 +37,6 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 			message.reason = MainActivity.PONG;
 			channel.sendUnicast(message, message.senderAddress);
 			break;
-			
-		case MainActivity.RFS:
-			String [] msgs = ((String) message.object).split("#");
-			lcat = new Date().getTime();// Long.parseLong(msgs[0]);
-			String supervisorAddress = msgs[1].replaceAll("/|:\\d*", "");
-			String remoteAddress = msgs[2].replaceAll("/|:\\d*", "");
-			try {
-				client.sendMessage(remoteAddress, 4444, MainActivity.SID, supervisorAddress);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			break;
 		
 		case MainActivity.MEDIA_DATA:
 			message.reason = MainActivity.MEDIA_DATA_SHARE;
@@ -76,7 +46,6 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 			
 		case MainActivity.START_EXPERIMENT:
 			if(startExperiment){
-				startFileServer();
 				startExperiment = false;
 				channel.sendBroadcast(message);
 			}
@@ -86,12 +55,10 @@ public class ExperimentSupervisorRole extends A3SupervisorRole {
 			break;
 			
 		case MainActivity.STOP_EXPERIMENT:
-			server.stopServer();
 			break;
 			
 		case MainActivity.LONG_RTT:
 			
-			server.stopServer();
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 			break;
 		}

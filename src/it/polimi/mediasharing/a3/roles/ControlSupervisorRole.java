@@ -1,4 +1,4 @@
-package it.polimi.mediasharing.a3;
+package it.polimi.mediasharing.a3.roles;
 
 import it.polimi.mediasharing.activities.MainActivity;
 

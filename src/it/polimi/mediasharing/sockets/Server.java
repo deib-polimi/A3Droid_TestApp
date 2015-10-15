@@ -1,6 +1,6 @@
 package it.polimi.mediasharing.sockets;
 
-import it.polimi.mediasharing.a3.ExperimentSupervisorRole;
+import it.polimi.mediasharing.a3.roles.ExperimentSupervisorRole;
 import it.polimi.mediasharing.activities.MainActivity;
 
 import java.io.BufferedInputStream;

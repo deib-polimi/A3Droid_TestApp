@@ -1,15 +1,8 @@
 package it.polimi.mediasharing.activities;
 
-import it.polimi.mediasharing.a3.ControlDescriptor;
-import it.polimi.mediasharing.a3.ExperimentDescriptor;
 import it.polimit.mediasharing.R;
-
-import java.util.ArrayList;
-
 import a3.a3droid.A3DroidActivity;
-import a3.a3droid.A3Message;
 import a3.a3droid.A3Node;
-import a3.a3droid.GroupDescriptor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -47,6 +40,7 @@ public class MainActivity extends A3DroidActivity{
 	private Handler fromGuiThread;
 	private EditText experiment;
 	public static int runningExperiment;
+	private boolean experimentRunning = false;
 	//private EditText numberOfGroupsToCreate;
 	
 	public static void setRunningExperiment(int runningExperiment) {
@@ -72,13 +66,18 @@ public class MainActivity extends A3DroidActivity{
 		fromGuiThread = new Handler(thread.getLooper()){
 			@Override
 			public void handleMessage(Message msg){
-				if(msg.what < 5)
-					node.sendToSupervisor(new A3Message(MainActivity.CREATE_GROUP_USER_COMMAND, experiment.getText().toString()), "control");
-				else{
-					if(msg.what == 5)
-						node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
-					else
-						node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT_USER_COMMAND, ""), "control");
+				
+				switch (msg.what) {
+					case STOP_EXPERIMENT_COMMAND:
+						experimentRunning = false;
+						break;
+					case RFS:
+						experimentRunning = true;
+						break;	
+					case SID:			
+						break;
+					default:
+						break;
 				}					
 			}
 		};
@@ -86,11 +85,11 @@ public class MainActivity extends A3DroidActivity{
 		inText=(EditText)findViewById(R.id.oneInEditText);
 		experiment = (EditText)findViewById(R.id.editText1);
 		
-		ArrayList<String> roles = new ArrayList<String>();
-		roles.add(PACKAGE_NAME + ".ControlSupervisorRole");
-		roles.add(PACKAGE_NAME + ".ControlFollowerRole");
-		roles.add(PACKAGE_NAME + ".ExperimentSupervisorRole");
-		roles.add(PACKAGE_NAME + ".ExperimentFollowerRole");
+		/*ArrayList<String> roles = new ArrayList<String>();
+		roles.add(ControlSupervisorRole.class.getName());
+		roles.add(ControlFollowerRole.class.getName());
+		roles.add(ExperimentSupervisorRole.class.getName());
+		roles.add(ExperimentFollowerRole.class.getName());
 		
 		
 		ArrayList<GroupDescriptor> groupDescriptors = new ArrayList<GroupDescriptor>();
@@ -98,19 +97,31 @@ public class MainActivity extends A3DroidActivity{
 		groupDescriptors.add(new ExperimentDescriptor());
 		
 		node = new A3Node(this, roles, groupDescriptors);
-		node.connect("control", false, true);
+		node.connect("control", false, true);*/
 	}
 
-	public void start1(View v){
-		fromGuiThread.sendEmptyMessage(1);
+	public void createGroup(View v){
+		fromGuiThread.sendEmptyMessage(CREATE_GROUP_USER_COMMAND);
 	}
 	
 	public void stopExperiment(View v){
-		fromGuiThread.sendEmptyMessage(5);
+		fromGuiThread.sendEmptyMessage(STOP_EXPERIMENT_COMMAND);
+		experimentRunning = true;
 	}
 	
-	public void startExperiment(View v){
-		fromGuiThread.sendEmptyMessage(6);
+	public void startSensor(View v){
+		if(!experimentRunning)
+			fromGuiThread.sendEmptyMessage(RFS);
+	}
+	
+	public void startActuator(View v){
+		if(!experimentRunning)
+			fromGuiThread.sendEmptyMessage(RFS);
+	}
+	
+	public void startServer(View v){
+		if(!experimentRunning)
+			fromGuiThread.sendEmptyMessage(RFS);
 	}
 	
 	@Override
@@ -128,7 +139,6 @@ public class MainActivity extends A3DroidActivity{
 	
 	@Override
 	public void showOnScreen(String message) {
-		// TODO Auto-generated method stub
 		toGuiThread.sendMessage(toGuiThread.obtainMessage(0, message));
 	}
 }
