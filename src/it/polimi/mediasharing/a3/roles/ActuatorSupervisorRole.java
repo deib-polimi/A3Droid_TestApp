@@ -8,7 +8,6 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 
 	//private int currentExperiment;
 	private boolean startExperiment;
-	private long lcat;
 	
 	public ActuatorSupervisorRole() {
 		// TODO Auto-generated constructor stub
@@ -38,12 +37,6 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			channel.sendUnicast(message, message.senderAddress);
 			break;
 		
-		case MainActivity.MEDIA_DATA:
-			message.reason = MainActivity.MEDIA_DATA_SHARE;
-			message.object = lcat + "#" + (String)message.object;
-			channel.sendBroadcast(message);
-			break;
-			
 		case MainActivity.START_EXPERIMENT:
 			if(startExperiment){
 				startExperiment = false;

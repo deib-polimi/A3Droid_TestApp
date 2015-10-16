@@ -6,9 +6,8 @@ import a3.a3droid.A3SupervisorRole;
 
 public class SensorSupervisorRole extends A3SupervisorRole {
 
-	//private int currentExperiment;
+	private int currentExperiment;
 	private boolean startExperiment;
-	private long lcat;
 	
 	public SensorSupervisorRole() {
 		// TODO Auto-generated constructor stub
@@ -19,7 +18,7 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		// TODO Auto-generated method stub
 		
-		//currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
+		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		startExperiment = true;		
 	}	
 
@@ -34,16 +33,17 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 		// TODO Auto-generated method stub
 		switch(message.reason){
 		case MainActivity.PING:
-			message.reason = MainActivity.PONG;
-			channel.sendUnicast(message, message.senderAddress);
-			break;
-		
-		case MainActivity.MEDIA_DATA:
-			message.reason = MainActivity.MEDIA_DATA_SHARE;
-			message.object = lcat + "#" + (String)message.object;
-			channel.sendBroadcast(message);
+			message.object = message.senderAddress + "#" + (String)message.object;
+			node.sendToSupervisor(message, "server");
 			break;
 			
+		case MainActivity.PONG:
+			String sensorAddress = ((String)message.object).split("#")[0];
+			String sendTime = ((String)message.object).split("#")[1];
+			message.object = sendTime;
+			channel.sendUnicast(message, sensorAddress);
+			break;
+
 		case MainActivity.START_EXPERIMENT:
 			if(startExperiment){
 				startExperiment = false;

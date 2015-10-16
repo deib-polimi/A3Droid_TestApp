@@ -1,8 +1,24 @@
 package it.polimi.mediasharing.activities;
 
+import it.polimi.mediasharing.a3.groups.ActuatorsDescriptor;
+import it.polimi.mediasharing.a3.groups.ControlDescriptor;
+import it.polimi.mediasharing.a3.groups.ServerDescriptor;
+import it.polimi.mediasharing.a3.groups.MonitoringDescriptor;
+import it.polimi.mediasharing.a3.roles.ActuatorFollowerRole;
+import it.polimi.mediasharing.a3.roles.ActuatorSupervisorRole;
+import it.polimi.mediasharing.a3.roles.ControlFollowerRole;
+import it.polimi.mediasharing.a3.roles.ControlSupervisorRole;
+import it.polimi.mediasharing.a3.roles.SensorFollowerRole;
+import it.polimi.mediasharing.a3.roles.SensorSupervisorRole;
+import it.polimi.mediasharing.a3.roles.ServerFollowerRole;
+import it.polimi.mediasharing.a3.roles.ServerSupervisorRole;
 import it.polimit.mediasharing.R;
+
+import java.util.ArrayList;
+
 import a3.a3droid.A3DroidActivity;
 import a3.a3droid.A3Node;
+import a3.a3droid.GroupDescriptor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -28,11 +44,9 @@ public class MainActivity extends A3DroidActivity{
 	public static final int START_EXPERIMENT_USER_COMMAND = 39;
 	public static final int START_EXPERIMENT = 40;
 	public static final int DATA = 41;
-	public static final int MEDIA_DATA = 42;
-	public static final int MEDIA_DATA_SHARE = 43;
-	public static final int RFS = 50;
-	public static final int MC = 51;
-	public static final int SID = 52;
+	public static final int START_SENSOR = 42;
+	public static final int START_ACTUATOR = 43;
+	public static final int START_SERVER = 50;
 	
 	private A3Node node;
 	private EditText inText;
@@ -66,38 +80,49 @@ public class MainActivity extends A3DroidActivity{
 		fromGuiThread = new Handler(thread.getLooper()){
 			@Override
 			public void handleMessage(Message msg){
-				
+				ArrayList<String> roles = new ArrayList<String>();
+				roles.add(ControlSupervisorRole.class.getName());
+				roles.add(ControlFollowerRole.class.getName());
+				ArrayList<GroupDescriptor> groupDescriptors = new ArrayList<GroupDescriptor>();
+				groupDescriptors.add(new ControlDescriptor());
 				switch (msg.what) {
 					case STOP_EXPERIMENT_COMMAND:
+						node.disconnect("control", true);
 						experimentRunning = false;
 						break;
-					case RFS:
+					case START_SENSOR:
+						roles.add(SensorSupervisorRole.class.getName());
+						roles.add(SensorFollowerRole.class.getName());		
+						roles.add(ServerFollowerRole.class.getName());
+						groupDescriptors.add(new MonitoringDescriptor());
+						node.connect("sensors_" + experiment, false, true);
 						experimentRunning = true;
 						break;	
-					case SID:			
+					case START_ACTUATOR:
+						roles.add(ActuatorSupervisorRole.class.getName());
+						roles.add(ActuatorFollowerRole.class.getName());
+						roles.add(ServerFollowerRole.class.getName());
+						groupDescriptors.add(new ActuatorsDescriptor());
+						node.connect("actuators_" + experiment, false, true);
+						experimentRunning = true;
+						break;
+					case START_SERVER:			
+						roles.add(ServerSupervisorRole.class.getName());
+						roles.add(ServerFollowerRole.class.getName());	
+						groupDescriptors.add(new ServerDescriptor());
+						node.connect("server", false, true);
+						experimentRunning = true;
 						break;
 					default:
 						break;
 				}					
+				node = new A3Node(MainActivity.this, roles, groupDescriptors);
+				node.connect("control", false, true);
 			}
 		};
 
 		inText=(EditText)findViewById(R.id.oneInEditText);
 		experiment = (EditText)findViewById(R.id.editText1);
-		
-		/*ArrayList<String> roles = new ArrayList<String>();
-		roles.add(ControlSupervisorRole.class.getName());
-		roles.add(ControlFollowerRole.class.getName());
-		roles.add(ExperimentSupervisorRole.class.getName());
-		roles.add(ExperimentFollowerRole.class.getName());
-		
-		
-		ArrayList<GroupDescriptor> groupDescriptors = new ArrayList<GroupDescriptor>();
-		groupDescriptors.add(new ControlDescriptor());
-		groupDescriptors.add(new ExperimentDescriptor());
-		
-		node = new A3Node(this, roles, groupDescriptors);
-		node.connect("control", false, true);*/
 	}
 
 	public void createGroup(View v){
@@ -111,17 +136,17 @@ public class MainActivity extends A3DroidActivity{
 	
 	public void startSensor(View v){
 		if(!experimentRunning)
-			fromGuiThread.sendEmptyMessage(RFS);
+			fromGuiThread.sendEmptyMessage(START_SENSOR);
 	}
 	
 	public void startActuator(View v){
 		if(!experimentRunning)
-			fromGuiThread.sendEmptyMessage(RFS);
+			fromGuiThread.sendEmptyMessage(START_ACTUATOR);
 	}
 	
 	public void startServer(View v){
 		if(!experimentRunning)
-			fromGuiThread.sendEmptyMessage(RFS);
+			fromGuiThread.sendEmptyMessage(START_SERVER);
 	}
 	
 	@Override

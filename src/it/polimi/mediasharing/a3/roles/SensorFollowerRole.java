@@ -2,18 +2,12 @@ package it.polimi.mediasharing.a3.roles;
 
 import it.polimi.mediasharing.activities.MainActivity;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Date;
 
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
 import a3.a3droid.Timer;
 import a3.a3droid.TimerInterface;
-import android.os.Environment;
 
 public class SensorFollowerRole extends A3FollowerRole implements TimerInterface{
 
@@ -24,6 +18,8 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private boolean experimentIsRunning;
 	private int sentCont;
 	private String startTimestamp;
+	
+	private final long maxInterval = 5 * 1000;
 	
 	public SensorFollowerRole() {
 		// TODO Auto-generated constructor stub
@@ -46,7 +42,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		
 		char[] c;
 		
-		switch(currentExperiment){
+		switch(4){
 		case 1:	c = new char[62484]; break;
 		case 2:	c = new char[32000]; break;
 		case 3:	c = new char[5017]; break;
@@ -77,60 +73,19 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			// TODO Auto-generated method stub
 			sentCont ++;
 			
-			rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
+			rtt = roundTripTime(((String)message.object), getTimestamp());
 
 			if(rtt > rttThreshold && experimentIsRunning){
 				experimentIsRunning = false;
 				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
 			}
 			else{
-				new Timer(this, 0, (int) (Math.random() * 100)).start();
+				new Timer(this, 0, (int) (Math.random() * maxInterval)).start();
 			}
 			
 			if(sentCont % 100 == 0)
 				showOnScreen(sentCont + " mex spediti.");
 			
-			break;
-			
-		case MainActivity.MEDIA_DATA_SHARE:
-			
-			String response [] = ((String)message.object).split("#");
-			
-			// TODO Auto-generated method stub
-			sentCont ++;
-			
-			rtt = roundTripTime(response[0], getTimestamp());
-
-			if(rtt > rttThreshold && experimentIsRunning){
-				experimentIsRunning = false;
-				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
-			}
-			
-			if(sentCont % 100 == 0)
-				showOnScreen(sentCont + " mex spediti.");
-			
-			try {
-				OutputStream out;
-	        	File file = new File(Environment.getExternalStorageDirectory() + "/a3droid/image.jpg");
-	            if (!file.exists()) {
-					file.createNewFile();
-				}
-	            out = new FileOutputStream(file);	            	            
-	            String[] byteValues = response[1].substring(1, response[1].length() - 1).split(",");
-	            byte[] bytes = new byte[byteValues.length];
-	            for (int i=0, len=bytes.length; i<len; i++) {
-	            	bytes[i] = Byte.parseByte(byteValues[i].trim());     
-	            }
-	            out.write(bytes);
-	            out.close();
-	          
-			} catch (NumberFormatException nfe){
-				nfe.printStackTrace();
-	        } catch (FileNotFoundException ex) {
-	            System.out.println("File not found. ");
-	        } catch (IOException e) {
-				e.printStackTrace();
-			}
 			break;
 
 		case MainActivity.START_EXPERIMENT:
@@ -139,7 +94,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			sentCont = 0;
 
 			experimentIsRunning = true;
-			//sendMessage();
+			sendMessage();
 			break;
 
 		case MainActivity.STOP_EXPERIMENT_COMMAND:
@@ -157,7 +112,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private void sendMessage() {
 		// TODO Auto-generated method stub
 		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(MainActivity.PING, getTimestamp() + " " + s));
+			channel.sendToSupervisor(new A3Message(MainActivity.PING, currentExperiment + "#" + getTimestamp() + "#" + s));
 	}
 
 	private String getTimestamp() {

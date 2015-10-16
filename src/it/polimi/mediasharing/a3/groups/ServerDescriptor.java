@@ -1,13 +1,13 @@
 package it.polimi.mediasharing.a3.groups;
 
-import it.polimi.mediasharing.a3.roles.ExperimentFollowerRole;
-import it.polimi.mediasharing.a3.roles.ExperimentSupervisorRole;
+import it.polimi.mediasharing.a3.roles.ServerFollowerRole;
+import it.polimi.mediasharing.a3.roles.ServerSupervisorRole;
 import a3.a3droid.GroupDescriptor;
 
-public class ExperimentDescriptor extends GroupDescriptor {
+public class ServerDescriptor extends GroupDescriptor {
 
-	public ExperimentDescriptor() {
-		super("A3Test3", ExperimentSupervisorRole.class.getName(), ExperimentFollowerRole.class.getName());
+	public ServerDescriptor() {
+		super("A3Test3", ServerSupervisorRole.class.getName(), ServerFollowerRole.class.getName());
 		// TODO Auto-generated constructor stub
 	}
 
