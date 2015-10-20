@@ -1,15 +1,14 @@
-package it.polimi.mediasharing.a3.roles;
+package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.greenhouse.activities.MainActivity;
 
 import java.util.Date;
 
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
-import a3.a3droid.Timer;
 import a3.a3droid.TimerInterface;
 
-public class ServerFollowerRole extends A3FollowerRole implements TimerInterface{
+public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterface{
 
 	private int currentExperiment;
 	private long rttThreshold;
@@ -19,7 +18,7 @@ public class ServerFollowerRole extends A3FollowerRole implements TimerInterface
 	private int sentCont;
 	private String startTimestamp;
 	
-	public ServerFollowerRole() {
+	public ActuatorFollowerRole() {
 		// TODO Auto-generated constructor stub
 		super();		
 	}
@@ -28,7 +27,7 @@ public class ServerFollowerRole extends A3FollowerRole implements TimerInterface
 	public void onActivation() {
 		// TODO Auto-generated method stub
 		
-		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
+		currentExperiment = 4;//Integer.valueOf(getGroupName().split("_")[1]);
 		
 		experimentIsRunning = false;
 		sentCont = 0;
@@ -72,17 +71,9 @@ public class ServerFollowerRole extends A3FollowerRole implements TimerInterface
 			sentCont ++;
 			
 			rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
-
-			if(rtt > rttThreshold && experimentIsRunning){
-				experimentIsRunning = false;
-				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
-			}
-			else{
-				new Timer(this, 0, (int) (Math.random() * 100)).start();
-			}
 			
 			if(sentCont % 100 == 0)
-				showOnScreen(sentCont + " mex spediti.");
+				showOnScreen(sentCont + " mex recevuti.");
 			
 			break;
 
@@ -92,7 +83,6 @@ public class ServerFollowerRole extends A3FollowerRole implements TimerInterface
 			sentCont = 0;
 
 			experimentIsRunning = true;
-			//sendMessage();
 			break;
 
 		case MainActivity.STOP_EXPERIMENT_COMMAND:
@@ -105,12 +95,6 @@ public class ServerFollowerRole extends A3FollowerRole implements TimerInterface
 					(runningTime/ 1000) + " " + frequency), "control");
 			break;
 		}
-	}
-
-	private void sendMessage() {
-		// TODO Auto-generated method stub
-		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(MainActivity.PING, getTimestamp() + " " + s));
 	}
 
 	private String getTimestamp() {
@@ -137,7 +121,5 @@ public class ServerFollowerRole extends A3FollowerRole implements TimerInterface
 
 	@Override
 	public void timerFired(int reason) {
-		// TODO Auto-generated method stub
-		sendMessage();
 	}
 }

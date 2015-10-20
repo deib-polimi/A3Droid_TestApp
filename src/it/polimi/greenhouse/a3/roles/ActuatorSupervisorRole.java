@@ -1,6 +1,6 @@
-package it.polimi.mediasharing.a3.roles;
+package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.greenhouse.activities.MainActivity;
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
 

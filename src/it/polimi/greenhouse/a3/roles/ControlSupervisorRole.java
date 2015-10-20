@@ -1,12 +1,16 @@
-package it.polimi.mediasharing.a3.roles;
+package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.greenhouse.activities.MainActivity;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
@@ -19,9 +23,8 @@ import android.os.Environment;
  */
 public class ControlSupervisorRole extends A3SupervisorRole {
 
-	private int runningExperiment;
 	private ArrayList<String> vmIds;
-	private int launchedGroups;
+	private Map<String, List<Integer>> launchedGroups;
 	private int totalGroups;
 
 	private File sd;
@@ -40,12 +43,11 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		// TODO Auto-generated method stub
 		
-		runningExperiment = 0;
 		vmIds = new ArrayList<String>();
 		
 		//I'm not connected to "experiment" group already.
-		launchedGroups = 1;
-		
+		launchedGroups = new HashMap<String, List<Integer>>();
+		totalGroups = 0;
 		numberOfTrials = 1;
 	}	
 
@@ -71,9 +73,12 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			break;
 			
 		case MainActivity.LONG_RTT:
-						
+			
+			if(message.senderAddress == channel.getChannelId())
+				break;
+			
 			sd = Environment.getExternalStorageDirectory();
-			f = new File(sd, MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + vmIds.size() +
+			f = new File(sd, MainActivity.EXPERIMENT_PREFIX + vmIds.size() +
 					"_" + totalGroups + ".txt");
 
 			try {
@@ -84,9 +89,12 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				showOnScreen(e.getLocalizedMessage());
 			}
 			
-			for(int i = 1; i < launchedGroups; i ++)
-				node.sendToSupervisor(message,
-						MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + i);
+			channel.sendBroadcast(message);
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType))
+					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+						node.sendToSupervisor(message,
+							gType + "_" + i);
 			break;
 			
 		case MainActivity.DATA:
@@ -110,21 +118,22 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 		case MainActivity.CREATE_GROUP_USER_COMMAND:
 			//String[] splittedObject = message.object.split("_");
 			
-			int temp = Integer.valueOf((String)message.object /*splittedObject[0]*/);
 			//totalGroups = Integer.valueOf(splittedObject[1]);
-			
-			if(runningExperiment != temp){
-				runningExperiment = temp;
-				launchedGroups = 1;
-				//numberOfTrials = Test3Activity.NUMBER_OF_EXPERIMENTS;
-			}
-			
-			channel.sendBroadcast(new A3Message(MainActivity.CREATE_GROUP, runningExperiment + "_" + launchedGroups));
+			message.reason = MainActivity.CREATE_GROUP;
+			channel.sendBroadcast(message);
 			break;
 			
 		case MainActivity.CREATE_GROUP:
-			node.connect(MainActivity.EXPERIMENT_PREFIX + message.object, true, true);
-			launchedGroups ++;
+			String content [] = ((String)message.object).split("_");
+			String type = content[0];
+			int experimentId = Integer.valueOf(content[1]);
+			if(launchedGroups.containsKey(type)){
+				if(!launchedGroups.get(type).contains(experimentId))
+					launchedGroups.get(type).add(experimentId);
+			}else{
+				launchedGroups.put(type, Arrays.asList(new Integer [] {experimentId}));
+				totalGroups++;
+			}
 			break;
 			
 		case MainActivity.START_EXPERIMENT_USER_COMMAND:
@@ -133,25 +142,25 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			
 			result = "";
 			
-			totalGroups = launchedGroups - 1;
-			dataToWaitFor = totalGroups * (vmIds.size() - 1);
-			for(int i = 1; i < launchedGroups; i ++)
-				node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
-						MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + i);
+			dataToWaitFor = launchedGroups.get("monitoring").size() - 1;
+			message.reason = MainActivity.START_EXPERIMENT;
+			channel.sendBroadcast(message);
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType))
+					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+						node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
+								gType + "_" + i);
 			break;
 			
 		case MainActivity.STOP_EXPERIMENT:
 			
 			showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
 			
-			for(int i = 1; i < launchedGroups; i ++)
-				node.sendToSupervisor(new A3Message(MainActivity.STOP_EXPERIMENT, ""),
-						MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + i);
-			
-			for(int i = 1; i <= launchedGroups; i ++){
-				if(!node.isSupervisor(MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + i))
-					node.disconnect(MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + i, true);
-			}
+			channel.sendBroadcast(message);
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType))
+					if(node.isConnectedForApplication(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
+						node.disconnect(gType + "_" + i, true);
 				
 			synchronized(this){
 				try {
@@ -159,11 +168,13 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				} catch (InterruptedException e) {}
 			}
 
-			for(int i = 1; i <= launchedGroups; i ++)
-				node.disconnect(MainActivity.EXPERIMENT_PREFIX + runningExperiment + "_" + i, true);
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType))
+					if(node.isConnectedForApplication(gType + "_" + i))
+						node.disconnect(gType + "_" + i, true);
 			
+			launchedGroups.clear();
 			showOnScreen("--- ESPERIMENTO TERMINATO ---");
-			launchedGroups = 1;
 			break;
 		}	
 	}

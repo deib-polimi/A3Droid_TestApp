@@ -1,7 +1,7 @@
-package it.polimi.mediasharing.a3.groups;
+package it.polimi.greenhouse.a3.groups;
 
-import it.polimi.mediasharing.a3.roles.ControlFollowerRole;
-import it.polimi.mediasharing.a3.roles.ControlSupervisorRole;
+import it.polimi.greenhouse.a3.roles.ControlFollowerRole;
+import it.polimi.greenhouse.a3.roles.ControlSupervisorRole;
 import a3.a3droid.GroupDescriptor;
 
 /**

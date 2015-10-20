@@ -1,14 +1,15 @@
-package it.polimi.mediasharing.a3.roles;
+package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.greenhouse.activities.MainActivity;
 
 import java.util.Date;
 
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
+import a3.a3droid.Timer;
 import a3.a3droid.TimerInterface;
 
-public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterface{
+public class SensorFollowerRole extends A3FollowerRole implements TimerInterface{
 
 	private int currentExperiment;
 	private long rttThreshold;
@@ -18,7 +19,9 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 	private int sentCont;
 	private String startTimestamp;
 	
-	public ActuatorFollowerRole() {
+	private final long maxInterval = 5 * 1000;
+	
+	public SensorFollowerRole() {
 		// TODO Auto-generated constructor stub
 		super();		
 	}
@@ -27,7 +30,7 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 	public void onActivation() {
 		// TODO Auto-generated method stub
 		
-		currentExperiment = 4;//Integer.valueOf(getGroupName().split("_")[1]);
+		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		
 		experimentIsRunning = false;
 		sentCont = 0;
@@ -39,7 +42,7 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 		
 		char[] c;
 		
-		switch(currentExperiment){
+		switch(4){
 		case 1:	c = new char[62484]; break;
 		case 2:	c = new char[32000]; break;
 		case 3:	c = new char[5017]; break;
@@ -70,10 +73,18 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 			// TODO Auto-generated method stub
 			sentCont ++;
 			
-			rtt = roundTripTime(((String)message.object).split(" ")[0], getTimestamp());
+			rtt = roundTripTime(((String)message.object), getTimestamp());
+
+			if(rtt > rttThreshold && experimentIsRunning){
+				experimentIsRunning = false;
+				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
+			}
+			else{
+				new Timer(this, 0, (int) (Math.random() * maxInterval)).start();
+			}
 			
 			if(sentCont % 100 == 0)
-				showOnScreen(sentCont + " mex recevuti.");
+				showOnScreen(sentCont + " mex spediti.");
 			
 			break;
 
@@ -83,6 +94,7 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 			sentCont = 0;
 
 			experimentIsRunning = true;
+			sendMessage();
 			break;
 
 		case MainActivity.STOP_EXPERIMENT_COMMAND:
@@ -95,6 +107,12 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 					(runningTime/ 1000) + " " + frequency), "control");
 			break;
 		}
+	}
+
+	private void sendMessage() {
+		// TODO Auto-generated method stub
+		if(experimentIsRunning)
+			channel.sendToSupervisor(new A3Message(MainActivity.PING, currentExperiment + "#" + getTimestamp() + "#" + s));
 	}
 
 	private String getTimestamp() {
@@ -121,5 +139,7 @@ public class ActuatorFollowerRole extends A3FollowerRole implements TimerInterfa
 
 	@Override
 	public void timerFired(int reason) {
+		// TODO Auto-generated method stub
+		sendMessage();
 	}
 }

@@ -1,6 +1,6 @@
-package it.polimi.mediasharing.a3.roles;
+package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.mediasharing.activities.MainActivity;
+import it.polimi.greenhouse.activities.MainActivity;
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
 
@@ -32,14 +32,16 @@ public class ServerSupervisorRole extends A3SupervisorRole {
 		// TODO Auto-generated method stub
 		switch(message.reason){
 			case MainActivity.PING:
+				showOnScreen("Received new data from a sensor");
 				message.reason = MainActivity.PONG;
 				String [] content = ((String)message.object).split("#");
 				String sensorAddress = content[0];
-				String sendTime = content[1];
-				String experiment = content[2];
+				String experiment = content[1];
+				String sendTime = content[2];
 				String sensorData = content[3];
-				message.object = sensorAddress + "#" + sendTime;
+				message.object = sensorAddress + "#" + experiment + "#" + sendTime;
 				channel.sendUnicast(message, message.senderAddress);
+				showOnScreen("Sent response to sensor");
 				break;
 
 			case MainActivity.START_EXPERIMENT:
