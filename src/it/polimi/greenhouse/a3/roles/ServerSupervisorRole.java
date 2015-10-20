@@ -59,7 +59,7 @@ public class ServerSupervisorRole extends A3SupervisorRole {
 				
 			case MainActivity.LONG_RTT:
 				
-				channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
+				//channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 				break;
 		}
 	}

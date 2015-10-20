@@ -7,9 +7,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import a3.a3droid.A3Message;
@@ -24,7 +22,7 @@ import android.os.Environment;
 public class ControlSupervisorRole extends A3SupervisorRole {
 
 	private ArrayList<String> vmIds;
-	private Map<String, List<Integer>> launchedGroups;
+	private Map<String, Map<Integer, Integer>> launchedGroups;
 	private int totalGroups;
 
 	private File sd;
@@ -46,8 +44,9 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 		vmIds = new ArrayList<String>();
 		
 		//I'm not connected to "experiment" group already.
-		launchedGroups = new HashMap<String, List<Integer>>();
+		launchedGroups = new HashMap<String, Map<Integer, Integer>>();
 		totalGroups = 0;
+		dataToWaitFor = 0;
 		numberOfTrials = 1;
 	}	
 
@@ -74,7 +73,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			
 		case MainActivity.LONG_RTT:
 			
-			if(message.senderAddress == channel.getChannelId())
+			if(message.object.equals(channel.getChannelId()))
 				break;
 			
 			sd = Environment.getExternalStorageDirectory();
@@ -88,10 +87,10 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				// TODO Auto-generated catch block
 				showOnScreen(e.getLocalizedMessage());
 			}
-			
+			message.object = channel.getChannelId();
 			channel.sendBroadcast(message);
 			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
+				for(int i : launchedGroups.get(gType).keySet())
 					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 						node.sendToSupervisor(message,
 							gType + "_" + i);
@@ -127,11 +126,12 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			String content [] = ((String)message.object).split("_");
 			String type = content[0];
 			int experimentId = Integer.valueOf(content[1]);
-			if(launchedGroups.containsKey(type)){
-				if(!launchedGroups.get(type).contains(experimentId))
-					launchedGroups.get(type).add(experimentId);
-			}else{
-				launchedGroups.put(type, Arrays.asList(new Integer [] {experimentId}));
+			if(launchedGroups.containsKey(type))
+					launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
+			else{
+				Map<Integer, Integer> newGroup = new HashMap<Integer, Integer>();
+				newGroup.put(experimentId, 1);
+				launchedGroups.put(type, newGroup);
 				totalGroups++;
 			}
 			break;
@@ -142,14 +142,17 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			
 			result = "";
 			
-			dataToWaitFor = launchedGroups.get("monitoring").size() - 1;
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType).keySet())
+					dataToWaitFor += launchedGroups.get(gType).get(i) - 1;
+			
 			message.reason = MainActivity.START_EXPERIMENT;
 			channel.sendBroadcast(message);
 			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
-					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-						node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
-								gType + "_" + i);
+				for(int i : launchedGroups.get(gType).keySet())
+						if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+							node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
+									gType + "_" + i);
 			break;
 			
 		case MainActivity.STOP_EXPERIMENT:
@@ -158,7 +161,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			
 			channel.sendBroadcast(message);
 			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
+				for(int i : launchedGroups.get(gType).keySet())
 					if(node.isConnectedForApplication(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
 						node.disconnect(gType + "_" + i, true);
 				
@@ -169,7 +172,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			}
 
 			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
+				for(int i : launchedGroups.get(gType).keySet())
 					if(node.isConnectedForApplication(gType + "_" + i))
 						node.disconnect(gType + "_" + i, true);
 			
