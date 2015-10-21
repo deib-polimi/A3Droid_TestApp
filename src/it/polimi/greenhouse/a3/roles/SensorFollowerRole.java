@@ -19,16 +19,14 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private int sentCont;
 	private String startTimestamp;
 	
-	private final long maxInterval = 5 * 1000;
+	private final static long MAX_INTERNAL = 5 * 1000;
 	
 	public SensorFollowerRole() {
-		// TODO Auto-generated constructor stub
 		super();		
 	}
 
 	@Override
 	public void onActivation() {
-		// TODO Auto-generated method stub
 		
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		
@@ -38,8 +36,6 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	}
 
 	private void initializeExperiment() {
-		// TODO Auto-generated method stub
-		
 		char[] c;
 		
 		switch(4){
@@ -59,7 +55,6 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	@Override
 	public void logic() {
-		// TODO Auto-generated method stub
 		showOnScreen("[" + getGroupName() + "_FolRole]");
 		active = false;
 	}
@@ -69,8 +64,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 		long rtt;
 		switch(message.reason){
-		case MainActivity.PONG:
-			// TODO Auto-generated method stub
+		case MainActivity.SENSOR_PONG:
 			sentCont ++;
 			
 			rtt = roundTripTime(((String)message.object), getTimestamp());
@@ -80,7 +74,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
 			}
 			else{
-				new Timer(this, 0, (int) (Math.random() * maxInterval)).start();
+				new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
 			}
 			
 			if(sentCont % 100 == 0)
@@ -110,21 +104,18 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	}
 
 	private void sendMessage() {
-		// TODO Auto-generated method stub
 		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(MainActivity.PING, currentExperiment + "#" + getTimestamp() + "#" + s));
+			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + getTimestamp() + "#" + s));
 	}
 
 	private String getTimestamp() {
 		try{
-		// TODO Auto-generated method stub
 			return new Date().getTime() + "";
 		}catch(Exception e){showOnScreen("getTimestamp(): " + e.getLocalizedMessage());}
 		return "0";
 	}
 	
 	private long roundTripTime(String departureTimestamp, String arrivalTimestamp) {
-		// TODO Auto-generated method stub
 		long i1 = 0, i2 = 0;
 		
 		try{
@@ -139,7 +130,6 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	@Override
 	public void timerFired(int reason) {
-		// TODO Auto-generated method stub
 		sendMessage();
 	}
 }

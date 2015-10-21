@@ -10,16 +10,13 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 	private boolean startExperiment;
 	
 	public SensorSupervisorRole() {
-		// TODO Auto-generated constructor stub
 		super();		
 	}
 
 	@Override
 	public void onActivation() {
-		// TODO Auto-generated method stub
-		
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
-		node.connect("server", false, true);
+		node.connect("server_" + currentExperiment, false, true);
 		startExperiment = true;		
 	}	
 
@@ -31,18 +28,17 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
-		// TODO Auto-generated method stub
 		switch(message.reason){
-		case MainActivity.PING:
+		case MainActivity.SENSOR_PING:
 			showOnScreen("Forwarding sensor data to server");
 			message.object = message.senderAddress + "#" + (String)message.object;
-			node.sendToSupervisor(message, "server");
+			node.sendToSupervisor(message, "server_" + currentExperiment);
 			break;
 			
-		case MainActivity.PONG:
+		case MainActivity.SENSOR_PONG:
 			showOnScreen("Forwarding server response to sensor");
 			String sensorAddress = ((String)message.object).split("#")[0];
-			String experiment = ((String)message.object).split("#")[1];
+			//String experiment = ((String)message.object).split("#")[1];
 			String sendTime = ((String)message.object).split("#")[2];
 			message.object = sendTime;
 			channel.sendUnicast(message, sensorAddress);

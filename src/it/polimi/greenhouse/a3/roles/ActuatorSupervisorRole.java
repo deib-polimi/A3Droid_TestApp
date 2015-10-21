@@ -6,20 +6,20 @@ import a3.a3droid.A3SupervisorRole;
 
 public class ActuatorSupervisorRole extends A3SupervisorRole {
 
-	//private int currentExperiment;
 	private boolean startExperiment;
+	private boolean serverPinged;
+	private int currentExperiment;
 	
 	public ActuatorSupervisorRole() {
-		// TODO Auto-generated constructor stub
 		super();		
 	}
 
 	@Override
 	public void onActivation() {
-		// TODO Auto-generated method stub
-		
-		//currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
-		startExperiment = true;		
+		startExperiment = true;
+		serverPinged = false;
+		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
+		node.connect("server_" + currentExperiment, false, true);
 	}	
 
 	@Override
@@ -30,11 +30,31 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
-		// TODO Auto-generated method stub
 		switch(message.reason){
-		case MainActivity.PING:
-			message.reason = MainActivity.PONG;
-			channel.sendUnicast(message, message.senderAddress);
+		case MainActivity.SERVER_PING:
+			if(serverPinged){
+				serverPinged = false;
+				break;
+			}else
+				serverPinged = true;
+			showOnScreen("Received new data from a server");
+			String [] content = ((String)message.object).split("#");
+			String serverAddress = content[0];
+			String experiment = content[1];
+			String sendTime = content[2];
+			String serverData = content[3];
+			message.object = serverAddress + "#" + experiment + "#" + sendTime + "#" + serverData;
+			channel.sendBroadcast(message);
+			showOnScreen("Broadcasted response to follower actuators");
+			break;
+			
+		case MainActivity.SERVER_PONG:
+			showOnScreen("Received follower actuator response");
+			content = ((String)message.object).split("#");
+			experiment = content[0];
+			sendTime = content[1];
+			message.object = sendTime;
+			node.sendToSupervisor(message, "server_" + experiment);
 			break;
 		
 		case MainActivity.START_EXPERIMENT:

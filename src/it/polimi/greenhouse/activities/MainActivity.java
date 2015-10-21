@@ -38,8 +38,8 @@ public class MainActivity extends A3DroidActivity{
 	public static final int CREATE_GROUP_USER_COMMAND = 33;
 	public static final int LONG_RTT = 34;
 	public static final int STOP_EXPERIMENT_COMMAND = 35;
-	public static final int PING = 36;
-	public static final int PONG = 37;
+	public static final int SENSOR_PING = 36;
+	public static final int SENSOR_PONG = 37;
 	public static final int NEW_PHONE = 38;
 	public static final int START_EXPERIMENT_USER_COMMAND = 39;
 	public static final int START_EXPERIMENT = 40;
@@ -47,6 +47,8 @@ public class MainActivity extends A3DroidActivity{
 	public static final int START_SENSOR = 42;
 	public static final int START_ACTUATOR = 43;
 	public static final int START_SERVER = 50;
+	public static final int SERVER_PING = 51;
+	public static final int SERVER_PONG = 52;
 	
 	private A3Node node;
 	private EditText inText;
@@ -55,7 +57,6 @@ public class MainActivity extends A3DroidActivity{
 	private EditText experiment;
 	public static int runningExperiment;
 	private boolean experimentRunning = false;
-	//private EditText numberOfGroupsToCreate;
 	
 	public static void setRunningExperiment(int runningExperiment) {
 		MainActivity.runningExperiment = runningExperiment;
@@ -104,7 +105,7 @@ public class MainActivity extends A3DroidActivity{
 						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("monitoring_" + experiment.getText().toString(), false, true);
+						node.connect("monitoring_" + experiment.getText().toString(), true, true);
 						node.sendToSupervisor(new A3Message(CREATE_GROUP_USER_COMMAND, "monitoring_" + experiment.getText().toString()), "control");
 						experimentRunning = true;
 						break;	
@@ -115,9 +116,10 @@ public class MainActivity extends A3DroidActivity{
 						roles.add(ActuatorFollowerRole.class.getName());
 						roles.add(ServerFollowerRole.class.getName());
 						groupDescriptors.add(new ActuatorsDescriptor());
+						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("actuators_" + experiment.getText().toString(), false, true);
+						node.connect("actuators_" + experiment.getText().toString(), true, true);
 						node.sendToSupervisor(new A3Message(CREATE_GROUP_USER_COMMAND, "actuators_" + experiment.getText().toString()), "control");
 						experimentRunning = true;
 						break;
@@ -129,7 +131,8 @@ public class MainActivity extends A3DroidActivity{
 						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("server", false, true);
+						node.connect("server_" + experiment.getText().toString(), true, true);
+						node.sendToSupervisor(new A3Message(CREATE_GROUP_USER_COMMAND, "server_" + experiment.getText().toString()), "control");
 						experimentRunning = true;
 						break;
 					default:
