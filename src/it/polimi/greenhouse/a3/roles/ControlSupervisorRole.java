@@ -63,6 +63,29 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 		// TODO Auto-generated method stub
 		
 		switch(message.reason){
+		
+		case MainActivity.JOINED:		
+			message.reason = MainActivity.ADD_MEMBER;
+			channel.sendBroadcast(message);
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType).keySet())
+					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+						node.sendToSupervisor(message,
+							gType + "_" + i);
+			break;
+			
+		case MainActivity.ADD_MEMBER:
+			String content [] = ((String)message.object).split("_");
+			String type = content[0];
+			int experimentId = Integer.valueOf(content[1]);
+			if(launchedGroups.containsKey(type))
+					launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
+			else{
+				Map<Integer, Integer> newGroup = new HashMap<Integer, Integer>();
+				newGroup.put(experimentId, 1);
+				launchedGroups.put(type, newGroup);
+				totalGroups++;
+			}
 			
 		case MainActivity.NEW_PHONE:
 			
@@ -101,7 +124,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			result = result + ((String)message.object).replace(".", ",") + "\n";
 			dataToWaitFor --;
 			
-			if(dataToWaitFor == 0){
+			if(dataToWaitFor <= 0){
 				
 				try {
 					bw.write(result);
@@ -120,20 +143,14 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			//totalGroups = Integer.valueOf(splittedObject[1]);
 			message.reason = MainActivity.CREATE_GROUP;
 			channel.sendBroadcast(message);
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType).keySet())
+					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+						node.sendToSupervisor(message,
+							gType + "_" + i);
 			break;
 			
 		case MainActivity.CREATE_GROUP:
-			String content [] = ((String)message.object).split("_");
-			String type = content[0];
-			int experimentId = Integer.valueOf(content[1]);
-			if(launchedGroups.containsKey(type))
-					launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
-			else{
-				Map<Integer, Integer> newGroup = new HashMap<Integer, Integer>();
-				newGroup.put(experimentId, 1);
-				launchedGroups.put(type, newGroup);
-				totalGroups++;
-			}
 			break;
 			
 		case MainActivity.START_EXPERIMENT_USER_COMMAND:
@@ -144,7 +161,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType).keySet())
-					dataToWaitFor += launchedGroups.get(gType).get(i) - 1;
+					dataToWaitFor += launchedGroups.get(gType).get(i);
 			
 			message.reason = MainActivity.START_EXPERIMENT;
 			channel.sendBroadcast(message);

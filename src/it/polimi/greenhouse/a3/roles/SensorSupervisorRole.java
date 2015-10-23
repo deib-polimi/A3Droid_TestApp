@@ -18,6 +18,7 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		node.connect("server_" + currentExperiment, false, true);
 		startExperiment = true;		
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}	
 
 	@Override

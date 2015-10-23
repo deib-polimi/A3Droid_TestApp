@@ -46,6 +46,8 @@ public class MainActivity extends A3DroidActivity{
 	public static final int DATA = 41;
 	public static final int START_SENSOR = 42;
 	public static final int START_ACTUATOR = 43;
+	public static final int JOINED = 44;
+	public static final int ADD_MEMBER = 45;
 	public static final int START_SERVER = 50;
 	public static final int SERVER_PING = 51;
 	public static final int SERVER_PONG = 52;
@@ -88,12 +90,16 @@ public class MainActivity extends A3DroidActivity{
 				groupDescriptors.add(new ControlDescriptor());
 				switch (msg.what) {
 					case STOP_EXPERIMENT_COMMAND:
-						node.sendToSupervisor(new A3Message(LONG_RTT, ""), "control");
-						experimentRunning = false;
+						if(experimentRunning){
+							node.sendToSupervisor(new A3Message(LONG_RTT, ""), "control");
+							experimentRunning = false;
+						}
 						break;
 					case START_EXPERIMENT_USER_COMMAND:
-						if(experimentRunning)
+						if(!experimentRunning){
+							experimentRunning = true;
 							node.sendToSupervisor(new A3Message(START_EXPERIMENT_USER_COMMAND, ""), "control");
+						}
 						break;
 					case START_SENSOR:
 						if(experimentRunning)
@@ -106,8 +112,7 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("monitoring_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(CREATE_GROUP_USER_COMMAND, "monitoring_" + experiment.getText().toString()), "control");
-						experimentRunning = true;
+						node.sendToSupervisor(new A3Message(JOINED, "monitoring_" + experiment.getText().toString()), "control");
 						break;	
 					case START_ACTUATOR:
 						if(experimentRunning)
@@ -120,8 +125,7 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("actuators_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(CREATE_GROUP_USER_COMMAND, "actuators_" + experiment.getText().toString()), "control");
-						experimentRunning = true;
+						node.sendToSupervisor(new A3Message(JOINED, "actuators_" + experiment.getText().toString()), "control");
 						break;
 					case START_SERVER:	
 						if(experimentRunning)
@@ -132,8 +136,7 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("server_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(CREATE_GROUP_USER_COMMAND, "server_" + experiment.getText().toString()), "control");
-						experimentRunning = true;
+						node.sendToSupervisor(new A3Message(JOINED, "server_" + experiment.getText().toString()), "control");
 						break;
 					default:
 						break;

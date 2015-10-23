@@ -1,18 +1,14 @@
 package it.polimi.greenhouse.a3.roles;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import it.polimi.greenhouse.activities.MainActivity;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import it.polimi.greenhouse.activities.MainActivity;
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
-import android.os.Environment;
 
 /**
  * This class is the role the followers of "control" group play.
@@ -57,9 +53,10 @@ public class ControlFollowerRole extends A3FollowerRole {
 					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 						node.sendToSupervisor(message,
 							gType + "_" + i);
+			//launchedGroups.clear();
 			break;
 			
-		case MainActivity.CREATE_GROUP:
+		case MainActivity.ADD_MEMBER:
 			String content [] = ((String)message.object).split("_");
 			String type = content[0];
 			int experimentId = Integer.valueOf(content[1]);

@@ -20,6 +20,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 		serverPinged = false;
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		node.connect("server_" + currentExperiment, false, true);
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}	
 
 	@Override
@@ -45,6 +46,9 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			String serverData = content[3];
 			message.object = serverAddress + "#" + experiment + "#" + sendTime + "#" + serverData;
 			channel.sendBroadcast(message);
+			message.reason = MainActivity.SERVER_PONG;
+			message.object = sendTime;
+			node.sendToSupervisor(message, "server_" + experiment);
 			showOnScreen("Broadcasted response to follower actuators");
 			break;
 			

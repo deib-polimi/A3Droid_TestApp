@@ -33,6 +33,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		experimentIsRunning = false;
 		sentCont = 0;
 		initializeExperiment();
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}
 
 	private void initializeExperiment() {
