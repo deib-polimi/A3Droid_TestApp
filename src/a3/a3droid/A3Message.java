@@ -19,7 +19,7 @@ public class A3Message {
 	
 	/**The data in this message.*/
 	@Position(2)
-	public Object object;
+	public String object;
 
 	/**This must exists because AllJoyn needs it, but is never used in these API.*/
 	public A3Message(){}
@@ -28,7 +28,7 @@ public class A3Message {
 	 * @param reason The kind of this message.
 	 * @param object The data in this message.
 	 */
-	public A3Message(int reason, Object object){
+	public A3Message(int reason, String object){
 		this.reason = reason;
 		this.object = object;
 		senderAddress = "";

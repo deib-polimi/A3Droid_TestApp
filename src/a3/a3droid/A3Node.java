@@ -296,7 +296,7 @@ public class A3Node extends Thread implements UserInterface{
 				}
 				synchronized(channelsStatus){
 					channelsStatus.put(groupName, CONNECTING);
-					showOnScreen("channelsStatus = " + channelsStatus);
+					//showOnScreen("channelsStatus = " + channelsStatus);
 				}
 
 				channel.connect(groupName, followerRole, supervisorRole, followerOnly, supervisorOnly);
@@ -328,8 +328,8 @@ public class A3Node extends Thread implements UserInterface{
 				channel.setConnectedForApplication(false);
 			else
 				channel.setConnectedForSystem(false);
-			showOnScreen(groupName + " usage:\n application: " + channel.isConnectedForApplication() +
-					"\n system: " + channel.isConnectedForSystem());
+			/*showOnScreen(groupName + " usage:\n application: " + channel.isConnectedForApplication() +
+					"\n system: " + channel.isConnectedForSystem());*/
 			if(!(channel.isConnectedForApplication() || channel.isConnectedForSystem())){
 				channel.disconnect();
 				channels.remove(channel);
@@ -352,7 +352,7 @@ public class A3Node extends Thread implements UserInterface{
 		if(noWaitChannels)
 			disconnect("wait", false);
 
-		showOnScreen("channelsStatus = " + channelsStatus);
+		//showOnScreen("channelsStatus = " + channelsStatus);
 	}
 
 	/**It passes a message to the user interface.
@@ -1007,7 +1007,7 @@ public class A3Node extends Thread implements UserInterface{
 		synchronized(channelsStatus){
 
 			channelsStatus.put(a3Channel.getGroupName(), CONNECTED);
-			showOnScreen("channelsStatus = " + channelsStatus);
+			//showOnScreen("channelsStatus = " + channelsStatus);
 			noWaitChannels = !channelsStatus.containsValue(WAITING);
 
 			channelsStatus.notifyAll();
@@ -1029,7 +1029,7 @@ public class A3Node extends Thread implements UserInterface{
 		synchronized(channelsStatus){
 
 			channelsStatus.put(a3Channel.getGroupName(), WAITING);
-			showOnScreen("channelsStatus = " + channelsStatus);
+			//showOnScreen("channelsStatus = " + channelsStatus);
 
 			channelsStatus.notifyAll();
 

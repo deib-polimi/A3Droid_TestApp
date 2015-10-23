@@ -65,7 +65,7 @@ public class Subscriptions {
 				 * for every kind of message the channel "senderAddress" is interested in,
 				 * I must retrieve the corresponding list of destinations and add "senderAddress" to it.
 				 */
-				String newSubscriptions = (String)message.object;
+				String newSubscriptions = message.object;
 	
 				if(!newSubscriptions.equals("")){
 					String[] splittedSubscriptions = newSubscriptions.split(Constants.A3_SEPARATOR);
@@ -103,7 +103,7 @@ public class Subscriptions {
 				 * I must retrieve the list of destinations of the messages of type "reason"
 				 * and remove "senderAddress" from it.
 				 */
-				String unsubscription = (String)message.object;
+				String unsubscription = message.object;
 	
 				int reason = Integer.valueOf(unsubscription);
 	

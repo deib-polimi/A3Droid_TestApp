@@ -1,7 +1,6 @@
 package a3.a3droid;
 
 import java.util.ArrayList;
-
 import org.alljoyn.bus.BusAttachment;
 import org.alljoyn.bus.BusListener;
 import org.alljoyn.bus.BusObject;
@@ -11,7 +10,6 @@ import org.alljoyn.bus.SessionListener;
 import org.alljoyn.bus.SessionOpts;
 import org.alljoyn.bus.Status;
 import org.alljoyn.bus.annotation.BusSignalHandler;
-
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -212,9 +210,10 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	/**Used to connect to the AllJoyn bus and to start group discovery.*/
 	public void connect(String group_name){
 
+		showOnScreen("Starting...");
+		
 		groupName = Constants.PREFIX + group_name;
 		
-		showOnScreen("Starting ...");
 		mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
 
 		mBus.registerBusListener(new BusListener() {
@@ -235,17 +234,23 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		});
 
 		Status status = mBus.connect();
-		if (Status.OK != status)
+		if (Status.OK != status){
+			showOnScreen("status = " + status + " dopo connect()");
 			return;
+		}
 
 		status = mBus.registerSignalHandlers(this);
-		if (status != Status.OK)
+		if (status != Status.OK){
+			showOnScreen("status = " + status + " dopo registerSignalHandlers()");
 			return;
+		}
 
 		// The discovery and the timer start.
 		status = mBus.findAdvertisedName(groupName);
-		if (Status.OK != status)
+		if (Status.OK != status){
+			showOnScreen("status = " + status + " dopo findAdvertisedName()");
 			return;
+		}
 
 		try{
 			timer = new Timer(this,0,(int) (2000 + Math.random() * 1000));
@@ -280,7 +285,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 
 			else{
 				mIsConnected = false;
-
+				showOnScreen("status = " + status + " dopo joinSession()");
 				//The group name was found, but the Service is not visible.
 				if(status == Status.ALLJOYN_JOINSESSION_REPLY_UNREACHABLE){
 					inTransitionConditions = true;
@@ -292,8 +297,12 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 					//If this channel is already joined.
 					if(status == Status.ALLJOYN_JOINSESSION_REPLY_ALREADY_JOINED)
 						onSessionJoined(sessionId);
-					else if(status == Status.ALLJOYN_JOINSESSION_REPLY_FAILED)
-						joinSession();
+					else{
+						if(status == Status.ALLJOYN_JOINSESSION_REPLY_FAILED)
+							joinSession();
+						else
+							reconnect();
+					}
 				}
 			}
 		}catch (Exception ex) {}
@@ -418,9 +427,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 							queue.dequeue();
 						else if(reconnect)
 							reconnect();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					} catch (Exception e) {}
 				}
 			}
 		};
@@ -531,13 +538,13 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		case Constants.NEW_SUPERVISOR:
 			//The new supervisor was elected.
 	
-			if(((String)message.object).equals("?")){
+			if(message.object.equals("?")){
 				message = new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REPLY, String.valueOf(getSupervisorFitnessFunction()));
 				sendToSupervisor(message);
 			}
 			
 			else{
-				if(((String)message.object).equals(myId)){
+				if(message.object.equals(myId)){
 					if(!isSupervisor){
 						becomeSupervisor();
 					}
@@ -596,7 +603,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			
 		case Constants.MERGE:
 			//"senderAddress Constants.MERGE otherGroupName".
-			node.actualMerge((String)message.object, getGroupName());
+			node.actualMerge(message.object, getGroupName());
 			break;
 			
 		case Constants.SPLIT:
@@ -613,11 +620,11 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			
 			try{
 				sendToSupervisor(new A3Message(Constants.WAIT_SUPERVISOR_FITNESS_FUNCTION,
-						(String)message.object + Constants.A3_SEPARATOR +
-						String.valueOf(node.getSupervisorFitnessFunction((String)message.object))));
+						message.object + Constants.A3_SEPARATOR +
+						String.valueOf(node.getSupervisorFitnessFunction(message.object))));
 			}
 			catch(Exception e){
-				/* I can have this exception only if the channel to group "(String)message.object" doesn't exist.
+				/* I can have this exception only if the channel to group "message.object" doesn't exist.
 				 * In this case, I don't have to send back reply message, so I do nothing.
 				 */
 			}
@@ -867,7 +874,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		if(message.startsWith("("))
 			ui.showOnScreen(message);
 		else
-			ui.showOnScreen("(Client " + myId + " " + groupName + "):\n" + message);
+			ui.showOnScreen("(" + getGroupName() + "): " + message);
 	}
 
 	/**It creates the Service when it doesn't exist.*/

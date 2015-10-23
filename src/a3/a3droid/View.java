@@ -104,7 +104,7 @@ public class View extends HandlerThread implements TimerInterface{
 			}
 		}
 		numberOfNodes = numberOfNodes + 1;
-		service.showOnScreen("View: " + getView());
+		//service.showOnScreen("View: " + getView());
 	}
 
 	/**
@@ -128,7 +128,7 @@ public class View extends HandlerThread implements TimerInterface{
 		}
 		numberOfNodes = numberOfNodes - 1;
 
-		service.showOnScreen("View: " + getView());
+		//service.showOnScreen("View: " + getView());
 
 		// If the old supervisor left, then I must elect a new one.
 		if(service.getSupervisorId().equals(memberName)){

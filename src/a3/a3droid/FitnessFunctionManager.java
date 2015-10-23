@@ -35,7 +35,7 @@ public class FitnessFunctionManager implements TimerInterface {
 	 */
 	public synchronized boolean onMessage(A3Message message){
 		if(collecting)
-			fitnessFunctions.add(new FitnessFunction(message.senderAddress, Integer.valueOf(((String)message.object))));
+			fitnessFunctions.add(new FitnessFunction(message.senderAddress, Integer.valueOf(message.object)));
 		return collecting;
 	}
 

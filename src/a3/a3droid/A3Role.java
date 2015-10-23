@@ -138,14 +138,14 @@ public abstract class A3Role implements Runnable{
 		case Constants.STACK_REPLY:
 			//"senderAddress Constants.STACK_REPLY otherGroupName true/false".
 			try{
-				object = ((String)message.object).split(Constants.A3_SEPARATOR);
+				object = message.object.split(Constants.A3_SEPARATOR);
 				node.stackReply(object[0], getGroupName(), Boolean.valueOf(object[1]));
 			} catch (Exception e) {}
 			break;
 
 		case Constants.PEERS_REPLY:
 			//"senderAddress Constants.PEERS_REPLY otherGroupName true/false".
-			object = ((String)message.object).split(Constants.A3_SEPARATOR);
+			object = message.object.split(Constants.A3_SEPARATOR);
 
 			/* peers(group1, group2) = peers(group2, group1),
 			 * so the way I visualize the involved groups doesn't matter.
@@ -159,7 +159,7 @@ public abstract class A3Role implements Runnable{
 			 */
 		case Constants.HIERARCHY_REPLY:
 			//"senderAddress Constants.HIERARCHY_REPLY parentGroupName otherGroupName true/false".
-			object = ((String)message.object).split(Constants.A3_SEPARATOR);
+			object = message.object.split(Constants.A3_SEPARATOR);
 			node.hierarchyReply(object[0], object[1], getGroupName(), Boolean.valueOf(object[2]));
 			break;
 

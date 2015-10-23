@@ -54,15 +54,14 @@ public class Hierarchy {
 			 */
 			hierarchy = new ArrayList<String>();
 
-			if(!((String)message.object).equals("")){
+			if(!message.object.equals("")){
 
-				String[] splittedHierarchy = ((String)message.object).split(Constants.A3_SEPARATOR);
+				String[] splittedHierarchy = message.object.split(Constants.A3_SEPARATOR);
 				numberOfSplittedGroups = Integer.valueOf(splittedHierarchy[0]);
 				
 				for(int i = 1; i < splittedHierarchy.length; i++)
 					hierarchy.add(splittedHierarchy[i]);
 			}
-			showOnScreen(hierarchy.toString());
 
 			break;
 
@@ -77,8 +76,7 @@ public class Hierarchy {
 			 * I add the new parent group's information to my hierarchy.
 			 */
 			synchronized(hierarchy){
-				hierarchy.add(((String)message.object));
-				showOnScreen(hierarchy.toString());
+				hierarchy.add(message.object);
 			}
 			break;
 
@@ -93,8 +91,7 @@ public class Hierarchy {
 			 * I remove the "groupName" group's information from my hierarchy.
 			 */
 			synchronized(hierarchy){
-				hierarchy.remove(((String)message.object));
-				showOnScreen(hierarchy.toString());
+				hierarchy.remove(message.object);
 			}
 			break;
 		}
@@ -129,9 +126,5 @@ public class Hierarchy {
 	
 	public synchronized int getSubgroupsCounter(){
 		return numberOfSplittedGroups;
-	}
-	private void showOnScreen(String string) {
-		// TODO Auto-generated method stub
-		channel.showOnScreen(string);
 	}
 }

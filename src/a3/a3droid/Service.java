@@ -310,7 +310,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 						A3Message newGroupMessage = new A3Message(Constants.NEW_SPLITTED_GROUP, "");
 						handleBroadcastMessage(newGroupMessage);
 
-						int nodesToTransfer = Integer.valueOf((String)object.object);
+						int nodesToTransfer = Integer.valueOf(object.object);
 						ArrayList<String> selectedNodes = new ArrayList<String>();
 						int numberOfNodes = view.getNumberOfNodes();
 						String[] splittedView = view.getView().substring(1, view.getView().length()-1).split(", ");

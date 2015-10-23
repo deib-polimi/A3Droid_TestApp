@@ -64,24 +64,24 @@ public abstract class A3SupervisorRole extends A3Role implements BusObject, Time
 			case Constants.STACK_REQUEST:
 				//"senderAddress Constants.STACK_REQUEST parentGroupName".
 				try{
-					ok = node.actualStack(((String)message.object), getGroupName());
-					reply = new A3Message(Constants.STACK_REPLY, ((String)message.object) + Constants.A3_SEPARATOR + ok);
+					ok = node.actualStack(message.object, getGroupName());
+					reply = new A3Message(Constants.STACK_REPLY, message.object + Constants.A3_SEPARATOR + ok);
 					channel.sendUnicast(reply, message.senderAddress);
 				} catch (Exception e) {}
 				break;
 				
 			case Constants.PEERS_REQUEST:
 				//"senderAddress Constants.PEERS_REQUEST otherGroupName".
-				ok = node.actualStack(((String)message.object), getGroupName());
-				reply = new A3Message(Constants.PEERS_REPLY, ((String)message.object) + Constants.A3_SEPARATOR + ok);
+				ok = node.actualStack(message.object, getGroupName());
+				reply = new A3Message(Constants.PEERS_REPLY, message.object + Constants.A3_SEPARATOR + ok);
 				channel.sendUnicast(reply, message.senderAddress);
 				break;
 
 			case Constants.HIERARCHY_REQUEST:
 				//"senderAddress Constants.HIERARCHY_REQUEST parentGroupName otherGroupName".
-				object = ((String)message.object).split(Constants.A3_SEPARATOR);
+				object = message.object.split(Constants.A3_SEPARATOR);
 				ok = node.actualStack(object[0], getGroupName());
-				reply = new A3Message(Constants.HIERARCHY_REPLY, ((String)message.object)
+				reply = new A3Message(Constants.HIERARCHY_REPLY, message.object
 						+ Constants.A3_SEPARATOR + ok);
 				
 				channel.sendUnicast(reply, message.senderAddress);
@@ -89,7 +89,7 @@ public abstract class A3SupervisorRole extends A3Role implements BusObject, Time
 
 			case Constants.REVERSE_STACK:
 				//"senderAddress Constants.REVERSE_STACK parentGroupName".
-				node.actualReverseStack(((String)message.object), getGroupName());
+				node.actualReverseStack(message.object, getGroupName());
 				break;
 
 			case Constants.INTEGER_SPLIT_FITNESS_FUNCTION:
