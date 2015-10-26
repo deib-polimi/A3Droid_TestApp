@@ -13,6 +13,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	private boolean experimentIsRunning;
 	private int currentExperiment;
 	private int sentCont;
+	private double avgRTT;
 	private String sPayLoad;
 	private String startTimestamp;
 	
@@ -30,6 +31,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		startExperiment = true;		
 		experimentIsRunning = false;
 		sentCont = 0;
+		avgRTT = 0;
 		sPayLoad = StringTimeUtil.createString(4);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}
@@ -62,6 +64,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 				showOnScreen("Server response received");
 				long rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
 				sentCont ++;
+				avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
 	
 				if(rtt > TIMEOUT && experimentIsRunning){
 					experimentIsRunning = false;
@@ -97,10 +100,10 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 
 			if(experimentIsRunning){
-				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp());
-				float frequency = sentCont / ((float)(runningTime / 1000));
-				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
-						(runningTime/ 1000) + " " + frequency), "control");
+				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
+				float frequency = sentCont / (float)(runningTime);
+				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + "\t" +
+						runningTime + "\t" + frequency + "\t" + avgRTT), "control");
 				experimentIsRunning = false;
 			}
 			break;

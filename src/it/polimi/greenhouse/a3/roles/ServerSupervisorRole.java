@@ -18,8 +18,9 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private int currentExperiment;
 	private boolean startExperiment;
 	private boolean experimentIsRunning;
-	private int sentCont = 0;
-	private int dataToWaitFor = 0;
+	private int sentCont;
+	private double avgRTT;
+	private int dataToWaitFor;
 	private String startTimestamp;
 	private String sPayLoad;
 	private final static long MAX_INTERNAL = 30 * 1000;
@@ -35,6 +36,8 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		startExperiment = true;
 		experimentIsRunning = false;
 		sentCont = 0;
+		avgRTT = 0;
+		dataToWaitFor = 0;
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();
 		sPayLoad = StringTimeUtil.createString(4);
@@ -68,9 +71,10 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				
 				
 			case MainActivity.SERVER_PONG:
+				showOnScreen("Actuator response received");
 				sentCont ++;
-				
 				rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
+				avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont; 
 
 				if(rtt > TIMEOUT && experimentIsRunning){
 					experimentIsRunning = false;
@@ -90,6 +94,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 			case MainActivity.START_EXPERIMENT:
 				if(startExperiment){
+					showOnScreen("Experiment has started");
 					if(!experimentIsRunning && launchedGroups.containsKey("actuators")){
 						startExperiment = false;
 						experimentIsRunning = true;
@@ -124,12 +129,13 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				
 			case MainActivity.LONG_RTT:
 				if(experimentIsRunning){
+					showOnScreen("Experiment has stopped");
 					experimentIsRunning = false;
-					long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp());
-					float frequency = sentCont / ((float)(runningTime / 1000));
+					long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
+					float frequency = sentCont / ((float)(runningTime));
 					
-					node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
-							(runningTime/ 1000) + " " + frequency), "control");
+					node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + "\t" +
+							runningTime + "\t" + frequency + "\t" + avgRTT), "control");
 				}
 				break;
 		}

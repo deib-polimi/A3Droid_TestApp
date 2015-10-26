@@ -14,6 +14,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private String sPayLoad;
 	private boolean experimentIsRunning;
 	private int sentCont;
+	private double avgRTT;
 	private String startTimestamp;
 	
 	private final static long MAX_INTERNAL = 10 * 1000;
@@ -30,6 +31,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		
 		experimentIsRunning = false;
 		sentCont = 0;
+		avgRTT = 0;
 		sPayLoad = StringTimeUtil.createString(4);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}
@@ -48,10 +50,10 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		case MainActivity.SENSOR_PONG:
 			
 			showOnScreen("Server response received");
-			sentCont ++;
-			
+			sentCont ++;			
 			rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
-
+			avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
+			
 			if(rtt > TIMEOUT && experimentIsRunning){
 				experimentIsRunning = false;
 				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
@@ -68,6 +70,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		case MainActivity.START_EXPERIMENT:
 
 			if(!experimentIsRunning){
+				showOnScreen("Experiment has started");
 				experimentIsRunning = true;
 				startTimestamp = StringTimeUtil.getTimestamp();
 				sentCont = 0;
@@ -78,11 +81,12 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		case MainActivity.STOP_EXPERIMENT_COMMAND:
 			
 			if(experimentIsRunning){
-				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp());
-				float frequency = sentCont / ((float)(runningTime / 1000));
+				showOnScreen("Experiment has stopped");
+				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
+				float frequency = sentCont / ((float)runningTime);
 				
-				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
-						(runningTime/ 1000) + " " + frequency), "control");
+				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + "\t" +
+						(runningTime) + "\t" + frequency + "\t" + avgRTT), "control");
 				experimentIsRunning = false;
 			}
 			break;
