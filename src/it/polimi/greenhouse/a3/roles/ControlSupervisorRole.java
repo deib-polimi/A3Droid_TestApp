@@ -6,9 +6,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
@@ -21,7 +23,7 @@ import android.os.Environment;
  */
 public class ControlSupervisorRole extends A3SupervisorRole {
 
-	private ArrayList<String> vmIds;
+	private Set<String> vmIds;
 	private Map<String, Map<Integer, Integer>> launchedGroups;
 	private int totalGroups;
 
@@ -29,8 +31,8 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	private File f;
 	private FileWriter fw;
 	private BufferedWriter bw;
-	private int dataToWaitFor;
-	private String result;
+	private volatile int dataToWaitFor;
+	private volatile String result;
 	private int numberOfTrials;
 	
 	public ControlSupervisorRole(){
@@ -39,12 +41,11 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	
 	@Override
 	public void onActivation() {
-		// TODO Auto-generated method stub
-		
-		vmIds = new ArrayList<String>();
+		// TODO Auto-generated method stub		
+		vmIds = Collections.synchronizedSet(new HashSet<String>());
 		
 		//I'm not connected to "experiment" group already.
-		launchedGroups = new HashMap<String, Map<Integer, Integer>>();
+		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();
 		totalGroups = 0;
 		dataToWaitFor = 0;
 		numberOfTrials = 1;
@@ -81,11 +82,12 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			if(launchedGroups.containsKey(type))
 					launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
 			else{
-				Map<Integer, Integer> newGroup = new HashMap<Integer, Integer>();
+				Map<Integer, Integer> newGroup = new ConcurrentHashMap<Integer, Integer>();
 				newGroup.put(experimentId, 1);
 				launchedGroups.put(type, newGroup);
 				totalGroups++;
 			}
+			break;
 			
 		case MainActivity.NEW_PHONE:
 			
@@ -158,10 +160,14 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			showOnScreen("--- TENTATIVO " + numberOfTrials + "---");
 			
 			result = "";
-			
+			dataToWaitFor = 0;
 			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType).keySet())
-					dataToWaitFor += launchedGroups.get(gType).get(i);
+				if(gType.equals("monitoring"))
+					for(int i : launchedGroups.get(gType).keySet())
+						dataToWaitFor += launchedGroups.get(gType).get(i);
+			
+			if(launchedGroups.containsKey("actuators"))
+				dataToWaitFor++;
 			
 			message.reason = MainActivity.START_EXPERIMENT;
 			channel.sendBroadcast(message);

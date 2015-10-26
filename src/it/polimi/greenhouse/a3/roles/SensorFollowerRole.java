@@ -1,9 +1,7 @@
 package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.greenhouse.activities.MainActivity;
-
-import java.util.Date;
-
+import it.polimi.greenhouse.util.StringTimeUtil;
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
 import a3.a3droid.Timer;
@@ -12,14 +10,14 @@ import a3.a3droid.TimerInterface;
 public class SensorFollowerRole extends A3FollowerRole implements TimerInterface{
 
 	private int currentExperiment;
-	private long rttThreshold;
 	
-	private String s;
+	private String sPayLoad;
 	private boolean experimentIsRunning;
 	private int sentCont;
 	private String startTimestamp;
 	
-	private final static long MAX_INTERNAL = 5 * 1000;
+	private final static long MAX_INTERNAL = 10 * 1000;
+	private final static long TIMEOUT = 60 * 1000;
 	
 	public SensorFollowerRole() {
 		super();		
@@ -32,26 +30,8 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		
 		experimentIsRunning = false;
 		sentCont = 0;
-		initializeExperiment();
+		sPayLoad = StringTimeUtil.createString(4);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
-	}
-
-	private void initializeExperiment() {
-		char[] c;
-		
-		switch(4){
-		case 1:	c = new char[62484]; break;
-		case 2:	c = new char[32000]; break;
-		case 3:	c = new char[5017]; break;
-		case 4:	c = new char[1812]; break;
-		default: c = null;
-		}
-		
-		for(int i = 0; i < c.length; i++)
-			c[i] = '0';
-		
-		s = new String(c);
-		rttThreshold = Long.parseLong("1000000000") * 10;
 	}
 
 	@Override
@@ -66,11 +46,13 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		long rtt;
 		switch(message.reason){
 		case MainActivity.SENSOR_PONG:
+			
+			showOnScreen("Server response received");
 			sentCont ++;
 			
-			rtt = roundTripTime(((String)message.object), getTimestamp());
+			rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
 
-			if(rtt > rttThreshold && experimentIsRunning){
+			if(rtt > TIMEOUT && experimentIsRunning){
 				experimentIsRunning = false;
 				node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
 			}
@@ -85,48 +67,31 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 		case MainActivity.START_EXPERIMENT:
 
-			startTimestamp = getTimestamp();
-			sentCont = 0;
-
-			experimentIsRunning = true;
-			sendMessage();
+			if(!experimentIsRunning){
+				experimentIsRunning = true;
+				startTimestamp = StringTimeUtil.getTimestamp();
+				sentCont = 0;
+				sendMessage();
+			}
 			break;
 
 		case MainActivity.STOP_EXPERIMENT_COMMAND:
 			
-			experimentIsRunning = false;
-			long runningTime = roundTripTime(startTimestamp, getTimestamp());
-			float frequency = sentCont / ((float)(runningTime / 1000));
-			
-			node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
-					(runningTime/ 1000) + " " + frequency), "control");
+			if(experimentIsRunning){
+				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp());
+				float frequency = sentCont / ((float)(runningTime / 1000));
+				
+				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
+						(runningTime/ 1000) + " " + frequency), "control");
+				experimentIsRunning = false;
+			}
 			break;
 		}
 	}
 
 	private void sendMessage() {
 		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + getTimestamp() + "#" + s));
-	}
-
-	private String getTimestamp() {
-		try{
-			return new Date().getTime() + "";
-		}catch(Exception e){showOnScreen("getTimestamp(): " + e.getLocalizedMessage());}
-		return "0";
-	}
-	
-	private long roundTripTime(String departureTimestamp, String arrivalTimestamp) {
-		long i1 = 0, i2 = 0;
-		
-		try{
-			i1 = Long.parseLong(arrivalTimestamp);
-		}catch(Exception e){showOnScreen("rtt()[1]: " + e.getLocalizedMessage());}
-		
-		try{
-			i2 = Long.parseLong(departureTimestamp);
-		}catch(Exception e){showOnScreen("rtt()[2]: " + e.getLocalizedMessage());}
-		return i1 - i2;
+			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
 	}
 
 	@Override

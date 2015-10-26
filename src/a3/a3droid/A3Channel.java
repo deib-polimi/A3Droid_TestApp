@@ -255,7 +255,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		try{
 			timer = new Timer(this,0,(int) (2000 + Math.random() * 1000));
 			timer.start();
-		} catch (Exception e){}
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**It is called when the timeout fires and the group name was discovered.
@@ -305,7 +307,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 					}
 				}
 			}
-		}catch (Exception ex) {}
+		}catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	/**It disconnect this channel from the group and the AllJoyn bus.*/
@@ -411,7 +415,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		
 		try {
 			sendToSupervisor(new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST, ""));
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		//unblock();
 		
 		/* Thread that reads the first message in the queue and try to send it to the Service.
@@ -427,7 +433,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 							queue.dequeue();
 						else if(reconnect)
 							reconnect();
-					} catch (Exception e) {}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		};
@@ -470,7 +478,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 				
 				node.setConnected(this);
 			}
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -504,7 +514,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 					
 				node.setConnected(this);
 			}
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -624,6 +636,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 						String.valueOf(node.getSupervisorFitnessFunction(message.object))));
 			}
 			catch(Exception e){
+				e.printStackTrace();
 				/* I can have this exception only if the channel to group "message.object" doesn't exist.
 				 * In this case, I don't have to send back reply message, so I do nothing.
 				 */
@@ -663,7 +676,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 						channel.becomeFollower();
 					}
 				}
-			}catch (Exception e){}
+			}catch (Exception e){
+				e.printStackTrace();
+			}
 			
 			break;
 			
@@ -850,7 +865,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			subscriptions.subscribe(reason);
 			A3Message subscriptionsMessage = new A3Message(Constants.SUBSCRIPTION, String.valueOf(reason));
 			sendToSupervisor(subscriptionsMessage);
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -864,7 +881,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			subscriptions.unsubscribe(reason);
 			A3Message unsubscriptionsMessage = new A3Message(Constants.UNSUBSCRIPTION, String.valueOf(reason));
 			sendToSupervisor(unsubscriptionsMessage);
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -888,7 +907,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 				service.connect();
 			}
 		
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -1008,7 +1029,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 							
 							try{
 								joinSession();
-							}catch(Exception e){}
+							}catch(Exception e){
+								e.printStackTrace();
+							}
 						}
 					}
 					break;	

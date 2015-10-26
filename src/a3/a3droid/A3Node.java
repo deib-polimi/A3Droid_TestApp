@@ -212,7 +212,9 @@ public class A3Node extends Thread implements UserInterface{
 						channel.setConnectedForApplication(true);
 					else
 						channel.setConnectedForSystem(true);
-				} catch (Exception e) {}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			else
 				status = DOES_NOT_EXIST;
@@ -379,7 +381,9 @@ public class A3Node extends Thread implements UserInterface{
 			channel = getChannel(groupName);
 			channel.sendToSupervisor(message);
 
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**It sends a message to all the members of the specified group.
@@ -395,7 +399,9 @@ public class A3Node extends Thread implements UserInterface{
 			channel = getChannel(groupName);
 			channel.sendBroadcast(message);
 
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**It sends a message to the specified node in the specified group.
@@ -412,7 +418,9 @@ public class A3Node extends Thread implements UserInterface{
 			channel = getChannel(groupName);
 			channel.sendUnicast(message, receiverAddress);
 
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**It sends a message in the specified group, to the nodes which are interested in receiving it.
@@ -428,7 +436,9 @@ public class A3Node extends Thread implements UserInterface{
 			channel = getChannel(groupName);
 			channel.sendMulticast(message);
 
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**It communicates the Service of the group "groupName" that this node is interested in receiving
@@ -446,7 +456,9 @@ public class A3Node extends Thread implements UserInterface{
 			channel = getChannel(groupName);
 			channel.subscribe(reason);
 
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**It communicates the Service of the group "groupName" that this node is no more interested in receiving
@@ -465,7 +477,9 @@ public class A3Node extends Thread implements UserInterface{
 			channel = getChannel(groupName);
 			channel.unsubscribe(reason);
 
-		}catch(Exception e){}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -1155,6 +1169,8 @@ public class A3Node extends Thread implements UserInterface{
 		try {
 			channel = getChannel(groupName);
 			channel.startSupervisorElection();
-		} catch (Exception e) {}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

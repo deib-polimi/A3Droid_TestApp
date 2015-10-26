@@ -3,9 +3,9 @@ package it.polimi.greenhouse.a3.roles;
 import it.polimi.greenhouse.activities.MainActivity;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
@@ -17,24 +17,19 @@ import a3.a3droid.A3Message;
  */
 public class ControlFollowerRole extends A3FollowerRole {
 
-	private int runningExperiment;
 	private Map<String, List<Integer>> launchedGroups;
 	
 	public ControlFollowerRole() {
-		// TODO Auto-generated constructor stub
 		super();
 	}
 
 	@Override
 	public void onActivation() {
-		// TODO Auto-generated method stub
-		runningExperiment = 0;		
-		launchedGroups = new HashMap<String, List<Integer>>();
+		launchedGroups = new ConcurrentHashMap<String, List<Integer>>();
 	}
 
 	@Override
 	public void logic() {
-		// TODO Auto-generated method stub
 		showOnScreen("[CtrlFolRole]");
 		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, ""), "control");
 		active = false;
@@ -42,7 +37,6 @@ public class ControlFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
-		// TODO Auto-generated method stub
 		
 		switch(message.reason){
 		
@@ -53,7 +47,6 @@ public class ControlFollowerRole extends A3FollowerRole {
 					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 						node.sendToSupervisor(message,
 							gType + "_" + i);
-			//launchedGroups.clear();
 			break;
 			
 		case MainActivity.ADD_MEMBER:

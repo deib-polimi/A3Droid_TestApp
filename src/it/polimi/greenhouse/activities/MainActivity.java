@@ -112,7 +112,6 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("monitoring_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(JOINED, "monitoring_" + experiment.getText().toString()), "control");
 						break;	
 					case START_ACTUATOR:
 						if(experimentRunning)
@@ -125,9 +124,8 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("actuators_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(JOINED, "actuators_" + experiment.getText().toString()), "control");
 						break;
-					case START_SERVER:	
+					case START_SERVER:
 						if(experimentRunning)
 							break;
 						roles.add(ServerSupervisorRole.class.getName());
@@ -136,7 +134,6 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("server_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(JOINED, "server_" + experiment.getText().toString()), "control");
 						break;
 					default:
 						break;

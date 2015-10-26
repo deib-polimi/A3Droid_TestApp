@@ -1,10 +1,11 @@
 package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.StringTimeUtil;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
@@ -14,16 +15,15 @@ import android.annotation.SuppressLint;
 
 public class ServerSupervisorRole extends A3SupervisorRole implements TimerInterface{
 
-	//private int currentExperiment;
 	private int currentExperiment;
 	private boolean startExperiment;
 	private boolean experimentIsRunning;
 	private int sentCont = 0;
 	private int dataToWaitFor = 0;
 	private String startTimestamp;
-	private String s;
-	private long rttThreshold;
-	private final static long MAX_INTERNAL = 10 * 1000;
+	private String sPayLoad;
+	private final static long MAX_INTERNAL = 30 * 1000;
+	private final static long TIMEOUT = 60 * 1000;
 	private Map<String, Map<Integer, Integer>> launchedGroups;
 	
 	public ServerSupervisorRole() {
@@ -36,27 +36,10 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		experimentIsRunning = false;
 		sentCont = 0;
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
-		launchedGroups = new HashMap<String, Map<Integer, Integer>>();
-		initializeExperiment();
+		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();
+		sPayLoad = StringTimeUtil.createString(4);
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}	
-	
-	private void initializeExperiment() {
-		char[] c;
-		
-		switch(4){
-		case 1:	c = new char[62484]; break;
-		case 2:	c = new char[32000]; break;
-		case 3:	c = new char[5017]; break;
-		case 4:	c = new char[1812]; break;
-		default: c = null;
-		}
-		
-		for(int i = 0; i < c.length; i++)
-			c[i] = '0';
-		
-		s = new String(c);
-		rttThreshold = Long.parseLong("1000000000") * 10;
-	}
 	
 	@Override
 	public void logic() {
@@ -85,12 +68,11 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				
 				
 			case MainActivity.SERVER_PONG:
-				// TODO Auto-generated method stub
 				sentCont ++;
 				
-				rtt = roundTripTime(((String)message.object), getTimestamp());
+				rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
 
-				if(rtt > rttThreshold && experimentIsRunning){
+				if(rtt > TIMEOUT && experimentIsRunning){
 					experimentIsRunning = false;
 					node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
 				}
@@ -108,13 +90,15 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 			case MainActivity.START_EXPERIMENT:
 				if(startExperiment){
-					startExperiment = false;
-					experimentIsRunning = true;
-					channel.sendBroadcast(message);
-					sentCont = 0;
-					startTimestamp = getTimestamp();
-					resetDataToWait();
-					sendMessage();
+					if(!experimentIsRunning && launchedGroups.containsKey("actuators")){
+						startExperiment = false;
+						experimentIsRunning = true;
+						channel.sendBroadcast(message);
+						sentCont = 0;
+						startTimestamp = StringTimeUtil.getTimestamp();
+						resetDataToWait();
+						sendMessage();
+					}
 				}
 				else
 					startExperiment = true;
@@ -139,12 +123,14 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				break;
 				
 			case MainActivity.LONG_RTT:
-				experimentIsRunning = false;
-				long runningTime = roundTripTime(startTimestamp, getTimestamp());
-				float frequency = sentCont / ((float)(runningTime / 1000));
-				
-				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
-						(runningTime/ 1000) + " " + frequency), "control");
+				if(experimentIsRunning){
+					experimentIsRunning = false;
+					long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp());
+					float frequency = sentCont / ((float)(runningTime / 1000));
+					
+					node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
+							(runningTime/ 1000) + " " + frequency), "control");
+				}
 				break;
 		}
 	}
@@ -152,35 +138,16 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private void resetDataToWait() {
 		dataToWaitFor = 0;
 		for(String gType : launchedGroups.keySet())
-			for(int i : launchedGroups.get(gType).keySet())
-				dataToWaitFor += launchedGroups.get(gType).get(i);
+			if(gType.equals("actuators"))
+				for(int i : launchedGroups.get(gType).keySet())
+					dataToWaitFor += launchedGroups.get(gType).get(i);
 	}
 
 	private void sendMessage() {
 		showOnScreen("Sendind command to actuators");
 		if(experimentIsRunning)
-			channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, currentExperiment + "#" + getTimestamp() + "#" + s));
-	}
-
-	private String getTimestamp() {
-		try{
-			return new Date().getTime() + "";
-		}catch(Exception e){showOnScreen("getTimestamp(): " + e.getLocalizedMessage());}
-		return "0";
-	}
-	
-	private long roundTripTime(String departureTimestamp, String arrivalTimestamp) {
-		long i1 = 0, i2 = 0;
-		
-		try{
-			i1 = Long.parseLong(arrivalTimestamp);
-		}catch(Exception e){showOnScreen("rtt()[1]: " + e.getLocalizedMessage());}
-		
-		try{
-			i2 = Long.parseLong(departureTimestamp);
-		}catch(Exception e){showOnScreen("rtt()[2]: " + e.getLocalizedMessage());}
-		return i1 - i2;
-	}
+			channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
+	}	
 
 	@Override
 	public void timerFired(int reason) {

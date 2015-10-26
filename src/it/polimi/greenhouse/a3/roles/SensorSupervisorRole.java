@@ -1,13 +1,23 @@
 package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.StringTimeUtil;
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
+import a3.a3droid.Timer;
+import a3.a3droid.TimerInterface;
 
-public class SensorSupervisorRole extends A3SupervisorRole {
+public class SensorSupervisorRole extends A3SupervisorRole implements TimerInterface{
 
-	private int currentExperiment;
 	private boolean startExperiment;
+	private boolean experimentIsRunning;
+	private int currentExperiment;
+	private int sentCont;
+	private String sPayLoad;
+	private String startTimestamp;
+	
+	private final static long MAX_INTERNAL = 5 * 1000;
+	private final static long TIMEOUT = 60 * 1000;
 	
 	public SensorSupervisorRole() {
 		super();		
@@ -18,8 +28,11 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		node.connect("server_" + currentExperiment, false, true);
 		startExperiment = true;		
+		experimentIsRunning = false;
+		sentCont = 0;
+		sPayLoad = StringTimeUtil.createString(4);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
-	}	
+	}
 
 	@Override
 	public void logic() {
@@ -37,31 +50,71 @@ public class SensorSupervisorRole extends A3SupervisorRole {
 			break;
 			
 		case MainActivity.SENSOR_PONG:
-			showOnScreen("Forwarding server response to sensor");
 			String sensorAddress = ((String)message.object).split("#")[0];
 			//String experiment = ((String)message.object).split("#")[1];
 			String sendTime = ((String)message.object).split("#")[2];
 			message.object = sendTime;
-			channel.sendUnicast(message, sensorAddress);
+
+			if(!sensorAddress.equals(channel.getChannelId())){
+				showOnScreen("Forwarding server response to follower sensor");
+				channel.sendUnicast(message, sensorAddress);
+			}else{
+				showOnScreen("Server response received");
+				long rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
+				sentCont ++;
+	
+				if(rtt > TIMEOUT && experimentIsRunning){
+					experimentIsRunning = false;
+					node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
+				}
+				else{
+					new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
+				}
+				
+				if(sentCont % 100 == 0)
+					showOnScreen(sentCont + " mex spediti.");
+			}
 			break;
 
 		case MainActivity.START_EXPERIMENT:
 			if(startExperiment){
-				startExperiment = false;
-				channel.sendBroadcast(message);
+				if(!experimentIsRunning){
+					startExperiment = false;
+					experimentIsRunning = true;
+					channel.sendBroadcast(message);
+					startTimestamp = StringTimeUtil.getTimestamp();
+					sentCont = 0;
+					sendMessage();
+				}
 			}
 			else
 				startExperiment = true;
 			
 			break;
 			
-		case MainActivity.STOP_EXPERIMENT:
-			break;
-			
 		case MainActivity.LONG_RTT:
 			
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
+
+			if(experimentIsRunning){
+				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp());
+				float frequency = sentCont / ((float)(runningTime / 1000));
+				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + " " +
+						(runningTime/ 1000) + " " + frequency), "control");
+				experimentIsRunning = false;
+			}
 			break;
+
 		}
+	}
+	
+	private void sendMessage() {
+		if(experimentIsRunning)
+			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
+	}
+
+	@Override
+	public void timerFired(int reason) {
+		sendMessage();
 	}
 }
