@@ -20,6 +20,7 @@ import a3.a3droid.A3DroidActivity;
 import a3.a3droid.A3Message;
 import a3.a3droid.A3Node;
 import a3.a3droid.GroupDescriptor;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -64,6 +65,7 @@ public class MainActivity extends A3DroidActivity{
 		MainActivity.runningExperiment = runningExperiment;
 	}
 
+	@SuppressLint("HandlerLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -133,7 +135,7 @@ public class MainActivity extends A3DroidActivity{
 						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("server_" + experiment.getText().toString(), true, true);
+						node.connect("server_0", true, true);
 						break;
 					default:
 						break;

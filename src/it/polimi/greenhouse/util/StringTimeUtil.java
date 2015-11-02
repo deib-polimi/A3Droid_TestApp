@@ -4,17 +4,8 @@ import java.util.Date;
 
 public class StringTimeUtil {
 
-	public static String createString(int size) {
-		char[] c;
-		
-		switch(4){
-		case 1:	c = new char[62484]; break;
-		case 2:	c = new char[32000]; break;
-		case 3:	c = new char[5017]; break;
-		case 4:	c = new char[1812]; break;
-		default: c = null;
-		}
-		
+	public static String createString(int bSize) {
+		char[] c = new char[bSize];		
 		for(int i = 0; i < c.length; i++)
 			c[i] = '0';
 		

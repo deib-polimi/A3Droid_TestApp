@@ -28,9 +28,9 @@ public class ServerFollowerRole extends A3FollowerRole{
 		String experiment;
 		switch(message.reason){
 		case MainActivity.SENSOR_PONG:
+			showOnScreen("Forwarding server data to sensor");
 			content = ((String)message.object).split("#");
 			experiment = content[1];
-			showOnScreen("Forwarding server data to sensor");
 			node.sendToSupervisor(message, "monitoring_" + experiment);
 			break;
 			
@@ -39,7 +39,8 @@ public class ServerFollowerRole extends A3FollowerRole{
 			content = ((String)message.object).split("#");
 			experiment = content[0];
 			message.object = message.senderAddress + "#" + (String)message.object;
-			node.sendToSupervisor(message, "actuators_" + experiment);
+			if(node.isConnectedForApplication("actuators_" + experiment))
+				node.sendToSupervisor(message, "actuators_" + experiment);
 			break;
 
 		case MainActivity.START_EXPERIMENT:

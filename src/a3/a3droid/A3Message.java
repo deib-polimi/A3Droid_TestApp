@@ -1,6 +1,7 @@
 package a3.a3droid;
 
 import org.alljoyn.bus.annotation.Position;
+import org.alljoyn.bus.annotation.Signature;
 
 /**This class represents the messages that are exchanged by the nodes through the channels.
  * In order for AllJoyn to correctly marshal and unmarshal this data structure,
@@ -11,15 +12,23 @@ public class A3Message {
 
 	/**The address of the channel which sends this message.*/
 	@Position(0)
+	@Signature("s")
 	public String senderAddress;
 	
 	/**The kind of this message.*/
 	@Position(1)
+	@Signature("i")
 	public int reason;
 	
 	/**The data in this message.*/
 	@Position(2)
+	@Signature("s")
 	public String object;
+	
+	/**The extra data in this message.*/
+	@Position(3)
+	@Signature("ay")
+	public byte[] bytes;
 
 	/**This must exists because AllJoyn needs it, but is never used in these API.*/
 	public A3Message(){}
@@ -31,6 +40,18 @@ public class A3Message {
 	public A3Message(int reason, String object){
 		this.reason = reason;
 		this.object = object;
+		this.bytes = new byte[0];
+		senderAddress = "";
+	}
+	
+	/**
+	 * @param reason The kind of this message.
+	 * @param object The data in this message.
+	 */
+	public A3Message(int reason, String object, byte [] extra){
+		this.reason = reason;
+		this.object = object;
+		this.bytes = extra;
 		senderAddress = "";
 	}
 	

@@ -19,6 +19,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	
 	private final static long MAX_INTERNAL = 5 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
+	private final static int PAYLOAD_SIZE = 32;
 	
 	public SensorSupervisorRole() {
 		super();		
@@ -27,12 +28,12 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	@Override
 	public void onActivation() {
 		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
-		node.connect("server_" + currentExperiment, false, true);
 		startExperiment = true;		
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		sPayLoad = StringTimeUtil.createString(4);
+		sPayLoad = StringTimeUtil.createString(PAYLOAD_SIZE);
+		node.connect("server_0", true, true);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}
 
@@ -48,7 +49,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		case MainActivity.SENSOR_PING:
 			showOnScreen("Forwarding sensor data to server");
 			message.object = message.senderAddress + "#" + (String)message.object;
-			node.sendToSupervisor(message, "server_" + currentExperiment);
+			node.sendToSupervisor(message, "server_0");
 			break;
 			
 		case MainActivity.SENSOR_PONG:

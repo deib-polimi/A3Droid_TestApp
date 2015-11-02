@@ -417,7 +417,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	}
 
 	@Override
-	@BusMethod(signature = "(sis)", replySignature = "b")
+	@BusMethod(signature = "(sisay)", replySignature = "b")
 	public boolean sendToSupervisor(A3Message message) {
 		// TODO Auto-generated method stub
 
@@ -496,7 +496,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	}
 
 	@Override
-	@BusMethod(signature = "(sis)", replySignature = "b")
+	@BusMethod(signature = "(sisay)", replySignature = "b")
 	public boolean sendBroadcast(A3Message message) {
 		// TODO Auto-generated method stub
 
@@ -517,7 +517,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	}
 
 	@Override
-	@BusMethod(signature = "(sis)", replySignature = "b")
+	@BusMethod(signature = "(sisay)", replySignature = "b")
 	public boolean sendMulticast(A3Message message) {
 		// TODO Auto-generated method stub
 
@@ -538,7 +538,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	}
 
 	@Override
-	@BusMethod(signature = "(sis)s", replySignature = "b")
+	@BusMethod(signature = "(sisay)s", replySignature = "b")
 	public boolean sendUnicast(A3Message message, String receiverAddress) {
 		// TODO Auto-generated method stub
 
@@ -561,14 +561,14 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	}
 
 	@Override
-	@BusSignal(signature = "(sis)")
+	@BusSignal(signature = "(sisay)")
 	public void ReceiveBroadcast(A3Message message) throws BusException {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	@BusSignal(signature = "(sis)")
+	@BusSignal(signature = "(sisay)")
 	public void SupervisorReceive(A3Message message) throws BusException {
 		// TODO Auto-generated method stub
 

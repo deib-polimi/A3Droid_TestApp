@@ -8,7 +8,6 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 
 	private boolean startExperiment;
 	private boolean serverPinged;
-	private int currentExperiment;
 	
 	public ActuatorSupervisorRole() {
 		super();		
@@ -18,8 +17,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		startExperiment = true;
 		serverPinged = false;
-		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
-		node.connect("server_" + currentExperiment, false, true);
+		node.connect("server_0", true, true);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}	
 
@@ -48,7 +46,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			channel.sendBroadcast(message);
 			message.reason = MainActivity.SERVER_PONG;
 			message.object = sendTime;
-			node.sendToSupervisor(message, "server_" + experiment);
+			node.sendToSupervisor(message, "server_0");
 			showOnScreen("Broadcasted response to follower actuators");
 			break;
 			
@@ -58,7 +56,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			experiment = content[0];
 			sendTime = content[1];
 			message.object = sendTime;
-			node.sendToSupervisor(message, "server_" + experiment);
+			node.sendToSupervisor(message, "server_0");
 			break;
 		
 		case MainActivity.START_EXPERIMENT:

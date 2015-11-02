@@ -18,7 +18,7 @@ public interface A3ServiceInterface {
 	 * @param msg The message to be sent.
 	 * @throws BusException AllJoyn errors.
 	 */
-	@BusMethod(signature = "(sis)", replySignature = "b")
+	@BusMethod(signature = "(sisay)", replySignature = "b")
 	public boolean sendToSupervisor(A3Message msg) throws BusException;
 	
 	/**Used by the Service to receive messages directed to all the channels of the group.
@@ -27,7 +27,7 @@ public interface A3ServiceInterface {
 	 * @return true if the transmission was successful, otherwise false.
 	 * @throws BusException AllJoyn errors.
 	 */
-	@BusMethod(signature = "(sis)", replySignature = "b")
+	@BusMethod(signature = "(sisay)", replySignature = "b")
 	public boolean sendBroadcast(A3Message message) throws BusException;
 	
 	/**Used by the Service to receive messages directed to the channels of the group
@@ -37,7 +37,7 @@ public interface A3ServiceInterface {
 	 * @return true if the transmission was successful, otherwise false.
 	 * @throws BusException AllJoyn errors.
 	 */
-	@BusMethod(signature = "(sis)", replySignature = "b")
+	@BusMethod(signature = "(sisay)", replySignature = "b")
 	public boolean sendMulticast(A3Message message) throws BusException;
 	
 	/**Used by the Service to receive messages directed to the specified channel of the group.
@@ -46,14 +46,14 @@ public interface A3ServiceInterface {
 	 * @return true if the transmission was successful, otherwise false.
 	 * @throws BusException AllJoyn errors.
 	 */
-	@BusMethod(signature = "(sis)s", replySignature = "b")
+	@BusMethod(signature = "(sisay)s", replySignature = "b")
 	public boolean sendUnicast(A3Message message, String address) throws BusException;
 	
 	/**Used by the Service to send messages to all the channels of the group.
 	 * @param message The message to be sent.
 	 * @throws BusException AllJoyn errors.
 	 */
-	@BusSignal(signature = "(sis)")
+	@BusSignal(signature = "(sisay)")
 	public void ReceiveBroadcast(A3Message message) throws BusException;
 	
 	/**Used by the Service to send messages to the supervisor.
@@ -61,7 +61,7 @@ public interface A3ServiceInterface {
 	 * @param msg The message to be sent.
 	 * @throws BusException AllJoyn errors.
 	 */
-	@BusSignal(signature = "(sis)")
+	@BusSignal(signature = "(sisay)")
 	public void SupervisorReceive(A3Message message) throws BusException;
 	
 	@BusSignal(signature = "ssii")

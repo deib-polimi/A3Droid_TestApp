@@ -15,7 +15,6 @@ import android.annotation.SuppressLint;
 
 public class ServerSupervisorRole extends A3SupervisorRole implements TimerInterface{
 
-	private int currentExperiment;
 	private boolean startExperiment;
 	private boolean experimentIsRunning;
 	private int sentCont;
@@ -25,6 +24,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private String sPayLoad;
 	private final static long MAX_INTERNAL = 30 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
+	private final static int PAYLOAD_SIZE = 64;
 	private Map<String, Map<Integer, Integer>> launchedGroups;
 	
 	public ServerSupervisorRole() {
@@ -38,9 +38,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
-		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();
-		sPayLoad = StringTimeUtil.createString(4);
+		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();		
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}	
 	
@@ -89,7 +87,6 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				
 				if(sentCont % 100 == 0)
 					showOnScreen(sentCont + " mex spediti.");
-				
 				break;
 
 			case MainActivity.START_EXPERIMENT:
@@ -98,16 +95,16 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 					if(!experimentIsRunning && launchedGroups.containsKey("actuators")){
 						startExperiment = false;
 						experimentIsRunning = true;
-						channel.sendBroadcast(message);
 						sentCont = 0;
 						startTimestamp = StringTimeUtil.getTimestamp();
 						resetDataToWait();
+						sPayLoad = StringTimeUtil.createString(groupSize("actuators") * PAYLOAD_SIZE);
+						channel.sendBroadcast(message);
 						sendMessage();
 					}
 				}
 				else
 					startExperiment = true;
-				
 				break;
 				
 			case MainActivity.ADD_MEMBER:
@@ -121,7 +118,6 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 					newGroup.put(experimentId, 1);
 					launchedGroups.put(type, newGroup);
 				}
-				
 				break;
 				
 			case MainActivity.STOP_EXPERIMENT:
@@ -152,8 +148,17 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private void sendMessage() {
 		showOnScreen("Sendind command to actuators");
 		if(experimentIsRunning)
-			channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
+			if(launchedGroups.containsKey("actuators"))
+				for(int groupId : launchedGroups.get("actuators").keySet())
+					channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
 	}	
+	
+	private int groupSize(String type){
+		int size = 0;
+		for(int i : launchedGroups.get(type).keySet())
+			size += launchedGroups.get(type).get(i);
+		return size;
+	}
 
 	@Override
 	public void timerFired(int reason) {

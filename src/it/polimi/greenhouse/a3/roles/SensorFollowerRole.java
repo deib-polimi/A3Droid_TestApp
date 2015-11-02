@@ -19,6 +19,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	
 	private final static long MAX_INTERNAL = 10 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
+	private final static int PAYLOAD_SIZE = 32;
 	
 	public SensorFollowerRole() {
 		super();		
@@ -32,7 +33,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		sPayLoad = StringTimeUtil.createString(4);
+		sPayLoad = StringTimeUtil.createString(PAYLOAD_SIZE);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
 	}
 
