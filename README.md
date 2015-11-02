@@ -13,8 +13,8 @@ Currently alljoyn framework only supports wi-fi as a stable connection method. B
 * Select one device to be the server
 * Select one or more devices to be the sensors and the actuators
 * For each device
-** Open the application
-** Click in **Start [Server|Sesor|Actuator]** button.
+  * Open the application
+  * Click in **Start [Server|Sesor|Actuator]** button.
 
 * Make sure the server is started before any sensor or actuator.
 * Click in the **Start Experiment** button.
