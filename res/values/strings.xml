@@ -12,12 +12,18 @@
     <string name="subscribe51">S51</string>
     <string name="send50">I50</string>
     <string name="send51">I51</string>
-    <string name="start_actuator">Start Actuator</string>
-    <string name="start_sensor">Start Sensor</string>
+    <string name="start_actuator">Actuator</string>
+    <string name="start_sensor">Sensor</string>
+    <string name="start_server">Server</string>
     <string name="stop_experiment">Stop Experiment</string>
-    <string name="experiment">Experiment</string>
+    <string name="group_id">Group ID</string>
+    <string name="s_frequency">S. Frequency</string>
+    <string name="a_frequency">A. Frequency</string>
+    <string name="s_payload">S. Payload</string>
+    <string name="a_payload">A. Payload</string>
     <string name="create_group">Create Group</string>
-    <string name="start_server">Start Server</string>
     <string name="start_experiment">Start Experiment</string>
+    <string name="mes_s">(Mes/min)</string>
+    <string name="bytes">(Bytes)</string>
 
 </resources>

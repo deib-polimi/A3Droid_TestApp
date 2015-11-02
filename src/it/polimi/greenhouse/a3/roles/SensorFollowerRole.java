@@ -17,9 +17,9 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private double avgRTT;
 	private String startTimestamp;
 	
-	private final static long MAX_INTERNAL = 10 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
-	private final static int PAYLOAD_SIZE = 32;
+	private long MAX_INTERNAL = 10 * 1000;
+	private int PAYLOAD_SIZE = 32;
 	
 	public SensorFollowerRole() {
 		super();		
@@ -48,6 +48,14 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 		long rtt;
 		switch(message.reason){
+		
+		case MainActivity.SET_PARAMS:
+			String params [] = message.object.split("_");
+			this.MAX_INTERNAL = 60 * 1000 / Long.valueOf(params[0]);
+			this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+			showOnScreen("Params set to: " + MAX_INTERNAL + " M/min and " + PAYLOAD_SIZE + " Bytes");
+			break;
+			
 		case MainActivity.SENSOR_PONG:
 			
 			showOnScreen("Server response received");

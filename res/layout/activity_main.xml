@@ -3,91 +3,156 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <LinearLayout
+    <!--  <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal" >-->
+   
+    <TableLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="80dp"
+	    android:shrinkColumns="*"
+	    android:stretchColumns="*"
+	    android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/experiment" />
-
-        <EditText
-            android:id="@+id/editText1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"            
-            android:inputType="number"
-            android:text="1"/>
-
-        <Button
-            android:id="@+id/button1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="createGroup"
-            android:text="@string/create_group" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" 
-        style="@android:attr/buttonBarStyle">
-
-        <Button
-            android:id="@+id/button2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start_sensor"
-            android:onClick="startSensor" 
-            style="@android:attr/buttonBarButtonStyle" />
-        
-        <Button
-            android:id="@+id/button3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start_actuator"
-            android:onClick="startActuator" 
-            style="@android:attr/buttonBarButtonStyle" />
-        
-        <Button
-            android:id="@+id/button4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/start_server"
-            android:onClick="startServer" 
-            style="@android:attr/buttonBarButtonStyle" />
-       </LinearLayout>
-	<LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" 
-        style="@android:attr/buttonBarStyle">
-        <Button
-            android:id="@+id/button6"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="startExperiment"
-            android:text="@string/start_experiment" 
-            style="@android:attr/buttonBarButtonStyle"/>
-        <Button
-            android:id="@+id/button5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="stopExperiment"
-            android:text="@string/stop_experiment" 
-            style="@android:attr/buttonBarButtonStyle"/>
-
-    </LinearLayout>
-
-    <EditText
-        android:id="@+id/oneInEditText"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:ems="10"
-        android:inputType="none" >
-        <requestFocus />
-    </EditText>
-
+        <TableRow
+            android:layout_width="match_parent">	        
+	        <TextView
+	            android:id="@+id/textView2"
+	            android:text="@string/s_frequency" />
+	        <TextView
+	            android:id="@+id/textView3"
+	            android:text="@string/a_frequency" />
+	        <TextView
+	            android:id="@+id/textView4"
+	            android:text="@string/s_payload" />
+	        <TextView
+	            android:id="@+id/textView5"
+	            android:text="@string/a_payload" />
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent">	        
+	        <TextView
+	            android:text="@string/mes_s" />
+	        <TextView
+	            android:text="@string/mes_s" />
+	        <TextView
+	            android:text="@string/bytes" />
+	        <TextView
+	            android:text="@string/bytes" />
+        </TableRow>
+        <TableRow>	        
+	        <EditText
+	            android:id="@+id/editText2"
+	            android:layout_width="0dp"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"            
+	            android:inputType="number"
+	            android:text="6"/>
+	        <EditText
+	            android:id="@+id/editText3"
+	            android:layout_width="0dp"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"            
+	            android:inputType="number"
+	            android:text="2"/>
+	        <EditText
+	            android:id="@+id/editText4"
+	            android:layout_width="0dp"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"            
+	            android:inputType="number"
+	            android:text="32"/>
+	        <EditText
+	            android:id="@+id/editText5"
+	            android:layout_width="0dp"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"            
+	            android:inputType="number"
+	            android:text="64"/>
+		</TableRow>
+	</TableLayout>
+	<TableLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="92dp"
+	    android:shrinkColumns="*"
+	    android:stretchColumns="*"
+	    android:orientation="vertical">
+		<TableRow>			
+	        <TextView
+		            android:id="@+id/textView1"
+		            android:layout_width="0px"
+		            android:layout_height="wrap_content"
+		            android:layout_weight="0.5"
+		            android:text="@string/group_id" />
+		    <EditText
+		            android:id="@+id/editText1"
+		            android:layout_height="wrap_content"
+		            android:layout_width="0px"
+		            android:layout_weight=".5"            
+		            android:inputType="number"
+		            android:text="1"/>	
+			<TextView 
+			    	android:text=""
+			    	android:layout_weight="0"/>	
+		</TableRow>
+		<TableRow>    
+	        <Button
+	            android:id="@+id/button2"
+	            android:layout_width="0px"
+	            android:layout_height="wrap_content"
+	            android:text="@string/start_sensor"
+	            android:onClick="startSensor" 
+	            style="@android:attr/buttonBarButtonStyle" />
+	        
+	        <Button
+	            android:id="@+id/button3"
+	            android:layout_width="0px"
+	            android:layout_height="wrap_content"
+	            android:text="@string/start_actuator"
+	            android:onClick="startActuator" 
+	            style="@android:attr/buttonBarButtonStyle" />
+	        
+	        <Button
+	            android:id="@+id/button4"
+	            android:layout_width="0px"
+	            android:layout_height="wrap_content"
+	            android:text="@string/start_server"
+	            android:onClick="startServer" 
+	            style="@android:attr/buttonBarButtonStyle" />
+		</TableRow>
+	</TableLayout>
+	<TableLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="50dp"
+	    android:shrinkColumns="*"
+	    android:stretchColumns="*"
+	    android:orientation="vertical">		
+		<TableRow>	        	
+		        <Button
+		            android:id="@+id/button6"
+		            android:layout_width="0px"
+		            android:layout_height="wrap_content"
+		            android:onClick="startExperiment"
+		            android:text="@string/start_experiment" 
+		            android:layout_weight="0.5"
+		            style="@android:attr/buttonBarButtonStyle"/>
+		        <Button
+		            android:id="@+id/button5"
+		            android:layout_width="0px"
+		            android:layout_height="wrap_content"
+		            android:onClick="stopExperiment"
+		            android:text="@string/stop_experiment" 
+		            android:layout_weight="0.5"
+		            style="@android:attr/buttonBarButtonStyle"/>
+		</TableRow>
+    </TableLayout>   	
+	    <EditText
+	        android:id="@+id/oneInEditText"
+	        android:layout_width="match_parent"
+	        android:layout_height="match_parent"
+	        android:ems="10"
+	        android:scrollHorizontally="true"
+	        android:inputType="none">
+	    </EditText>
 </LinearLayout>

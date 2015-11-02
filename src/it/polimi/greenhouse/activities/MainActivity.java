@@ -52,9 +52,10 @@ public class MainActivity extends A3DroidActivity{
 	public static final int START_SERVER = 50;
 	public static final int SERVER_PING = 51;
 	public static final int SERVER_PONG = 52;
+	public static final int SET_PARAMS = 60;
 	
 	private A3Node node;
-	private EditText inText;
+	private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
 	private Handler toGuiThread;
 	private Handler fromGuiThread;
 	private EditText experiment;
@@ -114,6 +115,8 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("monitoring_" + experiment.getText().toString(), true, true);
+						node.sendToSupervisor(new A3Message(SET_PARAMS, sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()), 
+												"monitoring_" + experiment.getText().toString());
 						break;	
 					case START_ACTUATOR:
 						if(experimentRunning)
@@ -125,7 +128,7 @@ public class MainActivity extends A3DroidActivity{
 						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("actuators_" + experiment.getText().toString(), true, true);
+						node.connect("actuators_" + experiment.getText().toString(), true, true);						
 						break;
 					case START_SERVER:
 						if(experimentRunning)
@@ -136,6 +139,8 @@ public class MainActivity extends A3DroidActivity{
 						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("server_0", true, true);
+						node.sendToSupervisor(new A3Message(SET_PARAMS, actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()), 
+								"server_0");
 						break;
 					default:
 						break;
@@ -146,6 +151,10 @@ public class MainActivity extends A3DroidActivity{
 
 		inText=(EditText)findViewById(R.id.oneInEditText);
 		experiment = (EditText)findViewById(R.id.editText1);
+		sensorsFrequency = (EditText)findViewById(R.id.editText2);
+		actuatorsFrequency = (EditText)findViewById(R.id.editText3);
+		sensorsPayload = (EditText)findViewById(R.id.editText4);
+		actuatorsPayload = (EditText)findViewById(R.id.editText5);
 	}
 
 	public void createGroup(View v){

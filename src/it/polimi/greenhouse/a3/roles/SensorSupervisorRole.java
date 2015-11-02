@@ -11,15 +11,16 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 
 	private boolean startExperiment;
 	private boolean experimentIsRunning;
+	private boolean paramsSet = false;
 	private int currentExperiment;
 	private int sentCont;
 	private double avgRTT;
 	private String sPayLoad;
 	private String startTimestamp;
 	
-	private final static long MAX_INTERNAL = 5 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
-	private final static int PAYLOAD_SIZE = 32;
+	private long MAX_INTERNAL = 10 * 1000;
+	private int PAYLOAD_SIZE = 32;
 	
 	public SensorSupervisorRole() {
 		super();		
@@ -46,6 +47,23 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
 		switch(message.reason){
+		
+		case MainActivity.SET_PARAMS:
+			if(message.senderAddress.equals(this.channel.getChannelId()) && !paramsSet){
+				paramsSet = true;
+				String params [] = message.object.split("_");
+				this.MAX_INTERNAL = 60 * 1000 / Long.valueOf(params[0]);
+				this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+				showOnScreen("Params set to: " + MAX_INTERNAL + " M/min and " + PAYLOAD_SIZE + " Bytes");				
+			}
+			break;
+			
+		case MainActivity.ADD_MEMBER:
+			message.reason = MainActivity.SET_PARAMS;
+			message.object = (60 * 1000 / this.MAX_INTERNAL) + "_" + PAYLOAD_SIZE;
+			channel.sendBroadcast(message);
+			break;
+		
 		case MainActivity.SENSOR_PING:
 			showOnScreen("Forwarding sensor data to server");
 			message.object = message.senderAddress + "#" + (String)message.object;

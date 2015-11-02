@@ -19,14 +19,15 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 	private boolean startExperiment;
 	private boolean experimentIsRunning;
+	private boolean paramsSet = false;
 	private int sentCont;
 	private double avgRTT;
 	private int dataToWaitFor;
 	private String startTimestamp;
 	private String sPayLoad;
-	private final static long MAX_INTERNAL = 30 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
-	private final static int PAYLOAD_SIZE = 64;
+	private long MAX_INTERNAL = 10 * 1000;
+	private int PAYLOAD_SIZE = 32;
 	private Map<String, Map<Integer, Set<String>>> launchedGroups;
 	
 	public ServerSupervisorRole() {
@@ -56,6 +57,17 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		
 		long rtt;
 		switch(message.reason){
+		
+			case MainActivity.SET_PARAMS:
+				if(!paramsSet){
+					paramsSet = true;
+					String params [] = message.object.split("_");
+					this.MAX_INTERNAL = 60 * 1000 / Long.valueOf(params[0]);
+					this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+					showOnScreen("Params set to: " + MAX_INTERNAL + " M/min and " + PAYLOAD_SIZE + " Bytes");
+				}
+				break;
+			
 			case MainActivity.SENSOR_PING:
 				showOnScreen("Received new data from a sensor");
 				message.reason = MainActivity.SENSOR_PONG;
