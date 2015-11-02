@@ -112,7 +112,10 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				if(launchedGroups.containsKey(type))
-					launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
+					if(launchedGroups.get(type).containsKey(experimentId))
+						launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
+					else
+						launchedGroups.get(type).put(experimentId, 1);
 				else{
 					Map<Integer, Integer> newGroup = new HashMap<Integer, Integer>();
 					newGroup.put(experimentId, 1);

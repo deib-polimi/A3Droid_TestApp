@@ -47,7 +47,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			message.reason = MainActivity.SERVER_PONG;
 			message.object = sendTime;
 			node.sendToSupervisor(message, "server_0");
-			showOnScreen("Broadcasted response to follower actuators");
+			showOnScreen("Broadcasted data to follower actuators");
 			break;
 			
 		case MainActivity.SERVER_PONG:

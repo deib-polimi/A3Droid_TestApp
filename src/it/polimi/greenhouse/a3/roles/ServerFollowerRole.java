@@ -35,12 +35,13 @@ public class ServerFollowerRole extends A3FollowerRole{
 			break;
 			
 		case MainActivity.SERVER_PING:
-			showOnScreen("Forwarding server data to actuators");
 			content = ((String)message.object).split("#");
 			experiment = content[0];
 			message.object = message.senderAddress + "#" + (String)message.object;
-			if(node.isConnectedForApplication("actuators_" + experiment))
+			if(node.isConnectedForApplication("actuators_" + experiment)){
+				showOnScreen("Forwarding server data to actuators");
 				node.sendToSupervisor(message, "actuators_" + experiment);
+			}
 			break;
 
 		case MainActivity.START_EXPERIMENT:

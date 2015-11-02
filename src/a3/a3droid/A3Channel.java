@@ -1,6 +1,7 @@
 package a3.a3droid;
 
 import java.util.ArrayList;
+
 import org.alljoyn.bus.BusAttachment;
 import org.alljoyn.bus.BusListener;
 import org.alljoyn.bus.BusObject;
@@ -10,9 +11,12 @@ import org.alljoyn.bus.SessionListener;
 import org.alljoyn.bus.SessionOpts;
 import org.alljoyn.bus.Status;
 import org.alljoyn.bus.annotation.BusSignalHandler;
+
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.telephony.TelephonyManager;
 
 /**
  * This class is the channel that lets the nodes communicate with each other.
@@ -144,7 +148,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		node = a3node;
 		serviceInterface = null;
 		service = null;
-		myId = null;
+		myId = null;		
 		discovered = false;
 		inTransitionConditions = false;
 		isSupervisor = false;
@@ -268,7 +272,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		try{
 			short contactPort = Constants.CONTACT_PORT;
 			SessionOpts sessionOpts = new SessionOpts();
-			sessionOpts.transports = SessionOpts.TRANSPORT_ANY + SessionOpts.TRANSPORT_WFD;
+			sessionOpts.transports = SessionOpts.TRANSPORT_ANY;
 			Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
 			
 			Status status = mBus.joinSession(groupName, contactPort, sessionId, sessionOpts, new SessionListener() {
@@ -441,6 +445,12 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		};
 		sender.start();
 		showOnScreen("Connected.");
+		try{
+			timer = new Timer(this,1,(int) (2000 + Math.random() * 1000));
+			timer.start();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -773,7 +783,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			try{
 				ok = serviceInterface.sendBroadcast(message);
 			}
-			catch(Exception e){}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 			if(!ok)
 				reconnect();
 		}
@@ -797,7 +809,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			try{
 				ok = serviceInterface.sendUnicast(message, receiverAddress);
 			}
-			catch(Exception e){}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 			if(!ok)
 				reconnect();
 		}
@@ -821,7 +835,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			try{
 				ok = serviceInterface.sendMulticast(message);
 			}
-			catch(Exception e){}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 			if(!ok)
 				reconnect();
 		}
@@ -846,7 +862,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 				try{
 					ok = serviceInterface.sendUnicast(message, destinations.get(i));
 				}
-				catch(Exception e){}
+				catch(Exception e){
+					e.printStackTrace();
+				}
 			}
 			if(!ok)
 				reconnect();
@@ -1008,30 +1026,44 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		
 					case Constants.TIMER_FIRED:{
 						
-						if(msg.arg1 == 0){
-							
-							mBus.cancelFindAdvertisedName(groupName);
-							
-							/*The group name wasn't found, so I must create the Service.
-							 * If I create the group, I will probably be the supervisor:
-							 * if I can only be a follower, I don't create the group.
-							 */
-							if(!discovered){
+						switch (msg.arg1) {
+							case 0:								
+								mBus.cancelFindAdvertisedName(groupName);
 								
-								if(followerOnly){
+								/*The group name wasn't found, so I must create the Service.
+								 * If I create the group, I will probably be the supervisor:
+								 * if I can only be a follower, I don't create the group.
+								 */
+								if(!discovered){
 									
-									node.setWaiting(A3Channel.this);
-									return;
+									if(followerOnly){
+										
+										node.setWaiting(A3Channel.this);
+										return;
+									}
+									else
+										createGroup();
 								}
-								else
-									createGroup();
-							}
-							
-							try{
-								joinSession();
-							}catch(Exception e){
-								e.printStackTrace();
-							}
+								
+								try{
+									joinSession();
+								}catch(Exception e){
+									e.printStackTrace();
+								}
+								break;
+	
+							case 1:
+								if(activeRole == null){
+									showOnScreen("Supervisor did no reply, retrying FFT");
+									try {
+										sendToSupervisor(new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST, ""));
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								}
+								break;
+							default:
+								break;
 						}
 					}
 					break;	
