@@ -3,8 +3,10 @@ package it.polimi.greenhouse.a3.roles;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.StringTimeUtil;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3Message;
@@ -25,7 +27,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private final static long MAX_INTERNAL = 30 * 1000;
 	private final static long TIMEOUT = 60 * 1000;
 	private final static int PAYLOAD_SIZE = 64;
-	private Map<String, Map<Integer, Integer>> launchedGroups;
+	private Map<String, Map<Integer, Set<String>>> launchedGroups;
 	
 	public ServerSupervisorRole() {
 		super();		
@@ -38,8 +40,8 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();		
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
+		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String>>>();		
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}	
 	
 	@Override
@@ -111,14 +113,15 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				content = ((String)message.object).split("_");
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
+				String uuid = content[2];
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
-						launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
+						launchedGroups.get(type).get(experimentId).add(uuid);	
 					else
-						launchedGroups.get(type).put(experimentId, 1);
+						launchedGroups.get(type).put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
 				else{
-					Map<Integer, Integer> newGroup = new HashMap<Integer, Integer>();
-					newGroup.put(experimentId, 1);
+					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
+					newGroup.put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
 					launchedGroups.put(type, newGroup);
 				}
 				break;
@@ -145,7 +148,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		for(String gType : launchedGroups.keySet())
 			if(gType.equals("actuators"))
 				for(int i : launchedGroups.get(gType).keySet())
-					dataToWaitFor += launchedGroups.get(gType).get(i);
+					dataToWaitFor += launchedGroups.get(gType).get(i).size();
 	}
 
 	private void sendMessage() {
@@ -159,7 +162,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private int groupSize(String type){
 		int size = 0;
 		for(int i : launchedGroups.get(type).keySet())
-			size += launchedGroups.get(type).get(i);
+			size += launchedGroups.get(type).get(i).size();
 		return size;
 	}
 

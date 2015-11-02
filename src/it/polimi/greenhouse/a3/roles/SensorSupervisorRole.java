@@ -34,7 +34,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		avgRTT = 0;
 		sPayLoad = StringTimeUtil.createString(PAYLOAD_SIZE);
 		node.connect("server_0", true, true);
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,7 +25,7 @@ import android.os.Environment;
 public class ControlSupervisorRole extends A3SupervisorRole {
 
 	private Set<String> vmIds;
-	private Map<String, Map<Integer, Integer>> launchedGroups;
+	private Map<String, Map<Integer, Set<String>>> launchedGroups;
 	private int totalGroups;
 
 	private File sd;
@@ -42,7 +43,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	@Override
 	public void onActivation() {
 		vmIds = Collections.synchronizedSet(new HashSet<String>());
-		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Integer>>();
+		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String>>>();
 		totalGroups = 0;
 		dataToWaitFor = 0;
 		numberOfTrials = 1;
@@ -57,6 +58,8 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
+		
+		String content []; 
 		switch(message.reason){
 			
 			case MainActivity.JOINED:		
@@ -70,19 +73,19 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				break;
 				
 			case MainActivity.ADD_MEMBER:
-				String content [] = ((String)message.object).split("_");
+				content = ((String)message.object).split("_");
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
+				String uuid = content[2];
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
-						launchedGroups.get(type).put(experimentId, launchedGroups.get(type).get(experimentId) + 1);
+						launchedGroups.get(type).get(experimentId).add(uuid);	
 					else
-						launchedGroups.get(type).put(experimentId, 1);
+						launchedGroups.get(type).put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
 				else{
-					Map<Integer, Integer> newGroup = new ConcurrentHashMap<Integer, Integer>();
-					newGroup.put(experimentId, 1);
+					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
+					newGroup.put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
 					launchedGroups.put(type, newGroup);
-					totalGroups++;
 				}
 				break;
 				
@@ -157,7 +160,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				for(String gType : launchedGroups.keySet())
 					if(gType.equals("monitoring"))
 						for(int i : launchedGroups.get(gType).keySet())
-							dataToWaitFor += launchedGroups.get(gType).get(i);
+							dataToWaitFor += launchedGroups.get(gType).get(i).size();
 				
 				if(launchedGroups.containsKey("actuators"))
 					dataToWaitFor++;

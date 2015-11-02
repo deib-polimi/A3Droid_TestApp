@@ -2,9 +2,13 @@ package a3.a3droid;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
 import android.widget.Toast;
 
 public abstract class A3DroidActivity extends Activity implements UserInterface{
+	
+	/**The device's UUID*/
+	private String uuId;	
 
 	/* Load the native alljoyn_java library. */
 	static {
@@ -14,6 +18,8 @@ public abstract class A3DroidActivity extends Activity implements UserInterface{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		this.uuId = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 
 		org.alljoyn.bus.alljoyn.DaemonInit.PrepareDaemon(getApplicationContext());
 
@@ -34,5 +40,9 @@ public abstract class A3DroidActivity extends Activity implements UserInterface{
 		public void uncaughtException(Thread thread, Throwable throwable) {
 			Toast.makeText(getApplication(), thread + " " + throwable.getLocalizedMessage(), Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	public String getUUID(){
+		return uuId;
 	}
 }

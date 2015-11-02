@@ -34,7 +34,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		sentCont = 0;
 		avgRTT = 0;
 		sPayLoad = StringTimeUtil.createString(PAYLOAD_SIZE);
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}
 
 	@Override

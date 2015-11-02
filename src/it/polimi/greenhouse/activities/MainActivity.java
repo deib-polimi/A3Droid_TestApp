@@ -111,7 +111,7 @@ public class MainActivity extends A3DroidActivity{
 						roles.add(ServerFollowerRole.class.getName());
 						groupDescriptors.add(new MonitoringDescriptor());
 						groupDescriptors.add(new ServerDescriptor());
-						node = new A3Node(MainActivity.this, roles, groupDescriptors);
+						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("monitoring_" + experiment.getText().toString(), true, true);
 						break;	
@@ -123,7 +123,7 @@ public class MainActivity extends A3DroidActivity{
 						roles.add(ServerFollowerRole.class.getName());
 						groupDescriptors.add(new ActuatorsDescriptor());
 						groupDescriptors.add(new ServerDescriptor());
-						node = new A3Node(MainActivity.this, roles, groupDescriptors);
+						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("actuators_" + experiment.getText().toString(), true, true);
 						break;
@@ -133,7 +133,7 @@ public class MainActivity extends A3DroidActivity{
 						roles.add(ServerSupervisorRole.class.getName());
 						roles.add(ServerFollowerRole.class.getName());	
 						groupDescriptors.add(new ServerDescriptor());
-						node = new A3Node(MainActivity.this, roles, groupDescriptors);
+						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
 						node.connect("server_0", true, true);
 						break;

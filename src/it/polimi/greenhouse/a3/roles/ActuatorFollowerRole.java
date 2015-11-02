@@ -11,7 +11,7 @@ public class ActuatorFollowerRole extends A3FollowerRole{
 	}
 	@Override
 	public void onActivation() {
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName()), "control");
+		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}
 	
 	@Override
