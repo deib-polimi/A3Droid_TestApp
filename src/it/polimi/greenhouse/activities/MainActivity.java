@@ -31,7 +31,7 @@ import android.widget.EditText;
 
 public class MainActivity extends A3DroidActivity{
 	
-	public static final String EXPERIMENT_PREFIX = "A3Test3_";
+	public static final String EXPERIMENT_PREFIX = "A3Droid_";
 	public static final int NUMBER_OF_EXPERIMENTS = 32;
 	
 	public static final int CREATE_GROUP = 31;
@@ -152,8 +152,8 @@ public class MainActivity extends A3DroidActivity{
 		inText=(EditText)findViewById(R.id.oneInEditText);
 		experiment = (EditText)findViewById(R.id.editText1);
 		sensorsFrequency = (EditText)findViewById(R.id.editText2);
-		actuatorsFrequency = (EditText)findViewById(R.id.editText3);
 		sensorsPayload = (EditText)findViewById(R.id.editText4);
+		actuatorsFrequency = (EditText)findViewById(R.id.editText3);
 		actuatorsPayload = (EditText)findViewById(R.id.editText5);
 	}
 

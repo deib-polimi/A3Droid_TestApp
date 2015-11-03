@@ -21,11 +21,11 @@
 	            android:id="@+id/textView2"
 	            android:text="@string/s_frequency" />
 	        <TextView
-	            android:id="@+id/textView3"
-	            android:text="@string/a_frequency" />
-	        <TextView
 	            android:id="@+id/textView4"
 	            android:text="@string/s_payload" />
+	        <TextView
+	            android:id="@+id/textView3"
+	            android:text="@string/a_frequency" />
 	        <TextView
 	            android:id="@+id/textView5"
 	            android:text="@string/a_payload" />
@@ -35,9 +35,9 @@
 	        <TextView
 	            android:text="@string/mes_s" />
 	        <TextView
-	            android:text="@string/mes_s" />
-	        <TextView
 	            android:text="@string/bytes" />
+	        <TextView
+	            android:text="@string/mes_s" />	        	       
 	        <TextView
 	            android:text="@string/bytes" />
         </TableRow>
@@ -50,19 +50,19 @@
 	            android:inputType="number"
 	            android:text="6"/>
 	        <EditText
-	            android:id="@+id/editText3"
-	            android:layout_width="0dp"
-	            android:layout_height="wrap_content"
-	            android:layout_weight="1"            
-	            android:inputType="number"
-	            android:text="2"/>
-	        <EditText
 	            android:id="@+id/editText4"
 	            android:layout_width="0dp"
 	            android:layout_height="wrap_content"
 	            android:layout_weight="1"            
 	            android:inputType="number"
 	            android:text="32"/>
+	        <EditText
+	            android:id="@+id/editText3"
+	            android:layout_width="0dp"
+	            android:layout_height="wrap_content"
+	            android:layout_weight="1"            
+	            android:inputType="number"
+	            android:text="2"/>
 	        <EditText
 	            android:id="@+id/editText5"
 	            android:layout_width="0dp"

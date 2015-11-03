@@ -52,9 +52,10 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			if(message.senderAddress.equals(this.channel.getChannelId()) && !paramsSet){
 				paramsSet = true;
 				String params [] = message.object.split("_");
-				this.MAX_INTERNAL = 60 * 1000 / Long.valueOf(params[0]);
+				long freq = Long.valueOf(params[0]);
+				this.MAX_INTERNAL = 60 * 1000 / freq;
 				this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
-				showOnScreen("Params set to: " + MAX_INTERNAL + " M/min and " + PAYLOAD_SIZE + " Bytes");				
+				showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");				
 			}
 			break;
 			
@@ -81,8 +82,8 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 				channel.sendUnicast(message, sensorAddress);
 			}else{
 				showOnScreen("Server response received");
-				long rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp());
 				sentCont ++;
+				double rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp()) / 1000;
 				avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
 	
 				if(rtt > TIMEOUT && experimentIsRunning){
@@ -119,7 +120,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 
 			if(experimentIsRunning){
-				long runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
+				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / (float)(runningTime);
 				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + "\t" +
 						runningTime + "\t" + frequency + "\t" + avgRTT), "control");

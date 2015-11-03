@@ -12,8 +12,8 @@ public class StringTimeUtil {
 		return new String(c);
 	}
 	
-	public static long roundTripTime(String departureTimestamp, String arrivalTimestamp) {
-		long i1 = 0, i2 = 0;		
+	public static double roundTripTime(String departureTimestamp, String arrivalTimestamp) {
+		double i1 = 0, i2 = 0;		
 		i1 = Long.parseLong(arrivalTimestamp);		
 		i2 = Long.parseLong(departureTimestamp);
 		return i1 - i2;

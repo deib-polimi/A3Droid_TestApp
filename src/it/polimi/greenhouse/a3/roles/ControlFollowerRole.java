@@ -31,7 +31,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 	@Override
 	public void logic() {
 		showOnScreen("[CtrlFolRole]");
-		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, ""), "control");
+		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, node.getUUID()), "control");
 		active = false;
 	}
 
@@ -49,7 +49,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 							gType + "_" + i);
 			break;
 			
-		case MainActivity.ADD_MEMBER:
+		case MainActivity.ADD_MEMBER:			
 			String content [] = ((String)message.object).split("_");
 			String type = content[0];
 			int experimentId = Integer.valueOf(content[1]);
@@ -59,6 +59,11 @@ public class ControlFollowerRole extends A3FollowerRole {
 			}else
 				launchedGroups.put(type, Arrays.asList(new Integer [] {experimentId}));
 			
+			for(String gType : launchedGroups.keySet())
+				for(int i : launchedGroups.get(gType))
+					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+						node.sendToSupervisor(message,
+							gType + "_" + i);
 			break;
 			
 		case MainActivity.START_EXPERIMENT:

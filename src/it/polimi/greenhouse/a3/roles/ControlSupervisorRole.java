@@ -52,7 +52,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	@Override
 	public void logic() {
 		showOnScreen("[CtrlSupRole]");
-		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, ""), "control");		
+		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, node.getUUID()), "control");		
 		active = false;
 	}
 
@@ -91,7 +91,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 			case MainActivity.NEW_PHONE:
 				
-				vmIds.add(message.senderAddress);
+				vmIds.add(message.object);
 				numberOfTrials = 1;
 				showOnScreen("Telefoni connessi: " + vmIds.size());
 				break;
@@ -102,8 +102,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 					break;
 				
 				sd = Environment.getExternalStorageDirectory();
-				f = new File(sd, MainActivity.EXPERIMENT_PREFIX + vmIds.size() +
-						"_" + totalGroups + ".txt");
+				f = new File(sd, MainActivity.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".txt");
 	
 				try {
 					fw = new FileWriter(f, true);
