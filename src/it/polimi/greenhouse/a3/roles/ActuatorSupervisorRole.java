@@ -41,13 +41,13 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			String serverAddress = content[0];
 			String experiment = content[1];
 			String sendTime = content[2];
-			String serverData = content[3];
-			message.object = serverAddress + "#" + experiment + "#" + sendTime + "#" + serverData;
+			//byte serverData [] = message.bytes;
+			message.object = serverAddress + "#" + experiment + "#" + sendTime;
 			channel.sendBroadcast(message);
+			showOnScreen("Broadcasted data to follower actuators");
 			message.reason = MainActivity.SERVER_PONG;
 			message.object = sendTime;
 			node.sendToSupervisor(message, "server_0");
-			showOnScreen("Broadcasted data to follower actuators");
 			break;
 			
 		case MainActivity.SERVER_PONG:

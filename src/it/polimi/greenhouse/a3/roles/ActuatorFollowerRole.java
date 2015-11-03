@@ -31,7 +31,7 @@ public class ActuatorFollowerRole extends A3FollowerRole{
 			//String serverAddress = content[0];
 			String experiment = content[1];
 			String sendTime = content[2];
-			//String serverData = content[3];
+			//byte serverData [] = message.bytes;
 			message.object = experiment + "#" + sendTime;
 			channel.sendToSupervisor(message);
 			showOnScreen("Sent response to server");

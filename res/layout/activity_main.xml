@@ -14,21 +14,20 @@
 	    android:shrinkColumns="*"
 	    android:stretchColumns="*"
 	    android:orientation="vertical">
-
         <TableRow
             android:layout_width="match_parent">	        
 	        <TextView
 	            android:id="@+id/textView2"
-	            android:text="@string/s_frequency" />
+	            android:text="@string/s_frequency"/>
 	        <TextView
 	            android:id="@+id/textView4"
-	            android:text="@string/s_payload" />
+	            android:text="@string/s_payload"/>
 	        <TextView
 	            android:id="@+id/textView3"
-	            android:text="@string/a_frequency" />
+	            android:text="@string/a_frequency"/>
 	        <TextView
 	            android:id="@+id/textView5"
-	            android:text="@string/a_payload" />
+	            android:text="@string/a_payload"/>
         </TableRow>
         <TableRow
             android:layout_width="match_parent">	        
@@ -47,28 +46,28 @@
 	            android:layout_width="0dp"
 	            android:layout_height="wrap_content"
 	            android:layout_weight="1"            
-	            android:inputType="number"
+	            android:inputType="numberSigned"
 	            android:text="6"/>
 	        <EditText
 	            android:id="@+id/editText4"
 	            android:layout_width="0dp"
 	            android:layout_height="wrap_content"
 	            android:layout_weight="1"            
-	            android:inputType="number"
+	            android:inputType="numberSigned"
 	            android:text="32"/>
 	        <EditText
 	            android:id="@+id/editText3"
 	            android:layout_width="0dp"
 	            android:layout_height="wrap_content"
 	            android:layout_weight="1"            
-	            android:inputType="number"
+	            android:inputType="numberSigned"
 	            android:text="2"/>
 	        <EditText
 	            android:id="@+id/editText5"
 	            android:layout_width="0dp"
 	            android:layout_height="wrap_content"
 	            android:layout_weight="1"            
-	            android:inputType="number"
+	            android:inputType="numberSigned"
 	            android:text="64"/>
 		</TableRow>
 	</TableLayout>
@@ -90,7 +89,7 @@
 		            android:layout_height="wrap_content"
 		            android:layout_width="0px"
 		            android:layout_weight=".5"            
-		            android:inputType="number"
+		            android:inputType="numberSigned"
 		            android:text="1"/>	
 			<TextView 
 			    	android:text=""

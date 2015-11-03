@@ -24,7 +24,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private double avgRTT;
 	private int dataToWaitFor;
 	private String startTimestamp;
-	private String sPayLoad;
+	private byte sPayLoad [];
 	private final static long TIMEOUT = 60 * 1000;
 	private long MAX_INTERNAL = 10 * 1000;
 	private int PAYLOAD_SIZE = 32;
@@ -76,7 +76,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				String sensorAddress = content[0];
 				String experiment = content[1];
 				String sendTime = content[2];
-				//String sensorData = content[3];
+				//byte sensorData [] = message.bytes;
 				message.object = sensorAddress + "#" + experiment + "#" + sendTime;
 				channel.sendUnicast(message, message.senderAddress);
 				showOnScreen("Sent response to sensor");
@@ -113,7 +113,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 						sentCont = 0;
 						startTimestamp = StringTimeUtil.getTimestamp();
 						resetDataToWait();
-						sPayLoad = StringTimeUtil.createString(groupSize("actuators") * PAYLOAD_SIZE);
+						sPayLoad = StringTimeUtil.createPayload(groupSize("actuators") * PAYLOAD_SIZE);
 						channel.sendBroadcast(message);
 						sendMessage();
 					}
@@ -169,7 +169,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		if(experimentIsRunning)
 			if(launchedGroups.containsKey("actuators"))
 				for(int groupId : launchedGroups.get("actuators").keySet())
-					channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
+					channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
 	}	
 	
 	private int groupSize(String type){

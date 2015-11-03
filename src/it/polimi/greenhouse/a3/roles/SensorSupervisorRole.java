@@ -15,7 +15,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	private int currentExperiment;
 	private int sentCont;
 	private double avgRTT;
-	private String sPayLoad;
+	private byte sPayLoad [];
 	private String startTimestamp;
 	
 	private final static long TIMEOUT = 60 * 1000;
@@ -33,7 +33,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		sPayLoad = StringTimeUtil.createString(PAYLOAD_SIZE);
+		sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
 		node.connect("server_0", true, true);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}
@@ -133,7 +133,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	
 	private void sendMessage() {
 		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp() + "#" + sPayLoad));
+			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
 	}
 
 	@Override
