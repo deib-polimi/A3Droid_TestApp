@@ -4,6 +4,7 @@ import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.StringTimeUtil;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -127,11 +128,12 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
+				cleanGroupMember(uuid);
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
 						launchedGroups.get(type).get(experimentId).add(uuid);	
 					else
-						launchedGroups.get(type).put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
+						launchedGroups.get(type).put(experimentId, Collections.synchronizedSet(new HashSet<String>(Arrays.asList(new String [] {uuid}))));
 				else{
 					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
 					newGroup.put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
@@ -149,7 +151,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 					double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 					float frequency = sentCont / ((float)(runningTime));
 					
-					node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + "\t" +
+					node.sendToSupervisor(new A3Message(MainActivity.DATA, "StoA: " + sentCont + "\t" +
 							runningTime + "\t" + frequency + "\t" + avgRTT), "control");
 				}
 				break;
@@ -177,6 +179,15 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		for(int i : launchedGroups.get(type).keySet())
 			size += launchedGroups.get(type).get(i).size();
 		return size;
+	}
+	
+	private void cleanGroupMember(String uuid){
+		for(String type : launchedGroups.keySet())
+			for(int i : launchedGroups.get(type).keySet())
+				if(launchedGroups.get(type).get(i).contains(uuid)){
+					launchedGroups.get(type).get(i).remove(uuid);
+					return;
+				}
 	}
 
 	@Override

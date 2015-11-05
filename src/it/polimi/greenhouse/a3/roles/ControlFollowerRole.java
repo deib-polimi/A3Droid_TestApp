@@ -40,15 +40,6 @@ public class ControlFollowerRole extends A3FollowerRole {
 		
 		switch(message.reason){
 		
-		case MainActivity.LONG_RTT:						
-								
-			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
-					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-						node.sendToSupervisor(message,
-							gType + "_" + i);
-			break;
-			
 		case MainActivity.ADD_MEMBER:			
 			String content [] = ((String)message.object).split("_");
 			String type = content[0];
@@ -67,12 +58,13 @@ public class ControlFollowerRole extends A3FollowerRole {
 			break;
 			
 		case MainActivity.START_EXPERIMENT:
+		case MainActivity.LONG_RTT:						
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
 					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 						node.sendToSupervisor(message,
-								gType + "_" + i);
+							gType + "_" + i);
 			break;
 		
 		case MainActivity.STOP_EXPERIMENT:

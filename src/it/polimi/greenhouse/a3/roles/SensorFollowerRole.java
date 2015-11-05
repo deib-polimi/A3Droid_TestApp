@@ -95,7 +95,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / ((float)runningTime);
 				
-				node.sendToSupervisor(new A3Message(MainActivity.DATA, sentCont + "\t" +
+				node.sendToSupervisor(new A3Message(MainActivity.DATA, "StoS: " + sentCont + "\t" +
 						(runningTime) + "\t" + frequency + "\t" + avgRTT), "control");
 				experimentIsRunning = false;
 			}

@@ -77,6 +77,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
+				cleanGroupMember(uuid);
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
 						launchedGroups.get(type).get(experimentId).add(uuid);	
@@ -94,6 +95,42 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				vmIds.add(message.object);
 				numberOfTrials = 1;
 				showOnScreen("Telefoni connessi: " + vmIds.size());
+				break;							
+				
+			case MainActivity.CREATE_GROUP_USER_COMMAND:
+				message.reason = MainActivity.CREATE_GROUP;
+				channel.sendBroadcast(message);
+				for(String gType : launchedGroups.keySet())
+					for(int i : launchedGroups.get(gType).keySet())
+						if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+							node.sendToSupervisor(message,
+								gType + "_" + i);
+				break;
+				
+			case MainActivity.CREATE_GROUP:
+				break;
+				
+			case MainActivity.START_EXPERIMENT_USER_COMMAND:
+				
+				showOnScreen("--- TENTATIVO " + numberOfTrials + "---");
+				
+				result = "";
+				dataToWaitFor = 0;
+				for(String gType : launchedGroups.keySet())
+					if(gType.equals("monitoring"))
+						for(int i : launchedGroups.get(gType).keySet())
+							dataToWaitFor += launchedGroups.get(gType).get(i).size();
+				
+				if(launchedGroups.containsKey("actuators"))
+					dataToWaitFor++;
+				
+				message.reason = MainActivity.START_EXPERIMENT;
+				channel.sendBroadcast(message);
+				for(String gType : launchedGroups.keySet())
+					for(int i : launchedGroups.get(gType).keySet())
+							if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+								node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
+										gType + "_" + i);
 				break;
 				
 			case MainActivity.LONG_RTT:
@@ -137,42 +174,6 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 				break;
 				
-			case MainActivity.CREATE_GROUP_USER_COMMAND:
-				message.reason = MainActivity.CREATE_GROUP;
-				channel.sendBroadcast(message);
-				for(String gType : launchedGroups.keySet())
-					for(int i : launchedGroups.get(gType).keySet())
-						if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-							node.sendToSupervisor(message,
-								gType + "_" + i);
-				break;
-				
-			case MainActivity.CREATE_GROUP:
-				break;
-				
-			case MainActivity.START_EXPERIMENT_USER_COMMAND:
-				
-				showOnScreen("--- TENTATIVO " + numberOfTrials + "---");
-				
-				result = "";
-				dataToWaitFor = 0;
-				for(String gType : launchedGroups.keySet())
-					if(gType.equals("monitoring"))
-						for(int i : launchedGroups.get(gType).keySet())
-							dataToWaitFor += launchedGroups.get(gType).get(i).size();
-				
-				if(launchedGroups.containsKey("actuators"))
-					dataToWaitFor++;
-				
-				message.reason = MainActivity.START_EXPERIMENT;
-				channel.sendBroadcast(message);
-				for(String gType : launchedGroups.keySet())
-					for(int i : launchedGroups.get(gType).keySet())
-							if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-								node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
-										gType + "_" + i);
-				break;
-				
 			case MainActivity.STOP_EXPERIMENT:
 				
 				showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
@@ -198,5 +199,14 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				showOnScreen("--- ESPERIMENTO TERMINATO ---");
 				break;
 		}	
+	}
+	
+	private void cleanGroupMember(String uuid){
+		for(String type : launchedGroups.keySet())
+			for(int i : launchedGroups.get(type).keySet())
+				if(launchedGroups.get(type).get(i).contains(uuid)){
+					launchedGroups.get(type).get(i).remove(uuid);
+					return;
+				}
 	}
 }
