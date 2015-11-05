@@ -118,7 +118,7 @@ public class A3UnicastTransmitter extends Thread{
 
 		short contactPort = Constants.CONTACT_PORT;
 		SessionOpts sessionOpts = new SessionOpts();
-		sessionOpts.transports = SessionOpts.TRANSPORT_ANY + SessionOpts.TRANSPORT_WFD;
+		sessionOpts.transports = SessionOpts.TRANSPORT_ANY;
 		Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
 
 		status = mBus.joinSession(name, contactPort, sessionId, sessionOpts, new SessionListener() {

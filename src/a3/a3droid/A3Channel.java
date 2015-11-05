@@ -12,11 +12,9 @@ import org.alljoyn.bus.SessionOpts;
 import org.alljoyn.bus.Status;
 import org.alljoyn.bus.annotation.BusSignalHandler;
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.telephony.TelephonyManager;
 
 /**
  * This class is the channel that lets the nodes communicate with each other.
@@ -40,6 +38,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 
 	/**The name of the group to join.*/
 	private String groupName;
+	private String groupSuffix = "";
 	
 	/**The connection to the AllJoyn bus.*/
 	private BusAttachment mBus;
@@ -216,9 +215,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 
 		showOnScreen("Starting...");
 		
-		groupName = Constants.PREFIX + group_name;
-		
 		mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
+
+		groupName = Constants.PREFIX + group_name;
 
 		mBus.registerBusListener(new BusListener() {
 
@@ -229,9 +228,15 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 				 * If the group is duplicated, starting the merging procedure takes time
 				 * and blocks the callbacks, so I manage this case in another thread.
 				 */
-				if(name.equals(groupName)){
+				if(nameWithoutSuffix(name).equals(groupName)){
 					discovered = true;
+					groupSuffix = name.replace(groupName, ""); 
+					groupName = name;
 				}
+			}
+
+			private Object nameWithoutSuffix(String name) {
+				return name.replaceAll("\\_.G.+", "");				
 			}
 
 			public void lostAdvertisedName(String name, short transport, String namePrefix){}
@@ -304,9 +309,10 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 					if(status == Status.ALLJOYN_JOINSESSION_REPLY_ALREADY_JOINED)
 						onSessionJoined(sessionId);
 					else{
-						if(status == Status.ALLJOYN_JOINSESSION_REPLY_FAILED)
-							joinSession();
-						else
+						if(status == Status.ALLJOYN_JOINSESSION_REPLY_FAILED){
+							discovered = false;
+							reconnect();
+						}else
 							reconnect();
 					}
 				}
@@ -318,6 +324,8 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 
 	/**It disconnect this channel from the group and the AllJoyn bus.*/
 	public void disconnect(){
+		
+		groupName = groupName.replace(groupSuffix, "");
 	
 		/*The name of my UnicastReceiver is strictly based on my address in the group,
 		 * so I must disconnect it when I disconnect.
@@ -364,6 +372,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	private void reset() {
 		// TODO Auto-generated method stub
 	
+		groupName = groupName.replace(groupSuffix, "");
 		mIsConnected = false;
 		serviceInterface = null;
 		service = null;
@@ -922,7 +931,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 
 			if(!mIsConnected){
 				service = new Service(groupName, node, inTransitionConditions);
-				service.connect();
+				String noSuffix = groupName;
+				groupName = service.connect();
+				groupSuffix = groupName.replace(noSuffix, "");
 			}
 		
 		}catch(Exception e){
@@ -1207,8 +1218,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 	
 	public String getGroupName() {
-		// TODO Auto-generated method stub
-		return groupName.replaceFirst(Constants.PREFIX, "");
+		return groupName.replace(Constants.PREFIX, "").replace(groupSuffix, "");
 	}
 
 	public Hierarchy getHierarchy(){
@@ -1216,17 +1226,14 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 	
 	public boolean isSupervisor() {
-		// TODO Auto-generated method stub
 		return isSupervisor;
 	}
 
 	public String getChannelId() {
-		// TODO Auto-generated method stub
 		return myId;
 	}
 
 	public Service getService() {
-		// TODO Auto-generated method stub
 		return service;
 	}
 

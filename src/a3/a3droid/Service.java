@@ -110,36 +110,38 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 		this.groupName = groupName;
 		node = a3Channel;
 		view = new View(this);
-		supervisorId = "";
-		groupTransmitter = new A3UnicastTransmitter(groupName);
+		supervisorId = "";		
 		subscriptions = new Subscriptions(this);
 		fitnessFunctionManager = new FitnessFunctionManager(this);
-		isNotMerging = true;
-		sendToOtherGroup(new A3Message(Constants.NEW_GROUP, getGroupName()), "wait");
-		discoveryManager = new DiscoveryManager(groupName, this);
+		isNotMerging = true;				
 		signalThread = new SignalThread();
 		start();
 	}
 
 	/**It is used to publish the group name on the bus.*/
-	public void connect(){
+	public String connect(){
 
-		mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
+		this.mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
+		this.groupName = groupName.concat("_.G").concat(mBus.getGlobalGUIDString());
+		this.groupTransmitter = new A3UnicastTransmitter(groupName);
+		sendToOtherGroup(new A3Message(Constants.NEW_GROUP, getGroupName()), "wait");
+		this.discoveryManager = new DiscoveryManager(groupName, this);
+		
 		mBus.registerBusListener(new BusListener());
 
 		Status status = mBus.registerBusObject(this, "/SimpleService");
 		if (status != Status.OK) {
-			return;
+			return null;
 		}
 
 		status = mBus.connect();
 		if (status != Status.OK) {
-			return;
+			return null;
 		}
 
 		status = mBus.registerSignalHandlers(this);
 		if (status != Status.OK)
-			return;
+			return null;
 		
 		status = mBus.addMatch("sessionless='t'");
         
@@ -149,7 +151,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 		sessionOpts.isMultipoint = true;
 		sessionOpts.proximity = SessionOpts.PROXIMITY_ANY;
 
-		sessionOpts.transports = SessionOpts.TRANSPORT_ANY + SessionOpts.TRANSPORT_WFD;
+		sessionOpts.transports = SessionOpts.TRANSPORT_ANY;
 
 		status = mBus.bindSessionPort(contactPort, sessionOpts, new SessionPortListener() {
 
@@ -198,7 +200,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 		});
 
 		if (status != Status.OK) {
-			return;
+			return null;
 		}
 
 		int flag = BusAttachment.ALLJOYN_REQUESTNAME_FLAG_REPLACE_EXISTING | BusAttachment.ALLJOYN_REQUESTNAME_FLAG_DO_NOT_QUEUE;
@@ -208,7 +210,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 			status = mBus.advertiseName(groupName, sessionOpts.transports);
 			if (status != Status.OK) {
 				status = mBus.releaseName(groupName);
-				return;
+				return null;
 			}
 			else{
 				try{
@@ -222,6 +224,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 			}
 			discoveryManager.connect();
 		}
+		return groupName;
 	}
 
 	/**It is used to unpublish the name from the bus.*/
@@ -666,17 +669,14 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 
 	@Override
 	public void showOnScreen(String string) {
-		// TODO Auto-generated method stub
 		node.showOnScreen("(Service " + groupName + "): " + string);
 	}
 
 	public String getGroupName() {
-		// TODO Auto-generated method stub
 		return groupName.replaceFirst(Constants.PREFIX, "");
 	}
 
 	public View getView() {
-		// TODO Auto-generated method stub
 		return view;
 	}
 
@@ -684,8 +684,6 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	@BusSignal(signature = "ssii")
 	public void GroupIsDuplicated(String groupName, String supervisorId,
 			int numberOfNodes, int randomNumber) throws BusException {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	@BusSignalHandler(iface = Constants.PACKAGE_NAME + ".A3ServiceInterface", signal = "GroupIsDuplicated")
