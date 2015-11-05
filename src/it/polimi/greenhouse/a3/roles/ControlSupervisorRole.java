@@ -26,7 +26,6 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 
 	private Set<String> vmIds;
 	private Map<String, Map<Integer, Set<String>>> launchedGroups;
-	private int totalGroups;
 
 	private File sd;
 	private File f;
@@ -35,6 +34,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	private volatile int dataToWaitFor;
 	private volatile String result;
 	private int numberOfTrials;
+	private boolean experimentIsRunning;
 	
 	public ControlSupervisorRole(){
 		super();
@@ -44,7 +44,6 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		vmIds = Collections.synchronizedSet(new HashSet<String>());
 		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String>>>();
-		totalGroups = 0;
 		dataToWaitFor = 0;
 		numberOfTrials = 1;
 	}	
@@ -65,11 +64,15 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			case MainActivity.JOINED:		
 				message.reason = MainActivity.ADD_MEMBER;
 				channel.sendBroadcast(message);
-				for(String gType : launchedGroups.keySet())
-					for(int i : launchedGroups.get(gType).keySet())
-						if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-							node.sendToSupervisor(message,
-								gType + "_" + i);
+				sendToConnectedSupervisors(message);
+				if(experimentIsRunning){
+					message.reason = MainActivity.START_EXPERIMENT;
+					message.object = "";
+					if(channel.getChannelId().equals(message.senderAddress))						
+						sendToConnectedSupervisors(message);
+					else
+						channel.sendUnicast(message, message.senderAddress);
+				}
 				break;
 				
 			case MainActivity.ADD_MEMBER:
@@ -100,11 +103,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			case MainActivity.CREATE_GROUP_USER_COMMAND:
 				message.reason = MainActivity.CREATE_GROUP;
 				channel.sendBroadcast(message);
-				for(String gType : launchedGroups.keySet())
-					for(int i : launchedGroups.get(gType).keySet())
-						if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-							node.sendToSupervisor(message,
-								gType + "_" + i);
+				sendToConnectedSupervisors(message);				
 				break;
 				
 			case MainActivity.CREATE_GROUP:
@@ -112,8 +111,12 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 			case MainActivity.START_EXPERIMENT_USER_COMMAND:
 				
+				if(experimentIsRunning)
+					break;
+				
 				showOnScreen("--- TENTATIVO " + numberOfTrials + "---");
 				
+				experimentIsRunning = true;
 				result = "";
 				dataToWaitFor = 0;
 				for(String gType : launchedGroups.keySet())
@@ -126,18 +129,15 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 				message.reason = MainActivity.START_EXPERIMENT;
 				channel.sendBroadcast(message);
-				for(String gType : launchedGroups.keySet())
-					for(int i : launchedGroups.get(gType).keySet())
-							if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-								node.sendToSupervisor(new A3Message(MainActivity.START_EXPERIMENT, ""),
-										gType + "_" + i);
+				sendToConnectedSupervisors(message);
 				break;
 				
 			case MainActivity.LONG_RTT:
 				
-				if(message.object.equals(channel.getChannelId()))
+				if(message.object.equals(channel.getChannelId()) || !experimentIsRunning)
 					break;
 				
+				experimentIsRunning = false;
 				sd = Environment.getExternalStorageDirectory();
 				f = new File(sd, MainActivity.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".txt");
 	
@@ -149,11 +149,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				}
 				message.object = channel.getChannelId();
 				channel.sendBroadcast(message);
-				for(String gType : launchedGroups.keySet())
-					for(int i : launchedGroups.get(gType).keySet())
-						if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-							node.sendToSupervisor(message,
-								gType + "_" + i);
+				sendToConnectedSupervisors(message);				
 				break;
 				
 			case MainActivity.DATA:
@@ -199,6 +195,14 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				showOnScreen("--- ESPERIMENTO TERMINATO ---");
 				break;
 		}	
+	}
+	
+	private void sendToConnectedSupervisors(A3Message message){
+		for(String gType : launchedGroups.keySet())
+			for(int i : launchedGroups.get(gType).keySet())
+				if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+					node.sendToSupervisor(message,
+						gType + "_" + i);
 	}
 	
 	private void cleanGroupMember(String uuid){

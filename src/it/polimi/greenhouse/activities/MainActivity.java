@@ -100,7 +100,13 @@ public class MainActivity extends A3DroidActivity{
 						break;
 					case START_EXPERIMENT_USER_COMMAND:
 						if(!experimentRunning){
-							experimentRunning = true;
+							experimentRunning = true;							
+							if(node.isConnectedForApplication("server_0"))
+								node.sendToSupervisor(new A3Message(SET_PARAMS, actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()), 
+										"server_0");
+							if(node.isConnectedForApplication("monitoring_" + experiment.getText().toString()))
+								node.sendToSupervisor(new A3Message(SET_PARAMS, sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()), 
+										"monitoring_" + experiment.getText().toString());
 							node.sendToSupervisor(new A3Message(START_EXPERIMENT_USER_COMMAND, ""), "control");
 						}
 						break;

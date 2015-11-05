@@ -66,7 +66,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			break;
 		
 		case MainActivity.SENSOR_PING:
-			showOnScreen("Forwarding sensor data to server");
+			//showOnScreen("Forwarding sensor data to server");
 			message.object = message.senderAddress + "#" + (String)message.object;
 			node.sendToSupervisor(message, "server_0");
 			break;
@@ -78,7 +78,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			message.object = sendTime;
 
 			if(!sensorAddress.equals(channel.getChannelId())){
-				showOnScreen("Forwarding server response to follower sensor");
+				//showOnScreen("Forwarding server response to follower sensor");
 				channel.sendUnicast(message, sensorAddress);
 			}else{
 				showOnScreen("Server response received");
@@ -120,6 +120,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 
 			if(experimentIsRunning){
+				paramsSet = false;
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / (float)(runningTime);
 				node.sendToSupervisor(new A3Message(MainActivity.DATA, "StoS: " + sentCont + "\t" +

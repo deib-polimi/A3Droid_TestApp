@@ -80,7 +80,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				//byte sensorData [] = message.bytes;
 				message.object = sensorAddress + "#" + experiment + "#" + sendTime;
 				channel.sendUnicast(message, message.senderAddress);
-				showOnScreen("Sent response to sensor");
+				//showOnScreen("Sent response to sensor");
 				break;
 				
 				
@@ -107,8 +107,8 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 			case MainActivity.START_EXPERIMENT:
 				if(startExperiment){
-					showOnScreen("Experiment has started");
 					if(!experimentIsRunning && launchedGroups.containsKey("actuators")){
+						showOnScreen("Experiment has started");
 						startExperiment = false;
 						experimentIsRunning = true;
 						sentCont = 0;
