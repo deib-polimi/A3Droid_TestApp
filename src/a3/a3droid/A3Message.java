@@ -28,7 +28,7 @@ public class A3Message {
 	/**The extra data in this message.*/
 	@Position(3)
 	@Signature("ay")
-	public byte[] bytes;
+	public byte[] bytes = new byte[0];
 
 	/**This must exists because AllJoyn needs it, but is never used in these API.*/
 	public A3Message(){}

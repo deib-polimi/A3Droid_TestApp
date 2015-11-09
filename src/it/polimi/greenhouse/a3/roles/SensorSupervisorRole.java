@@ -51,6 +51,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		case MainActivity.SET_PARAMS:
 			if(message.senderAddress.equals(this.channel.getChannelId()) && !paramsSet){
 				paramsSet = true;
+				channel.sendBroadcast(message);
 				String params [] = message.object.split("_");
 				long freq = Long.valueOf(params[0]);
 				this.MAX_INTERNAL = 60 * 1000 / freq;
@@ -60,9 +61,11 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			break;
 			
 		case MainActivity.ADD_MEMBER:
-			message.reason = MainActivity.SET_PARAMS;
-			message.object = (60 * 1000 / this.MAX_INTERNAL) + "_" + PAYLOAD_SIZE;
-			channel.sendBroadcast(message);
+			if(experimentIsRunning){
+				message.reason = MainActivity.SET_PARAMS;
+				message.object = (60 * 1000 / this.MAX_INTERNAL) + "_" + PAYLOAD_SIZE;
+				channel.sendBroadcast(message);
+			}
 			break;
 		
 		case MainActivity.SENSOR_PING:

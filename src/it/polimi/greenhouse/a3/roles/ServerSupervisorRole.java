@@ -107,7 +107,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 			case MainActivity.START_EXPERIMENT:
 				if(startExperiment){
-					if(!experimentIsRunning && launchedGroups.containsKey("actuators")){
+					if(!experimentIsRunning && launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty()){
 						showOnScreen("Experiment has started");
 						startExperiment = false;
 						experimentIsRunning = true;
@@ -136,7 +136,9 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 						launchedGroups.get(type).put(experimentId, Collections.synchronizedSet(new HashSet<String>(Arrays.asList(new String [] {uuid}))));
 				else{
 					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
-					newGroup.put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
+					Set<String> experiments = Collections.synchronizedSet(new HashSet<String>());
+					experiments.add(uuid);
+					newGroup.put(experimentId, experiments);
 					launchedGroups.put(type, newGroup);
 				}
 				break;

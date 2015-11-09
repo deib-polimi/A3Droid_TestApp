@@ -80,7 +80,8 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
-				cleanGroupMember(uuid);
+				if(!type.equals("server"))
+					cleanGroupMember(uuid);				
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
 						launchedGroups.get(type).get(experimentId).add(uuid);	
@@ -88,7 +89,9 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 						launchedGroups.get(type).put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
 				else{
 					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
-					newGroup.put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
+					Set<String> experiments = Collections.synchronizedSet(new HashSet<String>());
+					experiments.add(uuid);
+					newGroup.put(experimentId, experiments);
 					launchedGroups.put(type, newGroup);
 				}
 				break;
@@ -124,7 +127,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 						for(int i : launchedGroups.get(gType).keySet())
 							dataToWaitFor += launchedGroups.get(gType).get(i).size();
 				
-				if(launchedGroups.containsKey("actuators"))
+				if(launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty())
 					dataToWaitFor++;
 				
 				message.reason = MainActivity.START_EXPERIMENT;
@@ -206,7 +209,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	}
 	
 	private void cleanGroupMember(String uuid){
-		for(String type : launchedGroups.keySet())
+		for(String type : launchedGroups.keySet())			
 			for(int i : launchedGroups.get(type).keySet())
 				if(launchedGroups.get(type).get(i).contains(uuid)){
 					launchedGroups.get(type).get(i).remove(uuid);

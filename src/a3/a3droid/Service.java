@@ -149,7 +149,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 		sessionOpts.isMultipoint = true;
 		sessionOpts.proximity = SessionOpts.PROXIMITY_ANY;
 
-		sessionOpts.transports = SessionOpts.TRANSPORT_ANY + SessionOpts.TRANSPORT_WFD;
+		sessionOpts.transports = SessionOpts.TRANSPORT_ANY;
 
 		status = mBus.bindSessionPort(contactPort, sessionOpts, new SessionPortListener() {
 
