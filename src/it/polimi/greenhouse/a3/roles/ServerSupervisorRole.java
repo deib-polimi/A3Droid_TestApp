@@ -23,7 +23,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private boolean paramsSet = false;
 	private int sentCont;
 	private double avgRTT;
-	private int dataToWaitFor;
+	private volatile int dataToWaitFor;
 	private String startTimestamp;
 	private byte sPayLoad [];
 	private final static long TIMEOUT = 60 * 1000;
@@ -128,7 +128,8 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
-				cleanGroupMember(uuid);
+				if(!type.equals("server"))
+					cleanGroupMember(uuid);
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
 						launchedGroups.get(type).get(experimentId).add(uuid);	
