@@ -21,3 +21,8 @@ Currently alljoyn framework only supports wi-fi as a stable connection method. B
 * Check the log messages at the application interface of the server or any other device
 * Click in the **Stop Experiment** button whenever you want to finish it.
 * Check the A3Droid_Greenhouse_*NUMBER_OF_DEVICES*_*NUMBER_OF_GROUPS* file at the *Virtual external disk* folder of the server device with all experiment measurements.
+
+##System overview
+![System overview]
+(https://raw.githubusercontent.com/danilomendonca/A3Droid_Test_Greenhouse/master/docs/overview.png)
+
