@@ -23,7 +23,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private boolean paramsSet = false;
 	private int sentCont;
 	private double avgRTT;
-	private int dataToWaitFor;
+	private volatile int dataToWaitFor;
 	private String startTimestamp;
 	private byte sPayLoad [];
 	private final static long TIMEOUT = 60 * 1000;
@@ -61,11 +61,13 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		
 			case MainActivity.SET_PARAMS:
 				if(!paramsSet){
-					paramsSet = true;
 					String params [] = message.object.split("_");
-					long freq = Long.valueOf(params[0]);
+					if(!params[0].equals("A"))
+						break;
+					paramsSet = true;
+					long freq = Long.valueOf(params[1]);
 					this.MAX_INTERNAL = 60 * 1000 / freq;
-					this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+					this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
 					showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
 				}
 				break;
@@ -80,7 +82,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				//byte sensorData [] = message.bytes;
 				message.object = sensorAddress + "#" + experiment + "#" + sendTime;
 				channel.sendUnicast(message, message.senderAddress);
-				showOnScreen("Sent response to sensor");
+				//showOnScreen("Sent response to sensor");
 				break;
 				
 				
@@ -107,8 +109,8 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 			case MainActivity.START_EXPERIMENT:
 				if(startExperiment){
-					showOnScreen("Experiment has started");
-					if(!experimentIsRunning && launchedGroups.containsKey("actuators")){
+					if(!experimentIsRunning && launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty()){
+						showOnScreen("Experiment has started");
 						startExperiment = false;
 						experimentIsRunning = true;
 						sentCont = 0;
@@ -128,7 +130,8 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
-				cleanGroupMember(uuid);
+				if(!type.equals("server"))
+					cleanGroupMember(uuid);
 				if(launchedGroups.containsKey(type))
 					if(launchedGroups.get(type).containsKey(experimentId))
 						launchedGroups.get(type).get(experimentId).add(uuid);	
@@ -136,7 +139,9 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 						launchedGroups.get(type).put(experimentId, Collections.synchronizedSet(new HashSet<String>(Arrays.asList(new String [] {uuid}))));
 				else{
 					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
-					newGroup.put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
+					Set<String> experiments = Collections.synchronizedSet(new HashSet<String>());
+					experiments.add(uuid);
+					newGroup.put(experimentId, experiments);
 					launchedGroups.put(type, newGroup);
 				}
 				break;
@@ -148,6 +153,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				if(experimentIsRunning){
 					showOnScreen("Experiment has stopped");
 					experimentIsRunning = false;
+					paramsSet = false;
 					double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 					float frequency = sentCont / ((float)(runningTime));
 					

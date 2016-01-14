@@ -53,6 +53,7 @@ public class MainActivity extends A3DroidActivity{
 	public static final int SERVER_PING = 51;
 	public static final int SERVER_PONG = 52;
 	public static final int SET_PARAMS = 60;
+	public static final int SET_PARAMS_COMMAND = 61;
 	
 	private A3Node node;
 	private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
@@ -100,7 +101,13 @@ public class MainActivity extends A3DroidActivity{
 						break;
 					case START_EXPERIMENT_USER_COMMAND:
 						if(!experimentRunning){
-							experimentRunning = true;
+							experimentRunning = true;					
+							if(node.isConnectedForApplication("server_0"))
+								node.sendToSupervisor(new A3Message(SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()), 
+										"control");
+							if(node.isConnectedForApplication("monitoring_" + experiment.getText().toString()))
+								node.sendToSupervisor(new A3Message(SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()), 
+										"control");
 							node.sendToSupervisor(new A3Message(START_EXPERIMENT_USER_COMMAND, ""), "control");
 						}
 						break;
@@ -110,13 +117,19 @@ public class MainActivity extends A3DroidActivity{
 						roles.add(SensorSupervisorRole.class.getName());
 						roles.add(SensorFollowerRole.class.getName());		
 						roles.add(ServerFollowerRole.class.getName());
-						groupDescriptors.add(new MonitoringDescriptor());
+						groupDescriptors.add(new MonitoringDescriptor() {							
+							
+							@Override
+							public int getSupervisorFitnessFunction() {
+																
+								return 0;
+							}
+							
+						});
 						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("monitoring_" + experiment.getText().toString(), true, true);
-						node.sendToSupervisor(new A3Message(SET_PARAMS, sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()), 
-												"monitoring_" + experiment.getText().toString());
+						node.connect("monitoring_" + experiment.getText().toString(), true, true);						
 						break;	
 					case START_ACTUATOR:
 						if(experimentRunning)
@@ -138,9 +151,7 @@ public class MainActivity extends A3DroidActivity{
 						groupDescriptors.add(new ServerDescriptor());
 						node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
 						node.connect("control", true, true);
-						node.connect("server_0", true, true);
-						node.sendToSupervisor(new A3Message(SET_PARAMS, actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()), 
-								"server_0");
+						node.connect("server_0", true, true);						
 						break;
 					default:
 						break;

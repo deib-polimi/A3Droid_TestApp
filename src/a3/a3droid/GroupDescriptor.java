@@ -55,10 +55,12 @@ public abstract class GroupDescriptor {
 	 * 
 	 * @return It should return the value of an integer fitness function.
 	 */
-	public int getSupervisorFitnessFunction() throws Exception{
+	/*public int getSupervisorFitnessFunction() throws Exception{
 		// TODO Auto-generated method stub
 		throw new Exception("Supervisor fitness function not implemented.");
-	}
+	}*/
+	
+	public abstract int getSupervisorFitnessFunction();
 	
 	/**
 	 * Create the string representation of the type GroupInfo.

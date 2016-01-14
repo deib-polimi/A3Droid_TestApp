@@ -2,9 +2,10 @@ package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.greenhouse.activities.MainActivity;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3FollowerRole;
@@ -17,7 +18,7 @@ import a3.a3droid.A3Message;
  */
 public class ControlFollowerRole extends A3FollowerRole {
 
-	private Map<String, List<Integer>> launchedGroups;
+	private Map<String, Set<Integer>> launchedGroups;
 	
 	public ControlFollowerRole() {
 		super();
@@ -25,7 +26,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void onActivation() {
-		launchedGroups = new ConcurrentHashMap<String, List<Integer>>();
+		launchedGroups = new ConcurrentHashMap<String, Set<Integer>>();
 	}
 
 	@Override
@@ -47,8 +48,11 @@ public class ControlFollowerRole extends A3FollowerRole {
 			if(launchedGroups.containsKey(type)){
 				if(!launchedGroups.get(type).contains(experimentId))
 					launchedGroups.get(type).add(experimentId);
-			}else
-				launchedGroups.put(type, Arrays.asList(new Integer [] {experimentId}));
+			}else{
+				Set <Integer> experiments = Collections.synchronizedSet(new HashSet<Integer>());
+				experiments.add(experimentId);
+				launchedGroups.put(type, experiments);
+			}
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
@@ -58,7 +62,8 @@ public class ControlFollowerRole extends A3FollowerRole {
 			break;
 			
 		case MainActivity.START_EXPERIMENT:
-		case MainActivity.LONG_RTT:						
+		case MainActivity.LONG_RTT:		
+		case MainActivity.SET_PARAMS:
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))

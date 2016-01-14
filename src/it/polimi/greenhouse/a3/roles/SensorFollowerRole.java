@@ -33,7 +33,6 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}
 
@@ -51,9 +50,11 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		
 		case MainActivity.SET_PARAMS:
 			String params [] = message.object.split("_");
-			long freq = Long.valueOf(params[0]);
+			if(!params[0].equals("S"))
+				break;
+			long freq = Long.valueOf(params[1]);
 			this.MAX_INTERNAL = 60 * 1000 / freq;
-			this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+			this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
 			showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
 			break;
 			
@@ -84,6 +85,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				experimentIsRunning = true;
 				startTimestamp = StringTimeUtil.getTimestamp();
 				sentCont = 0;
+				sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
 				sendMessage();
 			}
 			break;

@@ -33,7 +33,6 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
 		node.connect("server_0", true, true);
 		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
 	}
@@ -48,25 +47,30 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	public void receiveApplicationMessage(A3Message message) {
 		switch(message.reason){
 		
-		case MainActivity.SET_PARAMS:
+		case MainActivity.SET_PARAMS:						
 			if(message.senderAddress.equals(this.channel.getChannelId()) && !paramsSet){
-				paramsSet = true;
 				String params [] = message.object.split("_");
-				long freq = Long.valueOf(params[0]);
+				if(!params[0].equals("S"))
+					break;
+				paramsSet = true;
+				channel.sendBroadcast(message);						
+				long freq = Long.valueOf(params[1]);
 				this.MAX_INTERNAL = 60 * 1000 / freq;
-				this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+				this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
 				showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");				
 			}
 			break;
 			
 		case MainActivity.ADD_MEMBER:
-			message.reason = MainActivity.SET_PARAMS;
-			message.object = (60 * 1000 / this.MAX_INTERNAL) + "_" + PAYLOAD_SIZE;
-			channel.sendBroadcast(message);
+			if(experimentIsRunning){
+				message.reason = MainActivity.SET_PARAMS;
+				message.object = (60 * 1000 / this.MAX_INTERNAL) + "_" + PAYLOAD_SIZE;
+				channel.sendBroadcast(message);
+			}
 			break;
 		
 		case MainActivity.SENSOR_PING:
-			showOnScreen("Forwarding sensor data to server");
+			//showOnScreen("Forwarding sensor data to server");
 			message.object = message.senderAddress + "#" + (String)message.object;
 			node.sendToSupervisor(message, "server_0");
 			break;
@@ -78,7 +82,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			message.object = sendTime;
 
 			if(!sensorAddress.equals(channel.getChannelId())){
-				showOnScreen("Forwarding server response to follower sensor");
+				//showOnScreen("Forwarding server response to follower sensor");
 				channel.sendUnicast(message, sensorAddress);
 			}else{
 				showOnScreen("Server response received");
@@ -107,6 +111,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 					channel.sendBroadcast(message);
 					startTimestamp = StringTimeUtil.getTimestamp();
 					sentCont = 0;
+					sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
 					sendMessage();
 				}
 			}
@@ -120,11 +125,12 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
 
 			if(experimentIsRunning){
+				paramsSet = false;
+				experimentIsRunning = false;
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / (float)(runningTime);
 				node.sendToSupervisor(new A3Message(MainActivity.DATA, "StoS: " + sentCont + "\t" +
 						runningTime + "\t" + frequency + "\t" + avgRTT), "control");
-				experimentIsRunning = false;
 			}
 			break;
 
