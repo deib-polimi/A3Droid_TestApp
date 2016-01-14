@@ -61,11 +61,13 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		
 			case MainActivity.SET_PARAMS:
 				if(!paramsSet){
-					paramsSet = true;
 					String params [] = message.object.split("_");
-					long freq = Long.valueOf(params[0]);
+					if(!params[0].equals("A"))
+						break;
+					paramsSet = true;
+					long freq = Long.valueOf(params[1]);
 					this.MAX_INTERNAL = 60 * 1000 / freq;
-					this.PAYLOAD_SIZE = Integer.valueOf(params[1]);
+					this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
 					showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
 				}
 				break;
@@ -151,6 +153,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				if(experimentIsRunning){
 					showOnScreen("Experiment has stopped");
 					experimentIsRunning = false;
+					paramsSet = false;
 					double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 					float frequency = sentCont / ((float)(runningTime));
 					

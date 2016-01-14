@@ -63,16 +63,9 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 			
 			case MainActivity.JOINED:		
 				message.reason = MainActivity.ADD_MEMBER;
+				message.object += "_" + message.senderAddress;
 				channel.sendBroadcast(message);
-				sendToConnectedSupervisors(message);
-				if(experimentIsRunning){
-					message.reason = MainActivity.START_EXPERIMENT;
-					message.object = "";
-					if(channel.getChannelId().equals(message.senderAddress))						
-						sendToConnectedSupervisors(message);
-					else
-						channel.sendUnicast(message, message.senderAddress);
-				}
+				sendToConnectedSupervisors(message);				
 				break;
 				
 			case MainActivity.ADD_MEMBER:
@@ -80,6 +73,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
+				//String originalSender = content[3];
 				if(!type.equals("server"))
 					cleanGroupMember(uuid);				
 				if(launchedGroups.containsKey(type))
@@ -94,6 +88,12 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 					newGroup.put(experimentId, experiments);
 					launchedGroups.put(type, newGroup);
 				}
+				if(experimentIsRunning){
+					message.reason = MainActivity.START_EXPERIMENT;
+					message.object = "";					
+					channel.sendBroadcast(message);
+					sendToConnectedSupervisors(message);
+				}
 				break;
 				
 			case MainActivity.NEW_PHONE:
@@ -101,7 +101,13 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				vmIds.add(message.object);
 				numberOfTrials = 1;
 				showOnScreen("Telefoni connessi: " + vmIds.size());
-				break;							
+				break;	
+				
+			case MainActivity.SET_PARAMS_COMMAND:
+				message.reason = MainActivity.SET_PARAMS;
+				channel.sendBroadcast(message);
+				sendToConnectedSupervisors(message);
+				break;
 				
 			case MainActivity.CREATE_GROUP_USER_COMMAND:
 				message.reason = MainActivity.CREATE_GROUP;

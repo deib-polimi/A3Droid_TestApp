@@ -2,7 +2,6 @@ package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.greenhouse.activities.MainActivity;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -63,7 +62,8 @@ public class ControlFollowerRole extends A3FollowerRole {
 			break;
 			
 		case MainActivity.START_EXPERIMENT:
-		case MainActivity.LONG_RTT:						
+		case MainActivity.LONG_RTT:		
+		case MainActivity.SET_PARAMS:
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
