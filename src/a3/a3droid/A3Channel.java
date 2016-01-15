@@ -236,7 +236,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			}
 
 			private Object nameWithoutSuffix(String name) {
-				return name.replaceAll("\\.G.+", "");				
+				return name.replaceFirst("\\.G[A-Za-z0-9]+", "");				
 			}
 
 			public void lostAdvertisedName(String name, short transport, String namePrefix){}
@@ -455,7 +455,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		sender.start();
 		showOnScreen("Connected.");
 		try{
-			timer = new Timer(this,1,(int) (15000 + Math.random() * 1000));
+			timer = new Timer(this,1,(int) (10000 + Math.random() * 1000));
 			timer.start();
 		} catch (Exception e){
 			e.printStackTrace();
