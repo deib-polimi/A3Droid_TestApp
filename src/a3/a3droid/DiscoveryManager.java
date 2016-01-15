@@ -47,12 +47,12 @@ public class DiscoveryManager extends Thread{
 			return;
 		}
 
-		/* Inizio il discovery, che continua finchè il canale è connesso.
+		/* Inizio il discovery, che continua finchï¿½ il canale ï¿½ connesso.
 		 * Attivo il timer, il quale, una volta scaduto, chiama il metodo timerFired().
 		 * Allo scadere del tempo, se non sono ancora connesso a nessun gruppo creo il Service.
 		 * A questo punto scopro il gruppo appena creato e mi ci connetto.
 		 */
-		status = mBus.findAdvertisedName(name);
+		status = mBus.findAdvertisedName(name + '.');
 		if (Status.OK != status) {
 			showOnScreen("STATUS = " + status + " DOPO FINDADVERTISEDNAME().");
 			return;
@@ -60,7 +60,7 @@ public class DiscoveryManager extends Thread{
 	}
 
 	public void disconnect(){
-		mBus.cancelFindAdvertisedName(name);
+		mBus.cancelFindAdvertisedName(name + '.');
 		mBus.disconnect();
 	}
 	

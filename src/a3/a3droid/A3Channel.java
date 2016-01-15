@@ -37,6 +37,7 @@ import android.os.Message;
 public class A3Channel extends Thread implements BusObject, TimerInterface, UserInterface{
 
 	/**The name of the group to join.*/
+	private String groupNameNoSuffix;
 	private String groupName;
 	private String groupSuffix = "";
 	
@@ -200,13 +201,14 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			A3SupervisorRole a3SupervisorRole, boolean followerOnly, boolean supervisorOnly) {
 		// TODO Auto-generated method stub
 		
+			this.groupNameNoSuffix = Constants.PREFIX + groupName;
 			this.groupName = Constants.PREFIX + groupName;
 			followerRole = a3FollowerRole;
 			supervisorRole = a3SupervisorRole;
 			this.followerOnly = followerOnly;
 			this.supervisorOnly = supervisorOnly;
 			setName(groupName);
-			connect(groupName);
+			connect(this.groupName);
 		
 	}
 
@@ -217,8 +219,6 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		
 		mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
 
-		groupName = Constants.PREFIX + group_name;
-
 		mBus.registerBusListener(new BusListener() {
 
 			@Override
@@ -228,15 +228,15 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 				 * If the group is duplicated, starting the merging procedure takes time
 				 * and blocks the callbacks, so I manage this case in another thread.
 				 */
-				if(nameWithoutSuffix(name).equals(groupName)){
+				if(nameWithoutSuffix(name).equals(groupNameNoSuffix)){
 					discovered = true;
-					groupSuffix = name.replace(groupName, ""); 
+					groupSuffix = name.replace(groupNameNoSuffix, ""); 
 					groupName = name;
 				}
 			}
 
 			private Object nameWithoutSuffix(String name) {
-				return name.replaceAll("\\_.G.+", "");				
+				return name.replaceAll("\\.G.+", "");				
 			}
 
 			public void lostAdvertisedName(String name, short transport, String namePrefix){}
@@ -255,7 +255,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		}
 
 		// The discovery and the timer start.
-		status = mBus.findAdvertisedName(groupName);
+		status = mBus.findAdvertisedName(groupNameNoSuffix + '.');
 		if (Status.OK != status){
 			showOnScreen("status = " + status + " dopo findAdvertisedName()");
 			return;
@@ -325,7 +325,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	/**It disconnect this channel from the group and the AllJoyn bus.*/
 	public void disconnect(){
 		
-		groupName = groupName.replace(groupSuffix, "");
+		groupName = groupNameNoSuffix;
 	
 		/*The name of my UnicastReceiver is strictly based on my address in the group,
 		 * so I must disconnect it when I disconnect.
@@ -455,7 +455,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		sender.start();
 		showOnScreen("Connected.");
 		try{
-			timer = new Timer(this,1,(int) (2000 + Math.random() * 1000));
+			timer = new Timer(this,1,(int) (15000 + Math.random() * 1000));
 			timer.start();
 		} catch (Exception e){
 			e.printStackTrace();
@@ -1039,7 +1039,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 						
 						switch (msg.arg1) {
 							case 0:								
-								mBus.cancelFindAdvertisedName(groupName);
+								mBus.cancelFindAdvertisedName(groupNameNoSuffix + '.');
 								
 								/*The group name wasn't found, so I must create the Service.
 								 * If I create the group, I will probably be the supervisor:
@@ -1218,7 +1218,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 	
 	public String getGroupName() {
-		return groupName.replace(Constants.PREFIX, "").replace(groupSuffix, "");
+		return groupNameNoSuffix.replace(Constants.PREFIX, "");
 	}
 
 	public Hierarchy getHierarchy(){

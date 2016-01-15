@@ -122,7 +122,7 @@ public class Service extends HandlerThread implements BusObject, A3ServiceInterf
 	public String connect(){
 
 		this.mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
-		this.groupName = groupName.concat("_.G").concat(mBus.getGlobalGUIDString());
+		this.groupName = groupName.concat(".G").concat(mBus.getGlobalGUIDString());
 		this.groupTransmitter = new A3UnicastTransmitter(groupName);
 		sendToOtherGroup(new A3Message(Constants.NEW_GROUP, getGroupName()), "wait");
 		this.discoveryManager = new DiscoveryManager(groupName, this);
