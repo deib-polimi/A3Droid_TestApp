@@ -201,14 +201,13 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 			A3SupervisorRole a3SupervisorRole, boolean followerOnly, boolean supervisorOnly) {
 		// TODO Auto-generated method stub
 		
-			this.groupNameNoSuffix = Constants.PREFIX + groupName;
-			this.groupName = Constants.PREFIX + groupName;
+			this.groupNameNoSuffix = Constants.PREFIX + groupName;			
 			followerRole = a3FollowerRole;
 			supervisorRole = a3SupervisorRole;
 			this.followerOnly = followerOnly;
 			this.supervisorOnly = supervisorOnly;
 			setName(groupName);
-			connect(this.groupName);
+			connect(groupName);
 		
 	}
 
@@ -216,6 +215,8 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	public void connect(String group_name){
 
 		showOnScreen("Starting...");
+		
+		this.groupName = Constants.PREFIX + group_name;
 		
 		mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
 

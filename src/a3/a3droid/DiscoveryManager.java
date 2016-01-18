@@ -52,7 +52,7 @@ public class DiscoveryManager extends Thread{
 		 * Allo scadere del tempo, se non sono ancora connesso a nessun gruppo creo il Service.
 		 * A questo punto scopro il gruppo appena creato e mi ci connetto.
 		 */
-		status = mBus.findAdvertisedName(name + '.');
+		status = mBus.findAdvertisedName(name);
 		if (Status.OK != status) {
 			showOnScreen("STATUS = " + status + " DOPO FINDADVERTISEDNAME().");
 			return;
@@ -60,7 +60,7 @@ public class DiscoveryManager extends Thread{
 	}
 
 	public void disconnect(){
-		mBus.cancelFindAdvertisedName(name + '.');
+		mBus.cancelFindAdvertisedName(name);
 		mBus.disconnect();
 	}
 	
