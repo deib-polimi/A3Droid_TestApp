@@ -17,130 +17,136 @@ import android.os.HandlerThread;
 import android.os.Message;
 
 /**
- * This class is the channel that lets the nodes communicate with each other.
- * It has the methods to receive broadcast messages and to send messages to the supervisor of the group.
+ * This class is the channel that lets the nodes communicate with each other. It
+ * has the methods to receive broadcast messages and to send messages to the
+ * supervisor of the group.
  * 
- * When a node needs to join a group, it creates a channel.
- * The channel start the discovery of the group and waits 2 seconds:
- * if the group was found, then the channel connects to it,
- * otherwise the channel creates the group and connects to it.
- * If the group name is found, but the Service is not visible,
+ * When a node needs to join a group, it creates a channel. The channel start
+ * the discovery of the group and waits 2 seconds: if the group was found, then
+ * the channel connects to it, otherwise the channel creates the group and
+ * connects to it. If the group name is found, but the Service is not visible,
  * the channels becomes creates the group and connects to it.
  * 
  * Once connected, the channel must know if it is the supervisor or a follower:
- * if the channel is the supervisor, it receives communication within a 2 seconds timeout,
- * and it soon sets itself as the supervisor.
- * Otherwise the channel sets itself as a follower after the timeout.
+ * if the channel is the supervisor, it receives communication within a 2
+ * seconds timeout, and it soon sets itself as the supervisor. Otherwise the
+ * channel sets itself as a follower after the timeout.
+ * 
  * @author Francesco
- *
+ * 
  */
-public class A3Channel extends Thread implements BusObject, TimerInterface, UserInterface{
+public class A3Channel extends Thread implements BusObject, TimerInterface,
+		UserInterface {
 
-	/**The name of the group to join.*/
+	/** The name of the group to join. */
 	private String groupNameNoSuffix;
 	private String groupName;
 	private String groupSuffix = "";
-	
-	/**The connection to the AllJoyn bus.*/
+
+	/** The connection to the AllJoyn bus. */
 	private BusAttachment mBus;
-	
-	/**The Service proxy to communicate with.*/
+
+	/** The Service proxy to communicate with. */
 	private ProxyBusObject mProxyObj;
-	
-	/**The interface used to communicate to the proxy.*/
+
+	/** The interface used to communicate to the proxy. */
 	private A3ServiceInterface serviceInterface;
-	
-	/**The id of the AllJoyn session this channel is joined.*/
+
+	/** The id of the AllJoyn session this channel is joined. */
 	private int mSessionId;
 
-	/**It indicates if this channel is connected or not.*/
+	/** It indicates if this channel is connected or not. */
 	private boolean mIsConnected;
-	
-	/**The node this channel belongs to.*/
+
+	/** The node this channel belongs to. */
 	private A3Node node;
-	
-	/**The thread which manages session lost and timeout firing.*/
+
+	/** The thread which manages session lost and timeout firing. */
 	private CallbackThread callbackThread;
-	
-	/**The Service this channel eventually creates.*/
+
+	/** The Service this channel eventually creates. */
 	private Service service;
-	
-	/**The address of this channel.*/
+
+	/** The address of this channel. */
 	private String myId;
-	
-	/**A timer.*/
+
+	/** A timer. */
 	private Timer timer;
 
 	/** */
 	private boolean discovered;
-	
-	/**The thread which handles the received messages.*/
+
+	/** The thread which handles the received messages. */
 	private MessageHandler messageHandler;
-	
-	/**Indicates if the group name was found, but the Service wasn't visible.*/
+
+	/** Indicates if the group name was found, but the Service wasn't visible. */
 	private boolean inTransitionConditions;
-	
-	/**Indicates if this channel is currently the group supervisor or not.*/
+
+	/** Indicates if this channel is currently the group supervisor or not. */
 	private boolean isSupervisor;
-	
-	/**The receiver used to receive unicast messages from the Service.*/
+
+	/** The receiver used to receive unicast messages from the Service. */
 	private A3UnicastReceiver unicastReceiver;
-	
-	/**The logic that is executed when this channel is a follower.*/
+
+	/** The logic that is executed when this channel is a follower. */
 	private A3FollowerRole followerRole;
 
-	/**The logic that is executed when this channel is the supervisor.*/
+	/** The logic that is executed when this channel is the supervisor. */
 	private A3SupervisorRole supervisorRole;
-	
-	/**The role that is currently active on this channel.*/
+
+	/** The role that is currently active on this channel. */
 	private A3Role activeRole;
-	
-	/**The list of message kinds this channel is interested in.*/
+
+	/** The list of message kinds this channel is interested in. */
 	private Subscriptions subscriptions;
-	
-	/**The list of the messages waiting to be sent to the supervisor.*/
+
+	/** The list of the messages waiting to be sent to the supervisor. */
 	private MessageQueue queue;
 
-	/**It indicates if the channel must reconnect or not.*/
+	/** It indicates if the channel must reconnect or not. */
 	private boolean reconnect;
 
-	/**The list of the parent groups.*/
+	/** The list of the parent groups. */
 	private Hierarchy hierarchy;
-	
-	/**The thread which passes the incoming messages to the active role.*/
+
+	/** The thread which passes the incoming messages to the active role. */
 	private InputQueueHandler inputQueueHandler;
-	
-	/**The list of the incoming message.*/
+
+	/** The list of the incoming message. */
 	private MessageQueue inputQueue;
 
-	/**true if this channel can only act as a follower, false otherwise.*/
+	/** true if this channel can only act as a follower, false otherwise. */
 	private boolean followerOnly;
 
-	/**true if this channel can only act as a supervisor, false otherwise.*/
+	/** true if this channel can only act as a supervisor, false otherwise. */
 	private boolean supervisorOnly;
-	
-	/**The user interface to interact to.*/
+
+	/** The user interface to interact to. */
 	protected UserInterface ui;
 
-	/**true if this channel is used by the application, false otherwise.*/
+	/** true if this channel is used by the application, false otherwise. */
 	private boolean connectedForApplication;
 
-	/**true if this channel is used by the system, false otherwise.*/
+	/** true if this channel is used by the system, false otherwise. */
 	private int connectedForSystem;
 
 	private boolean firstConnection;
-	
-	/**The descriptor of the group this channel is connected to.*/
+
+	/** The descriptor of the group this channel is connected to. */
 	private GroupDescriptor groupDescriptor;
 
 	private Thread sender;
-	
+
 	/**
-	 * @param a3node The node this channel belongs to.
-	 * @param userInterface The user interface to interact to.
-	 * @param groupDescriptor The descriptor of the group to connect this channel to.
+	 * @param a3node
+	 *            The node this channel belongs to.
+	 * @param userInterface
+	 *            The user interface to interact to.
+	 * @param groupDescriptor
+	 *            The descriptor of the group to connect this channel to.
 	 */
-	public A3Channel (A3Node a3node, UserInterface userInterface, GroupDescriptor groupDescriptor){
+	public A3Channel(A3Node a3node, UserInterface userInterface,
+			GroupDescriptor groupDescriptor) {
 
 		super();
 		start();
@@ -148,7 +154,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		node = a3node;
 		serviceInterface = null;
 		service = null;
-		myId = null;		
+		myId = null;
 		discovered = false;
 		inTransitionConditions = false;
 		isSupervisor = false;
@@ -161,26 +167,20 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		connectedForSystem = 0;
 		firstConnection = true;
 		this.groupDescriptor = groupDescriptor;
-		
-		/* Thread that reads the first message in the queue and try to send it to the Service.
-		 * If the transmission fails, the channel reconnects and the message is still available in the queue,
-		 * otherwise such message is removed from the queue.*/
-		/*sender = new Thread(){
-			public void run(){
-				A3Message message;
-				while(true){
-					try{
-						message = queue.get();
-						if(send(message))
-							queue.dequeue();
-						else if(reconnect)
-							reconnect();
-					} catch (Exception e) {}
-				}
-			}
-		};
-		sender.start();*/
-		
+
+		/*
+		 * Thread that reads the first message in the queue and try to send it
+		 * to the Service. If the transmission fails, the channel reconnects and
+		 * the message is still available in the queue, otherwise such message
+		 * is removed from the queue.
+		 */
+		/*
+		 * sender = new Thread(){ public void run(){ A3Message message;
+		 * while(true){ try{ message = queue.get(); if(send(message))
+		 * queue.dequeue(); else if(reconnect) reconnect(); } catch (Exception
+		 * e) {} } } }; sender.start();
+		 */
+
 		callbackThread = new CallbackThread();
 		messageHandler = new MessageHandler();
 		inputQueueHandler = new InputQueueHandler();
@@ -188,191 +188,212 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 	/**
-	 * Called by an A3Node when connecting the channel.
-	 * Used to connect to the AllJoyn bus and to start group discovery.
-	 * It also sets the roles of this channel.
-	 * @param groupName The name of the group to which to connect this channel.
-	 * @param a3FollowerRole The logic that is executed when this channel is a follower.
-	 * @param a3SupervisorRole The logic that is executed when this channel is the supervisor.
-	 * @param supervisorOnly 
-	 * @param followerOnly 
+	 * Called by an A3Node when connecting the channel. Used to connect to the
+	 * AllJoyn bus and to start group discovery. It also sets the roles of this
+	 * channel.
+	 * 
+	 * @param groupName
+	 *            The name of the group to which to connect this channel.
+	 * @param a3FollowerRole
+	 *            The logic that is executed when this channel is a follower.
+	 * @param a3SupervisorRole
+	 *            The logic that is executed when this channel is the
+	 *            supervisor.
+	 * @param supervisorOnly
+	 * @param followerOnly
 	 */
 	public void connect(String groupName, A3FollowerRole a3FollowerRole,
-			A3SupervisorRole a3SupervisorRole, boolean followerOnly, boolean supervisorOnly) {
+			A3SupervisorRole a3SupervisorRole, boolean followerOnly,
+			boolean supervisorOnly) {
 		// TODO Auto-generated method stub
-		
-			this.groupNameNoSuffix = Constants.PREFIX + groupName;			
-			followerRole = a3FollowerRole;
-			supervisorRole = a3SupervisorRole;
-			this.followerOnly = followerOnly;
-			this.supervisorOnly = supervisorOnly;
-			setName(groupName);
-			connect(groupName);
-		
+
+		this.groupNameNoSuffix = Constants.PREFIX + groupName;
+		followerRole = a3FollowerRole;
+		supervisorRole = a3SupervisorRole;
+		this.followerOnly = followerOnly;
+		this.supervisorOnly = supervisorOnly;
+		setName(groupName);
+		connect(groupName);
+
 	}
 
-	/**Used to connect to the AllJoyn bus and to start group discovery.*/
-	public void connect(String group_name){
+	/** Used to connect to the AllJoyn bus and to start group discovery. */
+	public void connect(String group_name) {
 
 		showOnScreen("Starting...");
-		
+
 		this.groupName = Constants.PREFIX + group_name;
-		
-		mBus = new BusAttachment(getClass().getPackage().getName(), BusAttachment.RemoteMessage.Receive);
+
+		mBus = new BusAttachment(getClass().getPackage().getName(),
+				BusAttachment.RemoteMessage.Receive);
 
 		mBus.registerBusListener(new BusListener() {
 
 			@Override
-			public void foundAdvertisedName(String name, short transport, String namePrefix) {
+			public void foundAdvertisedName(String name, short transport,
+					String namePrefix) {
 
-				/* "name" can be a prefix of another group name: in this case, I must do nothing.
-				 * If the group is duplicated, starting the merging procedure takes time
-				 * and blocks the callbacks, so I manage this case in another thread.
+				/*
+				 * "name" can be a prefix of another group name: in this case, I
+				 * must do nothing. If the group is duplicated, starting the
+				 * merging procedure takes time and blocks the callbacks, so I
+				 * manage this case in another thread.
 				 */
-				if(nameWithoutSuffix(name).equals(groupNameNoSuffix)){
+				if (nameWithoutSuffix(name).equals(groupNameNoSuffix)) {
 					discovered = true;
-					groupSuffix = name.replace(groupNameNoSuffix, ""); 
+					groupSuffix = name.replace(groupNameNoSuffix, "");
 					groupName = name;
 				}
 			}
 
 			private Object nameWithoutSuffix(String name) {
-				return name.replaceFirst("\\.G[A-Za-z0-9]+", "");				
+				return name.replaceFirst("\\.G[A-Za-z0-9]+", "");
 			}
 
-			public void lostAdvertisedName(String name, short transport, String namePrefix){}
+			public void lostAdvertisedName(String name, short transport,
+					String namePrefix) {
+			}
 		});
 
 		Status status = mBus.connect();
-		if (Status.OK != status){
+		if (Status.OK != status) {
 			showOnScreen("status = " + status + " dopo connect()");
 			return;
 		}
 
 		status = mBus.registerSignalHandlers(this);
-		if (status != Status.OK){
-			showOnScreen("status = " + status + " dopo registerSignalHandlers()");
+		if (status != Status.OK) {
+			showOnScreen("status = " + status
+					+ " dopo registerSignalHandlers()");
 			return;
 		}
 
 		// The discovery and the timer start.
 		status = mBus.findAdvertisedName(groupNameNoSuffix + '.');
-		if (Status.OK != status){
+		if (Status.OK != status) {
 			showOnScreen("status = " + status + " dopo findAdvertisedName()");
 			return;
 		}
 
-		try{
-			timer = new Timer(this,0,(int) (2000 + Math.random() * 1000));
+		try {
+			timer = new Timer(this, 0, (int) (2000 + Math.random() * 1000));
 			timer.start();
-		} catch (Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	/**It is called when the timeout fires and the group name was discovered.
-	 * It lets this channel join the AllJoyn session and connect to the group.
+	/**
+	 * It is called when the timeout fires and the group name was discovered. It
+	 * lets this channel join the AllJoyn session and connect to the group.
 	 */
-	public void joinSession(){
-		
-		try{
+	public void joinSession() {
+
+		try {
 			short contactPort = Constants.CONTACT_PORT;
 			SessionOpts sessionOpts = new SessionOpts();
 			sessionOpts.transports = SessionOpts.TRANSPORT_ANY;
 			Mutable.IntegerValue sessionId = new Mutable.IntegerValue();
-			
-			Status status = mBus.joinSession(groupName, contactPort, sessionId, sessionOpts, new SessionListener() {
 
-				@Override
-				public void sessionLost(int sessionId, int reason) {
+			Status status = mBus.joinSession(groupName, contactPort, sessionId,
+					sessionOpts, new SessionListener() {
 
-					Message msg = callbackThread.obtainMessage();
-					msg.arg2 = Constants.SESSION_LOST;
-					callbackThread.sendMessage(msg);
-				}
-			});
-			
+						@Override
+						public void sessionLost(int sessionId, int reason) {
+
+							Message msg = callbackThread.obtainMessage();
+							msg.arg2 = Constants.SESSION_LOST;
+							callbackThread.sendMessage(msg);
+						}
+					});
+
 			if (status == Status.OK)
 				onSessionJoined(sessionId);
 
-			else{
+			else {
 				mIsConnected = false;
 				showOnScreen("status = " + status + " dopo joinSession()");
-				//The group name was found, but the Service is not visible.
-				if(status == Status.ALLJOYN_JOINSESSION_REPLY_UNREACHABLE){
+				// The group name was found, but the Service is not visible.
+				if (status == Status.ALLJOYN_JOINSESSION_REPLY_UNREACHABLE) {
 					inTransitionConditions = true;
 					createGroup();
 					reconnect();
 
-				}
-				else{
-					//If this channel is already joined.
-					if(status == Status.ALLJOYN_JOINSESSION_REPLY_ALREADY_JOINED)
+				} else {
+					// If this channel is already joined.
+					if (status == Status.ALLJOYN_JOINSESSION_REPLY_ALREADY_JOINED)
 						onSessionJoined(sessionId);
-					else{
-						if(status == Status.ALLJOYN_JOINSESSION_REPLY_FAILED){
+					else {
+						if (status == Status.ALLJOYN_JOINSESSION_REPLY_FAILED) {
 							discovered = false;
 							reconnect();
-						}else
+						} else
 							reconnect();
 					}
 				}
 			}
-		}catch (Exception ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	/**It disconnect this channel from the group and the AllJoyn bus.*/
-	public void disconnect(){
-		
+	/** It disconnect this channel from the group and the AllJoyn bus. */
+	public void disconnect() {
+
 		groupName = groupNameNoSuffix;
-	
-		/*The name of my UnicastReceiver is strictly based on my address in the group,
-		 * so I must disconnect it when I disconnect.
+
+		/*
+		 * The name of my UnicastReceiver is strictly based on my address in the
+		 * group, so I must disconnect it when I disconnect.
 		 */
 		unicastReceiver.disconnect();
-		
-		try{
+
+		try {
 			sender.stop();
-		}catch (Exception ex) {}
-		
-		/* I stop the logic of this channel, whatever it is.
-		 * A supervisor only channel which discovers to be a follower at first connection
-		 * doesn't have any active logic: that's why I ignore an error here.
+		} catch (Exception ex) {
+		}
+
+		/*
+		 * I stop the logic of this channel, whatever it is. A supervisor only
+		 * channel which discovers to be a follower at first connection doesn't
+		 * have any active logic: that's why I ignore an error here.
 		 */
-		try{
+		try {
 			activeRole.setActive(false);
-		}catch (Exception ex) {}
-		
-		if(isSupervisor){
+		} catch (Exception ex) {
+		}
+
+		if (isSupervisor) {
 			isSupervisor = false;
 		}
-	
-		try{
+
+		try {
 			if (mIsConnected) {
 				mBus.leaveSession(mSessionId);
 				mIsConnected = false;
 				firstConnection = true;
 			}
+		} catch (Exception ex) {
+			showOnScreen("EXCEPTION IN A3Channel.disconnect(): "
+					+ ex.getMessage());
 		}
-		catch (Exception ex) {
-			showOnScreen("EXCEPTION IN A3Channel.disconnect(): " + ex.getMessage());
-		}
-	
-		try{
+
+		try {
 			mBus.disconnect();
 			reset();
 			showOnScreen("Disconnected.");
+		} catch (Exception ex) {
 		}
-		catch (Exception ex) {}
 		reset();
 	}
 
-	/**It resets the initial configuration of the channel, in order to reuse it next.*/
+	/**
+	 * It resets the initial configuration of the channel, in order to reuse it
+	 * next.
+	 */
 	private void reset() {
 		// TODO Auto-generated method stub
-	
+
 		groupName = groupName.replace(groupSuffix, "");
 		mIsConnected = false;
 		serviceInterface = null;
@@ -383,8 +404,8 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 	/**
-	 * It is used in order to reconnect this channel at the same group
-	 * in case of errors, or when a duplicated group is found.
+	 * It is used in order to reconnect this channel at the same group in case
+	 * of errors, or when a duplicated group is found.
 	 */
 	private void reconnect() {
 		// TODO Auto-generated method stub
@@ -393,19 +414,21 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 	/**
-	 * It is called when the channel has just joined the AllJoyn session.
-	 * It retreives the communication interface, connects the unicast receiver
-	 * and starts the timer to wait for communication about the role this channel has in the group.
+	 * It is called when the channel has just joined the AllJoyn session. It
+	 * retreives the communication interface, connects the unicast receiver and
+	 * starts the timer to wait for communication about the role this channel
+	 * has in the group.
 	 * 
-	 * @param sessionId The id of the AllJoyn session this channel is joined.
+	 * @param sessionId
+	 *            The id of the AllJoyn session this channel is joined.
 	 */
 	private void onSessionJoined(Mutable.IntegerValue sessionId) {
-		
-		// TODO Auto-generated method stub
-		mProxyObj =  mBus.getProxyBusObject(groupName, "/SimpleService", sessionId.value,
-				new Class<?>[] { A3ServiceInterface.class });
 
-		serviceInterface =  mProxyObj.getInterface(A3ServiceInterface.class);
+		// TODO Auto-generated method stub
+		mProxyObj = mBus.getProxyBusObject(groupName, "/SimpleService",
+				sessionId.value, new Class<?>[] { A3ServiceInterface.class });
+
+		serviceInterface = mProxyObj.getInterface(A3ServiceInterface.class);
 
 		mSessionId = sessionId.value;
 		mIsConnected = true;
@@ -413,39 +436,47 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 
 		String id = String.valueOf(myId.hashCode());
 
-		/*The name of my UnicastReceiver is strictly based on my address in the group,
-		 * so I can create and connect it only now that I know my address.
+		/*
+		 * The name of my UnicastReceiver is strictly based on my address in the
+		 * group, so I can create and connect it only now that I know my
+		 * address.
 		 */
 		unicastReceiver = new A3UnicastReceiver(groupName + "._" + id, this);
 		unicastReceiver.connect();
-		
-		//I transmit my subscriptions only if I am subscribed to receive something.
+
+		// I transmit my subscriptions only if I am subscribed to receive
+		// something.
 		String message = subscriptions.toString();
-		if(!message.equals("")){
-			A3Message subscriptionsMessage = new A3Message(Constants.SUBSCRIPTION, message);
+		if (!message.equals("")) {
+			A3Message subscriptionsMessage = new A3Message(
+					Constants.SUBSCRIPTION, message);
 			sendToSupervisor(subscriptionsMessage);
 		}
 		sendToSupervisor(new A3Message(Constants.GET_HIERARCHY, ""));
-		
+
 		try {
-			sendToSupervisor(new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST, ""));
+			sendToSupervisor(new A3Message(
+					Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST, ""));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//unblock();
-		
-		/* Thread that reads the first message in the queue and try to send it to the Service.
-		 * If the transmission fails, the channel reconnects and the message is still available in the queue,
-		 * otherwise such message is removed from the queue.*/
-		sender = new Thread(){
-			public void run(){
+		// unblock();
+
+		/*
+		 * Thread that reads the first message in the queue and try to send it
+		 * to the Service. If the transmission fails, the channel reconnects and
+		 * the message is still available in the queue, otherwise such message
+		 * is removed from the queue.
+		 */
+		sender = new Thread() {
+			public void run() {
 				A3Message message;
-				while(true){
-					try{
+				while (true) {
+					try {
 						message = queue.get();
-						if(send(message))
+						if (send(message))
 							queue.dequeue();
-						else if(reconnect)
+						else if (reconnect)
 							reconnect();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -455,322 +486,356 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		};
 		sender.start();
 		showOnScreen("Connected.");
-		try{
-			timer = new Timer(this,1,(int) (10000 + Math.random() * 1000));
+		try {
+			timer = new Timer(this, 1, (int) (10000 + Math.random() * 1000));
 			timer.start();
-		} catch (Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * Called when this channels becomes follower.
-	 * It deactivates the supervisor role (if it is active) and it activates follower role.
+	 * Called when this channels becomes follower. It deactivates the supervisor
+	 * role (if it is active) and it activates follower role.
 	 */
 	private void becomeFollower() {
 		// TODO Auto-generated method stub
-		
-		try{
-			/*At my first connection time I'm neither the supervisor nor a follower:
-			 * if I discover to be a follower, I don't have to deactivate the supervisor role.
-			 * In other cases, this method is called only if I was the supervisor,
-			 * so this "if" is always executed.
+
+		try {
+			/*
+			 * At my first connection time I'm neither the supervisor nor a
+			 * follower: if I discover to be a follower, I don't have to
+			 * deactivate the supervisor role. In other cases, this method is
+			 * called only if I was the supervisor, so this "if" is always
+			 * executed.
 			 */
-			if(isSupervisor){
+			if (isSupervisor) {
 				mBus.unregisterSignalHandlers(supervisorRole);
 				supervisorRole.setActive(false);
 			}
-			
-			if(supervisorOnly){
+
+			if (supervisorOnly) {
 				disconnect();
-				
+
 				node.setWaiting(this);
-			}
-			else{
+			} else {
 				isSupervisor = false;
 				followerRole.setActive(true);
 				activeRole = followerRole;
 				new Thread(followerRole).start();
-				
-				synchronized(inputQueue){
+
+				synchronized (inputQueue) {
 					inputQueue.notify();
 				}
-				
+
 				node.setConnected(this);
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * Called when this channels becomes supervisor.
-	 * It deactivates the follower role (if it is active) and it activates supervisor role.
+	 * Called when this channels becomes supervisor. It deactivates the follower
+	 * role (if it is active) and it activates supervisor role.
 	 */
 	private void becomeSupervisor() {
 		// TODO Auto-generated method stub
-		
-		//This method is always called when I am the supervisor, but I wasn't it before.
+
+		// This method is always called when I am the supervisor, but I wasn't
+		// it before.
 		isSupervisor = true;
-		try{
-			if(!supervisorOnly && !firstConnection)
+		try {
+			if (!supervisorOnly && !firstConnection)
 				followerRole.setActive(false);
-		
-			if(followerOnly){
+
+			if (followerOnly) {
 				disconnect();
-				
+
 				node.setWaiting(this);
-			}
-			else{
+			} else {
 				firstConnection = false;
 				supervisorRole.setActive(true);
 				activeRole = supervisorRole;
 				new Thread(supervisorRole).start();
 				mBus.registerSignalHandlers(supervisorRole);
-				
-					synchronized(inputQueue){
-						inputQueue.notify();
-					}
-					
+
+				synchronized (inputQueue) {
+					inputQueue.notify();
+				}
+
 				node.setConnected(this);
 			}
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * Called by the Service when it sends a broadcast message.
-	 * It passes the received messages to another thread, in order not to block the bus.
-	 * @param message The received message.
+	 * Called by the Service when it sends a broadcast message. It passes the
+	 * received messages to another thread, in order not to block the bus.
+	 * 
+	 * @param message
+	 *            The received message.
 	 */
 	@BusSignalHandler(iface = Constants.PACKAGE_NAME + ".A3ServiceInterface", signal = "ReceiveBroadcast")
 	public void ReceiveBroadcast(A3Message message) {
-	
+
 		Message msg = messageHandler.obtainMessage();
 		msg.obj = message;
 		messageHandler.sendMessage(msg);
 	}
 
-	/**It is called by the thread that handles the received messages.
-	 * @param message The received message.
+	/**
+	 * It is called by the thread that handles the received messages.
+	 * 
+	 * @param message
+	 *            The received message.
 	 */
-	private void onMessage(A3Message message) throws Exception{
-	
-		/* If the session was lost and now I receive a message,
-		 * then I'm connected and I can retrive the information about the new session.
+	private void onMessage(A3Message message) throws Exception {
+
+		/*
+		 * If the session was lost and now I receive a message, then I'm
+		 * connected and I can retrive the information about the new session.
 		 */
-		if(!mIsConnected){
+		if (!mIsConnected) {
 			mIsConnected = true;
 		}
-	
+
 		myId = mBus.getUniqueName();
-	
-		switch(message.reason){
+
+		switch (message.reason) {
 		case Constants.NEW_SUPERVISOR:
-			//The new supervisor was elected.
-	
-			if(message.object.equals("?")){
-				message = new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REPLY, String.valueOf(getSupervisorFitnessFunction()));
+			// The new supervisor was elected.
+
+			if (message.object.equals("?")) {
+				message = new A3Message(
+						Constants.SUPERVISOR_FITNESS_FUNCTION_REPLY,
+						String.valueOf(getSupervisorFitnessFunction()));
 				sendToSupervisor(message);
 			}
-			
-			else{
-				if(message.object.equals(myId)){
-					if(!isSupervisor){
+
+			else {
+				if (message.object.equals(myId)) {
+					if (!isSupervisor) {
 						becomeSupervisor();
 					}
 				}
-				
-				else{
-					if(isSupervisor || firstConnection){
+
+				else {
+					if (isSupervisor || firstConnection) {
 						firstConnection = false;
 						becomeFollower();
 					}
 				}
 			}
 			break;
-			
+
 		case Constants.SUBSCRIPTION:
 		case Constants.UNSUBSCRIPTION:
 			subscriptions.onMessage(message);
 			break;
-			
+
 		case Constants.HIERARCHY:
 		case Constants.ADD_TO_HIERARCHY:
 		case Constants.REMOVE_FROM_HIERARCHY:
 			hierarchy.onMessage(message);
 			break;
-			
+
 		case Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST:
-			if(!followerOnly){
-				//I send the value of my fitness function to the Service, which collects it.
-				message = new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REPLY, String.valueOf(getSupervisorFitnessFunction()));
+			if (!followerOnly) {
+				// I send the value of my fitness function to the Service, which
+				// collects it.
+				message = new A3Message(
+						Constants.SUPERVISOR_FITNESS_FUNCTION_REPLY,
+						String.valueOf(getSupervisorFitnessFunction()));
 				sendToSupervisor(message);
 			}
 			break;
-			
+
 		case Constants.BOOLEAN_SPLIT_FITNESS_FUNCTION:
-			//If my fitness function equals true, I transfer to the new group.
+			// If my fitness function equals true, I transfer to the new group.
 			hierarchy.incrementSubgroupsCounter();
-			if(!isSupervisor && getBooleanSplitFitnessFunction())
-				node.actualMerge(getGroupName() + "_" + hierarchy.getSubgroupsCounter(), groupName);
+			if (!isSupervisor && getBooleanSplitFitnessFunction())
+				node.actualMerge(
+						getGroupName() + "_" + hierarchy.getSubgroupsCounter(),
+						groupName);
 			break;
-			
+
 		case Constants.INTEGER_SPLIT_FITNESS_FUNCTION:
-			//I send my integer split fitness function value to the Service.
+			// I send my integer split fitness function value to the Service.
 			hierarchy.incrementSubgroupsCounter();
-			if(!isSupervisor){
-				message = new A3Message(Constants.INTEGER_SPLIT_FITNESS_FUNCTION, String.valueOf(getIntegerSplitFitnessFunction()));
+			if (!isSupervisor) {
+				message = new A3Message(
+						Constants.INTEGER_SPLIT_FITNESS_FUNCTION,
+						String.valueOf(getIntegerSplitFitnessFunction()));
 				sendToSupervisor(message);
 			}
 			break;
-			
+
 		case Constants.NEW_SPLITTED_GROUP:
-			/*The supervisor triggered a random split command:
-			 * a new group is created and I get notified of it.
+			/*
+			 * The supervisor triggered a random split command: a new group is
+			 * created and I get notified of it.
 			 */
 			hierarchy.incrementSubgroupsCounter();
 			break;
-			
+
 		case Constants.MERGE:
-			//"senderAddress Constants.MERGE otherGroupName".
+			// "senderAddress Constants.MERGE otherGroupName".
 			node.actualMerge(message.object, getGroupName());
 			break;
-			
+
 		case Constants.SPLIT:
-			
-			/* I will connect to a group splitted by this group, which has the same roles of this group,
-			 * so I don't need to check for right roles here.
+
+			/*
+			 * I will connect to a group splitted by this group, which has the
+			 * same roles of this group, so I don't need to check for right
+			 * roles here.
 			 */
-			if(!isSupervisor)
-				node.actualMerge(getGroupName() + "_" + hierarchy.getSubgroupsCounter(), getGroupName());
-			
+			if (!isSupervisor)
+				node.actualMerge(
+						getGroupName() + "_" + hierarchy.getSubgroupsCounter(),
+						getGroupName());
+
 			break;
-		
+
 		case Constants.WAIT_SUPERVISOR_FITNESS_FUNCTION_REQUEST:
-			
-			try{
-				sendToSupervisor(new A3Message(Constants.WAIT_SUPERVISOR_FITNESS_FUNCTION,
-						message.object + Constants.A3_SEPARATOR +
-						String.valueOf(node.getSupervisorFitnessFunction(message.object))));
-			}
-			catch(Exception e){
+
+			try {
+				sendToSupervisor(new A3Message(
+						Constants.WAIT_SUPERVISOR_FITNESS_FUNCTION,
+						message.object
+								+ Constants.A3_SEPARATOR
+								+ String.valueOf(node
+										.getSupervisorFitnessFunction(message.object))));
+			} catch (Exception e) {
 				e.printStackTrace();
-				/* I can have this exception only if the channel to group "message.object" doesn't exist.
-				 * In this case, I don't have to send back reply message, so I do nothing.
+				/*
+				 * I can have this exception only if the channel to group
+				 * "message.object" doesn't exist. In this case, I don't have to
+				 * send back reply message, so I do nothing.
 				 */
 			}
-			
+
 			break;
-			
+
 		case Constants.WAIT_NEW_SUPERVISOR:
 			// "senderAddress Constants.WAIT_NEW_SUPERVISOR groupName supervisorId".
-			String[] splittedObject = ((String)message.object).split(Constants.A3_SEPARATOR);
-			
+			String[] splittedObject = ((String) message.object)
+					.split(Constants.A3_SEPARATOR);
+
 			A3Channel channel;
-			
-			try{
+
+			try {
 				channel = node.getChannel(splittedObject[0]);
-				
-				if(splittedObject[1].equals(myId)){
-					
-					if(channel.followerOnly){
+
+				if (splittedObject[1].equals(myId)) {
+
+					if (channel.followerOnly) {
 						channel.disconnect();
 						node.setWaiting(channel);
-					}
-					else{
+					} else {
 						channel.connect(splittedObject[0]);
 						channel.becomeSupervisor();
-						channel.sendToSupervisor(new A3Message(Constants.NEW_SUPERVISOR, ""));
+						channel.sendToSupervisor(new A3Message(
+								Constants.NEW_SUPERVISOR, ""));
 					}
 				}
-				
-				else{
-					if((channel.supervisorOnly)){
+
+				else {
+					if ((channel.supervisorOnly)) {
 						channel.disconnect();
 						node.setWaiting(channel);
-					}
-					else{
+					} else {
 						channel.connect(splittedObject[0]);
 						channel.becomeFollower();
 					}
 				}
-			}catch (Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 			break;
-			
+
 		case Constants.WAIT_MERGE:
 			// "senderAddress Constants.WAIT_MERGE groupToJoin groupToDestroy".
-			splittedObject = ((String)message.object).split(Constants.A3_SEPARATOR);
+			splittedObject = ((String) message.object)
+					.split(Constants.A3_SEPARATOR);
 			node.actualMerge(splittedObject[0], splittedObject[1]);
 			break;
 			
+		//case Constants.MEMBER_REMOVED:
+			//node.memberRemoved((String) message.object);
+			//break;
+			
 		default:
-			//I pass the message to the active role.
+			// I pass the message to the active role.
 			inputQueue.enqueue(message);
 			break;
 		}
 	}
 
 	/**
-	 * It puts a message in the queue of the messages directed to the supervisor.
-	 * @param msg The message to be sent.
+	 * It puts a message in the queue of the messages directed to the
+	 * supervisor.
+	 * 
+	 * @param msg
+	 *            The message to be sent.
 	 */
-	public void sendToSupervisor(A3Message msg){
+	public void sendToSupervisor(A3Message msg) {
 		queue.enqueue(msg);
 	}
 
 	/**
-	 * Sends a message to the Service and, form there, to the supervisor.
-	 * If the transmission is unsuccesful, this channel reconnects, and a view update starts.
-	 * If the channel isn't connected, the sender thread is blocked.
-	 * @param message The message to send.
+	 * Sends a message to the Service and, form there, to the supervisor. If the
+	 * transmission is unsuccesful, this channel reconnects, and a view update
+	 * starts. If the channel isn't connected, the sender thread is blocked.
+	 * 
+	 * @param message
+	 *            The message to send.
 	 */
-	public boolean send(A3Message msg){
+	public boolean send(A3Message msg) {
 		boolean inServiceView = false;
 		boolean sent = false;
-		
-		synchronized(this){
-			while(!mIsConnected){
+
+		synchronized (this) {
+			while (!mIsConnected) {
 				try {
 					wait();
-					
+
 				} catch (Exception e) {
 					return false;
 				}
 			}
 		}
 		try {
-	
+
 			msg.senderAddress = myId;
-			
-			if (mIsConnected && serviceInterface != null){
+
+			if (mIsConnected && serviceInterface != null) {
 				inServiceView = serviceInterface.sendToSupervisor(msg);
-	
-				if(!inServiceView){
+
+				if (!inServiceView) {
 					sent = false;
 					reconnect = true;
 				}
-	
-				else{
+
+				else {
 					sent = true;
 					reconnect = false;
 					inTransitionConditions = false;
 					inServiceView = true;
 				}
-			}
-			else{
+			} else {
 				sent = false;
 				reconnect = false;
 			}
-	
+
 		} catch (Exception ex) {
-			if(ex.getMessage().equals("org.alljoyn.Bus.Exiting"))
+			if (ex.getMessage().equals("org.alljoyn.Bus.Exiting"))
 				stop();
-			else{
+			else {
 				sent = false;
 				reconnect = true;
 			}
@@ -779,197 +844,212 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 	/**
-	 * Sends a message to the Service and, form there, to all members of the group.
-	 * Such operation is possible only if this channel is the supervisor.
-	 * If the transmission is unsuccesful, this channel reconnects, and a view update starts.
-	 * @param message The message to send to every member of the group.
+	 * Sends a message to the Service and, form there, to all members of the
+	 * group. Such operation is possible only if this channel is the supervisor.
+	 * If the transmission is unsuccesful, this channel reconnects, and a view
+	 * update starts.
+	 * 
+	 * @param message
+	 *            The message to send to every member of the group.
 	 */
-	public void sendBroadcast(A3Message message){
-		
+	public void sendBroadcast(A3Message message) {
+
 		boolean ok = false;
-		
-		if(isSupervisor){
+
+		if (isSupervisor) {
 			message.senderAddress = myId;
-			try{
+			try {
 				ok = serviceInterface.sendBroadcast(message);
-			}
-			catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			if(!ok)
+			if (!ok)
 				reconnect();
-		}
-		else
+		} else
 			showOnScreen("Sending failed: I'm not the supervisor.");
 	}
 
 	/**
-	 * Sends a message to the Service and, form there, to the specified member of the group.
-	 * Such operation is possible only if this channel is the supervisor.
-	 * If the transmission is unsuccesful, this channel reconnects, and a view update starts.
-	 * @param message The message to send.
-	 * @param receiverAddress The address of the channel that must receive the message.
+	 * Sends a message to the Service and, form there, to the specified member
+	 * of the group. Such operation is possible only if this channel is the
+	 * supervisor. If the transmission is unsuccesful, this channel reconnects,
+	 * and a view update starts.
+	 * 
+	 * @param message
+	 *            The message to send.
+	 * @param receiverAddress
+	 *            The address of the channel that must receive the message.
 	 */
-	public void sendUnicast(A3Message message, String receiverAddress){
-	
+	public void sendUnicast(A3Message message, String receiverAddress) {
+
 		boolean ok = false;
-		
-		if(isSupervisor){
+
+		if (isSupervisor) {
 			message.senderAddress = myId;
-			try{
+			try {
 				ok = serviceInterface.sendUnicast(message, receiverAddress);
-			}
-			catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			if(!ok)
+			if (!ok)
 				reconnect();
-		}
-		else
+		} else
 			showOnScreen("Sending failed: I'm not the supervisor.");
 	}
 
 	/**
-	 * Sends a message to the Service and, form there,
-	 * to the members of the group which are interested in receiving it, basing on the reason of the message.
-	 * Such operation is possible only if this channel is the supervisor.
-	 * If the transmission is unsuccesful, this channel reconnects, and a view update starts.
-	 * @param message The message to send.
+	 * Sends a message to the Service and, form there, to the members of the
+	 * group which are interested in receiving it, basing on the reason of the
+	 * message. Such operation is possible only if this channel is the
+	 * supervisor. If the transmission is unsuccesful, this channel reconnects,
+	 * and a view update starts.
+	 * 
+	 * @param message
+	 *            The message to send.
 	 */
-	public void sendMulticast(A3Message message){
-	
+	public void sendMulticast(A3Message message) {
+
 		boolean ok = false;
-		
-		if(isSupervisor){
+
+		if (isSupervisor) {
 			message.senderAddress = myId;
-			try{
+			try {
 				ok = serviceInterface.sendMulticast(message);
-			}
-			catch(Exception e){
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			if(!ok)
+			if (!ok)
 				reconnect();
-		}
-		else
+		} else
 			showOnScreen("Sending failed: I'm not the supervisor.");
 	}
 
 	/**
-	 * Sends a message to the Service and, form there, to the members of the group specified in "destinations".
-	 * This results in calling "sendUnicast(message, destination)" on the Service for every destination.
-	 * Such operation is possible only if this channel is the supervisor.
-	 * If the transmission is unsuccesful, this channel reconnects, and a view update starts.
-	 * @param message The message to send.
-	 * @param destinations The members of the group that must receive the message.
+	 * Sends a message to the Service and, form there, to the members of the
+	 * group specified in "destinations". This results in calling
+	 * "sendUnicast(message, destination)" on the Service for every destination.
+	 * Such operation is possible only if this channel is the supervisor. If the
+	 * transmission is unsuccesful, this channel reconnects, and a view update
+	 * starts.
+	 * 
+	 * @param message
+	 *            The message to send.
+	 * @param destinations
+	 *            The members of the group that must receive the message.
 	 */
-	public void sendMulticast(A3Message message, ArrayList<String> destinations){
-	
+	public void sendMulticast(A3Message message, ArrayList<String> destinations) {
+
 		boolean ok = true;
-		
-		if(isSupervisor){
-			for (int i = 0; i < destinations.size() && ok; i ++){
-				try{
-					ok = serviceInterface.sendUnicast(message, destinations.get(i));
-				}
-				catch(Exception e){
+
+		if (isSupervisor) {
+			for (int i = 0; i < destinations.size() && ok; i++) {
+				try {
+					ok = serviceInterface.sendUnicast(message,
+							destinations.get(i));
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			if(!ok)
+			if (!ok)
 				reconnect();
-		}
-		else
+		} else
 			showOnScreen("Sending failed: I'm not the supervisor.");
 	}
 
 	/**
-	 * It adds a new subscription to the list "mySubscriptions" used on the channel
-	 * and notifies it to the Service.
-	 * @param reason The subscription to add.
+	 * It adds a new subscription to the list "mySubscriptions" used on the
+	 * channel and notifies it to the Service.
+	 * 
+	 * @param reason
+	 *            The subscription to add.
 	 */
-	public void subscribe(int reason){
-		try{
+	public void subscribe(int reason) {
+		try {
 			subscriptions.subscribe(reason);
-			A3Message subscriptionsMessage = new A3Message(Constants.SUBSCRIPTION, String.valueOf(reason));
+			A3Message subscriptionsMessage = new A3Message(
+					Constants.SUBSCRIPTION, String.valueOf(reason));
 			sendToSupervisor(subscriptionsMessage);
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * It removes a subscription from the list "mySubscriptions" used on the channel
-	 * and notifies it to the Service.
-	 * @param reason The subscription to remove.
+	 * It removes a subscription from the list "mySubscriptions" used on the
+	 * channel and notifies it to the Service.
+	 * 
+	 * @param reason
+	 *            The subscription to remove.
 	 */
 	public void unsubscribe(int reason) {
 		// TODO Auto-generated method stub
-		try{	
+		try {
 			subscriptions.unsubscribe(reason);
-			A3Message unsubscriptionsMessage = new A3Message(Constants.UNSUBSCRIPTION, String.valueOf(reason));
+			A3Message unsubscriptionsMessage = new A3Message(
+					Constants.UNSUBSCRIPTION, String.valueOf(reason));
 			sendToSupervisor(unsubscriptionsMessage);
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	public void showOnScreen(String message) {
 		// TODO Auto-generated method stub
 
-		if(message.startsWith("("))
+		if (message.startsWith("("))
 			ui.showOnScreen(message);
 		else
 			ui.showOnScreen("(" + getGroupName() + "): " + message);
 	}
 
-	/**It creates the Service when it doesn't exist.*/
+	/** It creates the Service when it doesn't exist. */
 	private void createGroup() {
 		// TODO Auto-generated method stub
-		
-		try{
 
-			if(!mIsConnected){
+		try {
+
+			if (!mIsConnected) {
 				service = new Service(groupName, node, inTransitionConditions);
 				String noSuffix = groupName;
 				groupName = service.connect();
 				groupSuffix = groupName.replace(noSuffix, "");
 			}
-		
-		}catch(Exception e){
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void timerFired(int reason) {
-			// TODO Auto-generated method stub
-			Message msg = callbackThread.obtainMessage();
-			msg.arg1 = reason;
-			msg.arg2 = Constants.TIMER_FIRED;
-			callbackThread.sendMessage(msg);
+		// TODO Auto-generated method stub
+		Message msg = callbackThread.obtainMessage();
+		msg.arg1 = reason;
+		msg.arg2 = Constants.TIMER_FIRED;
+		callbackThread.sendMessage(msg);
 	}
 
-	/**It unblocks the thread which sends the messages to the supervisor.*/
+	/** It unblocks the thread which sends the messages to the supervisor. */
 	public synchronized void unblock() {
 		// TODO Auto-generated method stub
-		try{
+		try {
 			mIsConnected = true;
 			notify();
-		}catch (Exception ex) {}
+		} catch (Exception ex) {
+		}
 	}
 
-	/**This thread manages the incoming messages.*/
-	private class MessageHandler extends HandlerThread{
-	
+	/** This thread manages the incoming messages. */
+	private class MessageHandler extends HandlerThread {
+
 		private Handler mHandler;
-		
+
 		public MessageHandler() {
 			super("MessageHandler_" + groupName);
 			start();
 		}
-	
+
 		public Message obtainMessage() {
 			// TODO Auto-generated method stub
 			return mHandler.obtainMessage();
@@ -983,26 +1063,27 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		@Override
 		protected void onLooperPrepared() {
 			super.onLooperPrepared();
-			
+
 			mHandler = new Handler(getLooper()) {
-				
+
 				@Override
 				public void handleMessage(Message msg) {
-					
+
 					A3Message message = (A3Message) msg.obj;
 					try {
 						onMessage(message);
-					} catch (Exception e) {}
+					} catch (Exception e) {
+					}
 				}
 			};
 		}
 	}
 
-	/**This thread manages session losing and timeout firing.*/
-	class CallbackThread extends HandlerThread{
+	/** This thread manages session losing and timeout firing. */
+	class CallbackThread extends HandlerThread {
 
 		private Handler mHandler;
-		
+
 		public CallbackThread() {
 			super("CallbackThread_" + groupName);
 			start();
@@ -1021,86 +1102,90 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		@Override
 		protected void onLooperPrepared() {
 			super.onLooperPrepared();
-			
+
 			mHandler = new Handler(getLooper()) {
-		
+
 				@Override
 				public void handleMessage(Message msg) {
-		
-					switch(msg.arg2){
-		
+
+					switch (msg.arg2) {
+
 					case Constants.SESSION_LOST:
-		
+
 						showOnScreen("Session lost: I reconnect.");
 						reconnect();
-						
+
 						break;
-		
-					case Constants.TIMER_FIRED:{
-						
+
+					case Constants.TIMER_FIRED: {
+
 						switch (msg.arg1) {
-							case 0:								
-								mBus.cancelFindAdvertisedName(groupNameNoSuffix + '.');
-								
-								/*The group name wasn't found, so I must create the Service.
-								 * If I create the group, I will probably be the supervisor:
-								 * if I can only be a follower, I don't create the group.
-								 */
-								if(!discovered){
-									
-									if(followerOnly){
-										
-										node.setWaiting(A3Channel.this);
-										return;
-									}
-									else
-										createGroup();
-								}
-								
-								try{
-									joinSession();
-								}catch(Exception e){
+						case 0:
+							mBus.cancelFindAdvertisedName(groupNameNoSuffix + '.');
+
+							/*
+							 * The group name wasn't found, so I must create the
+							 * Service. If I create the group, I will probably
+							 * be the supervisor: if I can only be a follower, I
+							 * don't create the group.
+							 */
+							if (!discovered) {
+
+								if (followerOnly) {
+
+									node.setWaiting(A3Channel.this);
+									return;
+								} else
+									createGroup();
+							}
+
+							try {
+								joinSession();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+							break;
+
+						case 1:
+							if (activeRole == null) {
+								showOnScreen("Supervisor did no reply, retrying FFT");
+								try {
+									sendToSupervisor(new A3Message(
+											Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST,
+											""));
+								} catch (Exception e) {
 									e.printStackTrace();
 								}
-								break;
-	
-							case 1:
-								if(activeRole == null){
-									showOnScreen("Supervisor did no reply, retrying FFT");
-									try {
-										sendToSupervisor(new A3Message(Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST, ""));
-									} catch (Exception e) {
-										e.printStackTrace();
-									}
-								}
-								break;
-							default:
-								break;
+							}
+							break;
+						default:
+							break;
 						}
 					}
-					break;	
-					default: break;
+						break;
+					default:
+						break;
 					}
 				}
 			};
+		}
 	}
-	}
-	
-	private class InputQueueHandler extends Thread{
-		
+
+	private class InputQueueHandler extends Thread {
+
 		public InputQueueHandler() {
 			super();
 		}
-	
+
 		public void run() {
-	
+
 			A3Message message;
-			
-			while(true){
-				try{
+
+			while (true) {
+				try {
 					message = inputQueue.get();
-					while(activeRole == null)
-						synchronized(inputQueue){
+					while (activeRole == null)
+						synchronized (inputQueue) {
 							inputQueue.wait();
 						}
 					activeRole.onMessage(message);
@@ -1113,41 +1198,50 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 	/**
-	 * @return The value of an integer fitness function used for split,
-	 * as defined in the group descriptor class.
-	 * @throws Exception The integer fitness function is not implemented in the group descriptor class.
+	 * @return The value of an integer fitness function used for split, as
+	 *         defined in the group descriptor class.
+	 * @throws Exception
+	 *             The integer fitness function is not implemented in the group
+	 *             descriptor class.
 	 */
-	protected int getIntegerSplitFitnessFunction() throws Exception{
+	protected int getIntegerSplitFitnessFunction() throws Exception {
 		// TODO Auto-generated method stub
-		
+
 		return groupDescriptor.getIntegerSplitFitnessFunction();
 	}
 
 	/**
-	 * @return The value of the boolean fitness function used for split,
-	 * as defined in the group descriptor class.
-	 * @throws Exception The integer fitness function is not implemented in the group descriptor class.
+	 * @return The value of the boolean fitness function used for split, as
+	 *         defined in the group descriptor class.
+	 * @throws Exception
+	 *             The integer fitness function is not implemented in the group
+	 *             descriptor class.
 	 */
-	protected boolean getBooleanSplitFitnessFunction() throws Exception{
+	protected boolean getBooleanSplitFitnessFunction() throws Exception {
 		// TODO Auto-generated method stub
 		return groupDescriptor.getBooleanSplitFitnessFunction();
 	}
 
 	/**
-	 * @return The value of an integer fitness function used for supervisor election,
-	 * as defined in the group descriptor class.
-	 * @throws Exception The integer fitness function is not implemented in the group descriptor class.
+	 * @return The value of an integer fitness function used for supervisor
+	 *         election, as defined in the group descriptor class.
+	 * @throws Exception
+	 *             The integer fitness function is not implemented in the group
+	 *             descriptor class.
 	 */
 	protected int getSupervisorFitnessFunction() throws Exception {
 		// TODO Auto-generated method stub
-		if(!followerOnly)
+		if (!followerOnly)
 			return groupDescriptor.getSupervisorFitnessFunction();
 		throw new Exception("Cannot become supervisor.");
 	}
 
 	/**
 	 * It starts a supervisor election in the group this channel belongs to.
-	 * @param groupName The name of the group in which to start the supervisor election.
+	 * 
+	 * @param groupName
+	 *            The name of the group in which to start the supervisor
+	 *            election.
 	 */
 	public void startSupervisorElection() {
 		// TODO Auto-generated method stub
@@ -1155,43 +1249,53 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 		sendToSupervisor(message);
 	}
 
-	/**It sends a message to the Service, in order for it to start a random split operation.
+	/**
+	 * It sends a message to the Service, in order for it to start a random
+	 * split operation.
 	 * 
-	 * @param nodesToTransfer The number of nodes to translate to the new group.
+	 * @param nodesToTransfer
+	 *            The number of nodes to translate to the new group.
 	 */
 	public void split(int nodesToTransfer) {
 		// TODO Auto-generated method stub
-		
-		A3Message message = new A3Message(Constants.SPLIT, String.valueOf(nodesToTransfer));
+
+		A3Message message = new A3Message(Constants.SPLIT,
+				String.valueOf(nodesToTransfer));
 		sendToSupervisor(message);
 	}
 
-	/**It broadcasts a message, in order to collect the integer split fitness functions of the nodes.
-	 * It is called only if this node is the supervisor.
+	/**
+	 * It broadcasts a message, in order to collect the integer split fitness
+	 * functions of the nodes. It is called only if this node is the supervisor.
 	 * 
-	 * @param nodesToTransfer The number of nodes to translate to the new group.
+	 * @param nodesToTransfer
+	 *            The number of nodes to translate to the new group.
 	 */
-	public void splitWithIntegerFitnessFunction(int nodesToTransfer) throws Exception{
+	public void splitWithIntegerFitnessFunction(int nodesToTransfer)
+			throws Exception {
 		// TODO Auto-generated method stub
-		
-		try{
+
+		try {
 			// I'm sure I am the supervisor.
 			supervisorRole.startSplit(nodesToTransfer);
-			A3Message message = new A3Message(Constants.INTEGER_SPLIT_FITNESS_FUNCTION, "");
+			A3Message message = new A3Message(
+					Constants.INTEGER_SPLIT_FITNESS_FUNCTION, "");
 			sendBroadcast(message);
 		} catch (Exception e) {
 			throw new Exception(e.getLocalizedMessage());
 		}
 	}
 
-	/**It broadcasts a message, in order to start a boolean split operation.
-	 * It is called only if this node is the supervisor.
+	/**
+	 * It broadcasts a message, in order to start a boolean split operation. It
+	 * is called only if this node is the supervisor.
 	 */
 	public void splitWithBooleanFitnessFunction() throws Exception {
 		// TODO Auto-generated method stub
-		
-		try{
-			A3Message message = new A3Message(Constants.BOOLEAN_SPLIT_FITNESS_FUNCTION, "");
+
+		try {
+			A3Message message = new A3Message(
+					Constants.BOOLEAN_SPLIT_FITNESS_FUNCTION, "");
 			sendBroadcast(message);
 		} catch (Exception e) {
 			throw new Exception(e.getLocalizedMessage());
@@ -1212,20 +1316,20 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 	public void setConnectedForSystem(boolean connectedForSystem) {
-		if(connectedForSystem)
-			this.connectedForSystem ++;
+		if (connectedForSystem)
+			this.connectedForSystem++;
 		else
-			this.connectedForSystem --;
+			this.connectedForSystem--;
 	}
-	
+
 	public String getGroupName() {
 		return groupNameNoSuffix.replace(Constants.PREFIX, "");
 	}
 
-	public Hierarchy getHierarchy(){
+	public Hierarchy getHierarchy() {
 		return hierarchy;
 	}
-	
+
 	public boolean isSupervisor() {
 		return isSupervisor;
 	}
@@ -1239,4 +1343,3 @@ public class A3Channel extends Thread implements BusObject, TimerInterface, User
 	}
 
 }
-

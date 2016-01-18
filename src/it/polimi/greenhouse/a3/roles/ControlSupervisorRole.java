@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
+import a3.a3droid.Constants;
 import android.os.Environment;
 
 /**
@@ -84,7 +85,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				else{
 					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
 					Set<String> experiments = Collections.synchronizedSet(new HashSet<String>());
-					experiments.add(uuid);
+					experiments.add(uuid);					
 					newGroup.put(experimentId, experiments);
 					launchedGroups.put(type, newGroup);
 				}
@@ -202,6 +203,11 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 				launchedGroups.clear();
 				showOnScreen("--- ESPERIMENTO TERMINATO ---");
+				break;
+			
+			case Constants.MEMBER_REMOVED:
+				
+				showOnScreen("hip uha!");
 				break;
 		}	
 	}

@@ -1203,6 +1203,10 @@ public class A3Node extends Thread implements UserInterface{
 		}
 	}
 	
+	public void memberRemoved(String memberName){
+		showOnScreen("Exited: " + memberName);
+	}
+	
 	public String getUUID(){
 		return this.uuId;
 	}
