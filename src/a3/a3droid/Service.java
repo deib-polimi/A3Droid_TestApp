@@ -333,7 +333,6 @@ public class Service extends HandlerThread implements BusObject,
 						break;
 
 					case Constants.SUPERVISOR_FITNESS_FUNCTION_REQUEST:
-
 						/*
 						 * If a supervisor election is ongoing, then this
 						 * message is accepted. Else

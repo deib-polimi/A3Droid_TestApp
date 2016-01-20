@@ -422,7 +422,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 	 * @param sessionId
 	 *            The id of the AllJoyn session this channel is joined.
 	 */
-	private void onSessionJoined(Mutable.IntegerValue sessionId) {
+	private void onSessionJoined(Mutable.IntegerValue sessionId) {			
 
 		// TODO Auto-generated method stub
 		mProxyObj = mBus.getProxyBusObject(groupName, "/SimpleService",
@@ -445,6 +445,12 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 		 */
 		unicastReceiver = new A3UnicastReceiver(groupName + "._" + id, this);
 		unicastReceiver.connect();
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
 
 		// I transmit my subscriptions only if I am subscribed to receive
 		// something.
@@ -488,12 +494,12 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 		};
 		sender.start();
 		showOnScreen("Connected.");
-		try {
+		/*try {
 			timer = new Timer(this, 1, (int) (10000 + Math.random() * 1000));
 			timer.start();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	/**
@@ -582,7 +588,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 	 */
 	@BusSignalHandler(iface = Constants.PACKAGE_NAME + ".A3ServiceInterface", signal = "ReceiveBroadcast")
 	public void ReceiveBroadcast(A3Message message) {
-
+		
 		Message msg = messageHandler.obtainMessage();
 		msg.obj = message;
 		messageHandler.sendMessage(msg);
@@ -610,7 +616,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 		switch (message.reason) {
 		case Constants.NEW_SUPERVISOR:
 			// The new supervisor was elected.
-
+			
 			if (message.object.equals("?")) {
 				message = new A3Message(
 						Constants.SUPERVISOR_FITNESS_FUNCTION_REPLY,

@@ -69,7 +69,7 @@ public class A3UnicastReceiver extends Thread implements A3UnicastInterface, Bus
 		sessionOpts.isMultipoint = false;
 		sessionOpts.proximity = SessionOpts.PROXIMITY_ANY;
 	
-		sessionOpts.transports = SessionOpts.TRANSPORT_ANY + SessionOpts.TRANSPORT_WFD;
+		sessionOpts.transports = SessionOpts.TRANSPORT_ANY;
 	
 		status = mBus.bindSessionPort(contactPort, sessionOpts, new SessionPortListener() {
 	
@@ -111,7 +111,7 @@ public class A3UnicastReceiver extends Thread implements A3UnicastInterface, Bus
 	public void disconnect(){
 	
 		try{	
-			mBus.cancelAdvertiseName(groupName, (short)(SessionOpts.TRANSPORT_ANY + SessionOpts.TRANSPORT_WFD));	
+			mBus.cancelAdvertiseName(groupName, (short)(SessionOpts.TRANSPORT_ANY));	
 		} catch (Exception e){}
 	
 		try{
