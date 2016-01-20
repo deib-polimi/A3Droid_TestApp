@@ -1,22 +1,12 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 import it.polimi.greenhouse.util.StringTimeUtil;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import a3.a3droid.A3Message;
-import a3.a3droid.A3SupervisorRole;
 import a3.a3droid.Timer;
 import a3.a3droid.TimerInterface;
-import android.annotation.SuppressLint;
 
-public class ServerSupervisorRole extends A3SupervisorRole implements TimerInterface{
+public class ServerSupervisorRole extends SupervisorRole implements TimerInterface{
 
 	private boolean startExperiment;
 	private boolean experimentIsRunning;
@@ -29,7 +19,6 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 	private final static long TIMEOUT = 60 * 1000;
 	private long MAX_INTERNAL = 10 * 1000;
 	private int PAYLOAD_SIZE = 32;
-	private Map<String, Map<Integer, Set<String>>> launchedGroups;
 	
 	public ServerSupervisorRole() {
 		super();		
@@ -42,8 +31,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String>>>();		
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
 	}	
 	
 	@Override
@@ -52,14 +40,33 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		active = false;
 	}
 
-	@SuppressLint("UseSparseArrays")
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
 		
 		double rtt;
 		switch(message.reason){
 		
-			case MainActivity.SET_PARAMS:
+			case AppConstants.ADD_MEMBER:
+				String [] content = ((String)message.object).split("_");
+				String type = content[0];
+				int experimentId = Integer.valueOf(content[1]);
+				String uuid = content[2];
+				String name = content[3];
+				if(!type.equals("server"))
+					removeGroupMember(uuid);
+				addGroupMember(type, experimentId, uuid, name);
+				break;
+				
+			case AppConstants.MEMBER_ADDED:
+				resetCount();
+				break;
+				
+			case AppConstants.MEMBER_REMOVED:				
+				removeGroupMember(retrieveGroupMemberUuid(message.object));
+				resetCount();
+				break;
+				
+			case AppConstants.SET_PARAMS:
 				if(!paramsSet){
 					String params [] = message.object.split("_");
 					if(!params[0].equals("A"))
@@ -72,21 +79,19 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 				}
 				break;
 			
-			case MainActivity.SENSOR_PING:
+			case AppConstants.SENSOR_PING:
 				showOnScreen("Received new data from a sensor");
-				message.reason = MainActivity.SENSOR_PONG;
-				String [] content = ((String)message.object).split("#");
+				message.reason = AppConstants.SENSOR_PONG;
+				content = ((String)message.object).split("#");
 				String sensorAddress = content[0];
 				String experiment = content[1];
 				String sendTime = content[2];
-				//byte sensorData [] = message.bytes;
 				message.object = sensorAddress + "#" + experiment + "#" + sendTime;
 				channel.sendUnicast(message, message.senderAddress);
-				//showOnScreen("Sent response to sensor");
 				break;
 				
 				
-			case MainActivity.SERVER_PONG:
+			case AppConstants.SERVER_PONG:
 				showOnScreen("Actuator response received");
 				sentCont ++;
 				rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp()) / 1000;
@@ -94,11 +99,11 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 
 				if(rtt > TIMEOUT && experimentIsRunning){
 					experimentIsRunning = false;
-					node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
+					node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
 				}
 				else{
 					if(--dataToWaitFor <= 0){
-						resetDataToWait();
+						resetCount();
 						new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
 					}
 				}
@@ -107,7 +112,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 					showOnScreen(sentCont + " mex spediti.");
 				break;
 
-			case MainActivity.START_EXPERIMENT:
+			case AppConstants.START_EXPERIMENT:
 				if(startExperiment){
 					if(!experimentIsRunning && launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty()){
 						showOnScreen("Experiment has started");
@@ -115,7 +120,7 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 						experimentIsRunning = true;
 						sentCont = 0;
 						startTimestamp = StringTimeUtil.getTimestamp();
-						resetDataToWait();
+						resetCount();
 						sPayLoad = StringTimeUtil.createPayload(groupSize("actuators") * PAYLOAD_SIZE);
 						channel.sendBroadcast(message);
 						sendMessage();
@@ -125,31 +130,11 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 					startExperiment = true;
 				break;
 				
-			case MainActivity.ADD_MEMBER:
-				content = ((String)message.object).split("_");
-				String type = content[0];
-				int experimentId = Integer.valueOf(content[1]);
-				String uuid = content[2];
-				if(!type.equals("server"))
-					cleanGroupMember(uuid);
-				if(launchedGroups.containsKey(type))
-					if(launchedGroups.get(type).containsKey(experimentId))
-						launchedGroups.get(type).get(experimentId).add(uuid);	
-					else
-						launchedGroups.get(type).put(experimentId, Collections.synchronizedSet(new HashSet<String>(Arrays.asList(new String [] {uuid}))));
-				else{
-					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
-					Set<String> experiments = Collections.synchronizedSet(new HashSet<String>());
-					experiments.add(uuid);
-					newGroup.put(experimentId, experiments);
-					launchedGroups.put(type, newGroup);
-				}
+				
+			case AppConstants.STOP_EXPERIMENT:
 				break;
 				
-			case MainActivity.STOP_EXPERIMENT:
-				break;
-				
-			case MainActivity.LONG_RTT:
+			case AppConstants.LONG_RTT:
 				if(experimentIsRunning){
 					showOnScreen("Experiment has stopped");
 					experimentIsRunning = false;
@@ -157,14 +142,18 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 					double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 					float frequency = sentCont / ((float)(runningTime));
 					
-					node.sendToSupervisor(new A3Message(MainActivity.DATA, "StoA: " + sentCont + "\t" +
+					node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoA: " + sentCont + "\t" +
 							runningTime + "\t" + frequency + "\t" + avgRTT), "control");
 				}
+				break;
+				
+			default:
 				break;
 		}
 	}
 	
-	private void resetDataToWait() {
+	
+	private void resetCount() {
 		dataToWaitFor = 0;
 		for(String gType : launchedGroups.keySet())
 			if(gType.equals("actuators"))
@@ -177,23 +166,23 @@ public class ServerSupervisorRole extends A3SupervisorRole implements TimerInter
 		if(experimentIsRunning)
 			if(launchedGroups.containsKey("actuators"))
 				for(int groupId : launchedGroups.get("actuators").keySet())
-					channel.sendBroadcast(new A3Message(MainActivity.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
+					channel.sendBroadcast(new A3Message(AppConstants.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
 	}	
 	
-	private int groupSize(String type){
-		int size = 0;
-		for(int i : launchedGroups.get(type).keySet())
-			size += launchedGroups.get(type).get(i).size();
-		return size;
+	@Override
+	public void memberAdded(String name) {
+		showOnScreen("Entered: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
+		channel.sendBroadcast(msg);
+		node.sendToSupervisor(msg, "control");
 	}
-	
-	private void cleanGroupMember(String uuid){
-		for(String type : launchedGroups.keySet())
-			for(int i : launchedGroups.get(type).keySet())
-				if(launchedGroups.get(type).get(i).contains(uuid)){
-					launchedGroups.get(type).get(i).remove(uuid);
-					return;
-				}
+
+	@Override
+	public void memberRemoved(String name) {	
+		showOnScreen("Exited: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
+		channel.sendBroadcast(msg);
+		node.sendToSupervisor(msg, "control");
 	}
 
 	@Override

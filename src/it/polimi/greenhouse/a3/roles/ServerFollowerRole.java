@@ -1,6 +1,6 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
 
@@ -12,7 +12,7 @@ public class ServerFollowerRole extends A3FollowerRole{
 
 	@Override
 	public void onActivation() {
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
 	}
 
 	@Override
@@ -27,14 +27,14 @@ public class ServerFollowerRole extends A3FollowerRole{
 		String [] content;
 		String experiment;
 		switch(message.reason){
-		case MainActivity.SENSOR_PONG:
+		case AppConstants.SENSOR_PONG:
 			showOnScreen("Forwarding server data to sensor");
 			content = ((String)message.object).split("#");
 			experiment = content[1];
 			node.sendToSupervisor(message, "monitoring_" + experiment);
 			break;
 			
-		case MainActivity.SERVER_PING:
+		case AppConstants.SERVER_PING:
 			content = ((String)message.object).split("#");
 			experiment = content[0];
 			message.object = message.senderAddress + "#" + (String)message.object;
@@ -44,10 +44,13 @@ public class ServerFollowerRole extends A3FollowerRole{
 			}
 			break;
 
-		case MainActivity.START_EXPERIMENT:
+		case AppConstants.START_EXPERIMENT:
 			break;
 
-		case MainActivity.STOP_EXPERIMENT_COMMAND:
+		case AppConstants.STOP_EXPERIMENT_COMMAND:
+			break;
+			
+		default:
 			break;
 		}
 	}

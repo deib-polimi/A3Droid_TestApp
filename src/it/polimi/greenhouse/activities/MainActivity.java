@@ -12,6 +12,7 @@ import it.polimi.greenhouse.a3.roles.SensorFollowerRole;
 import it.polimi.greenhouse.a3.roles.SensorSupervisorRole;
 import it.polimi.greenhouse.a3.roles.ServerFollowerRole;
 import it.polimi.greenhouse.a3.roles.ServerSupervisorRole;
+import it.polimi.greenhouse.util.AppConstants;
 import it.polimit.greenhouse.R;
 
 import java.util.ArrayList;
@@ -30,30 +31,6 @@ import android.view.View;
 import android.widget.EditText;
 
 public class MainActivity extends A3DroidActivity{
-	
-	public static final String EXPERIMENT_PREFIX = "A3Droid_";
-	public static final int NUMBER_OF_EXPERIMENTS = 32;
-	
-	public static final int CREATE_GROUP = 31;
-	public static final int STOP_EXPERIMENT = 32;
-	public static final int CREATE_GROUP_USER_COMMAND = 33;
-	public static final int LONG_RTT = 34;
-	public static final int STOP_EXPERIMENT_COMMAND = 35;
-	public static final int SENSOR_PING = 36;
-	public static final int SENSOR_PONG = 37;
-	public static final int NEW_PHONE = 38;
-	public static final int START_EXPERIMENT_USER_COMMAND = 39;
-	public static final int START_EXPERIMENT = 40;
-	public static final int DATA = 41;
-	public static final int START_SENSOR = 42;
-	public static final int START_ACTUATOR = 43;
-	public static final int JOINED = 44;
-	public static final int ADD_MEMBER = 45;
-	public static final int START_SERVER = 50;
-	public static final int SERVER_PING = 51;
-	public static final int SERVER_PONG = 52;
-	public static final int SET_PARAMS = 60;
-	public static final int SET_PARAMS_COMMAND = 61;
 	
 	private A3Node node;
 	private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
@@ -93,25 +70,25 @@ public class MainActivity extends A3DroidActivity{
 				ArrayList<GroupDescriptor> groupDescriptors = new ArrayList<GroupDescriptor>();
 				groupDescriptors.add(new ControlDescriptor());
 				switch (msg.what) {
-					case STOP_EXPERIMENT_COMMAND:
+					case AppConstants.STOP_EXPERIMENT_COMMAND:
 						if(experimentRunning){
-							node.sendToSupervisor(new A3Message(LONG_RTT, ""), "control");
+							node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
 							experimentRunning = false;
 						}
 						break;
-					case START_EXPERIMENT_USER_COMMAND:
+					case AppConstants.START_EXPERIMENT_USER_COMMAND:
 						if(!experimentRunning){
 							experimentRunning = true;					
 							if(node.isConnectedForApplication("server_0"))
-								node.sendToSupervisor(new A3Message(SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()), 
+								node.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()), 
 										"control");
 							if(node.isConnectedForApplication("monitoring_" + experiment.getText().toString()))
-								node.sendToSupervisor(new A3Message(SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()), 
+								node.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()), 
 										"control");
-							node.sendToSupervisor(new A3Message(START_EXPERIMENT_USER_COMMAND, ""), "control");
+							node.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
 						}
 						break;
-					case START_SENSOR:
+					case AppConstants.START_SENSOR:
 						if(experimentRunning)
 							break;
 						roles.add(SensorSupervisorRole.class.getName());
@@ -131,7 +108,7 @@ public class MainActivity extends A3DroidActivity{
 						node.connect("control", true, true);
 						node.connect("monitoring_" + experiment.getText().toString(), true, true);						
 						break;	
-					case START_ACTUATOR:
+					case AppConstants.START_ACTUATOR:
 						if(experimentRunning)
 							break;
 						roles.add(ActuatorSupervisorRole.class.getName());
@@ -143,7 +120,7 @@ public class MainActivity extends A3DroidActivity{
 						node.connect("control", true, true);
 						node.connect("actuators_" + experiment.getText().toString(), true, true);						
 						break;
-					case START_SERVER:
+					case AppConstants.START_SERVER:
 						if(experimentRunning)
 							break;
 						roles.add(ServerSupervisorRole.class.getName());
@@ -169,30 +146,30 @@ public class MainActivity extends A3DroidActivity{
 	}
 
 	public void createGroup(View v){
-		fromGuiThread.sendEmptyMessage(CREATE_GROUP_USER_COMMAND);
+		fromGuiThread.sendEmptyMessage(AppConstants.CREATE_GROUP_USER_COMMAND);
 	}
 	
 	public void stopExperiment(View v){
-		fromGuiThread.sendEmptyMessage(STOP_EXPERIMENT_COMMAND);
+		fromGuiThread.sendEmptyMessage(AppConstants.STOP_EXPERIMENT_COMMAND);
 	}
 	
 	public void startExperiment(View v){
-		fromGuiThread.sendEmptyMessage(START_EXPERIMENT_USER_COMMAND);
+		fromGuiThread.sendEmptyMessage(AppConstants.START_EXPERIMENT_USER_COMMAND);
 	}
 	
 	public void startSensor(View v){
 		if(!experimentRunning)
-			fromGuiThread.sendEmptyMessage(START_SENSOR);
+			fromGuiThread.sendEmptyMessage(AppConstants.START_SENSOR);
 	}
 	
 	public void startActuator(View v){
 		if(!experimentRunning)
-			fromGuiThread.sendEmptyMessage(START_ACTUATOR);
+			fromGuiThread.sendEmptyMessage(AppConstants.START_ACTUATOR);
 	}
 	
 	public void startServer(View v){
 		if(!experimentRunning)
-			fromGuiThread.sendEmptyMessage(START_SERVER);
+			fromGuiThread.sendEmptyMessage(AppConstants.START_SERVER);
 	}
 	
 	@Override

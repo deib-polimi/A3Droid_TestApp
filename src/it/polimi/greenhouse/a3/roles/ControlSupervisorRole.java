@@ -1,21 +1,16 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import a3.a3droid.A3Message;
-import a3.a3droid.A3SupervisorRole;
-import a3.a3droid.Constants;
 import android.os.Environment;
 
 /**
@@ -23,10 +18,7 @@ import android.os.Environment;
  * @author Francesco
  *
  */
-public class ControlSupervisorRole extends A3SupervisorRole {
-
-	private Set<String> vmIds;
-	private Map<String, Map<Integer, Set<String>>> launchedGroups;
+public class ControlSupervisorRole extends SupervisorRole {	
 
 	private File sd;
 	private File f;
@@ -37,6 +29,8 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	private int numberOfTrials;
 	private boolean experimentIsRunning;
 	
+	private Set<String> vmIds;	
+	
 	public ControlSupervisorRole(){
 		super();
 	}
@@ -44,7 +38,6 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	@Override
 	public void onActivation() {
 		vmIds = Collections.synchronizedSet(new HashSet<String>());
-		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String>>>();
 		dataToWaitFor = 0;
 		numberOfTrials = 1;
 	}	
@@ -52,7 +45,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 	@Override
 	public void logic() {
 		showOnScreen("[CtrlSupRole]");
-		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, node.getUUID()), "control");		
+		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUUID()), "control");		
 		active = false;
 	}
 
@@ -62,64 +55,62 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 		String content []; 
 		switch(message.reason){
 			
-			case MainActivity.JOINED:		
-				message.reason = MainActivity.ADD_MEMBER;
+			case AppConstants.JOINED:		
+				message.reason = AppConstants.ADD_MEMBER;
 				message.object += "_" + message.senderAddress;
 				channel.sendBroadcast(message);
 				sendToConnectedSupervisors(message);				
 				break;
 				
-			case MainActivity.ADD_MEMBER:
+			case AppConstants.ADD_MEMBER:
 				content = ((String)message.object).split("_");
 				String type = content[0];
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
-				//String originalSender = content[3];
+				String name = content[3];
 				if(!type.equals("server"))
-					cleanGroupMember(uuid);				
-				if(launchedGroups.containsKey(type))
-					if(launchedGroups.get(type).containsKey(experimentId))
-						launchedGroups.get(type).get(experimentId).add(uuid);	
-					else
-						launchedGroups.get(type).put(experimentId, new HashSet<String>(Arrays.asList(new String [] {uuid})));
-				else{
-					Map<Integer, Set<String>> newGroup = new ConcurrentHashMap<Integer, Set<String>>();
-					Set<String> experiments = Collections.synchronizedSet(new HashSet<String>());
-					experiments.add(uuid);					
-					newGroup.put(experimentId, experiments);
-					launchedGroups.put(type, newGroup);
-				}
+					removeGroupMember(uuid);				
+				addGroupMember(type, experimentId, uuid, name);
 				if(experimentIsRunning){
-					message.reason = MainActivity.START_EXPERIMENT;
+					message.reason = AppConstants.START_EXPERIMENT;
 					message.object = "";					
 					channel.sendBroadcast(message);
 					sendToConnectedSupervisors(message);
 				}
 				break;
 				
-			case MainActivity.NEW_PHONE:
+			case AppConstants.MEMBER_ADDED:								
+				resetCount();
+				break;
+				
+			case AppConstants.MEMBER_REMOVED:				
+				removeGroupMember(retrieveGroupMemberUuid(message.object));
+				resetCount();
+				break;
+				
+			case AppConstants.NEW_PHONE:
 				
 				vmIds.add(message.object);
 				numberOfTrials = 1;
 				showOnScreen("Telefoni connessi: " + vmIds.size());
 				break;	
 				
-			case MainActivity.SET_PARAMS_COMMAND:
-				message.reason = MainActivity.SET_PARAMS;
+			case AppConstants.SET_PARAMS_COMMAND:
+				message.reason = AppConstants.SET_PARAMS;
 				channel.sendBroadcast(message);
 				sendToConnectedSupervisors(message);
 				break;
 				
-			case MainActivity.CREATE_GROUP_USER_COMMAND:
-				message.reason = MainActivity.CREATE_GROUP;
+			case AppConstants.CREATE_GROUP_USER_COMMAND:
+				message.reason = AppConstants.CREATE_GROUP;
 				channel.sendBroadcast(message);
 				sendToConnectedSupervisors(message);				
 				break;
 				
-			case MainActivity.CREATE_GROUP:
+			case AppConstants.CREATE_GROUP:
 				break;
 				
-			case MainActivity.START_EXPERIMENT_USER_COMMAND:
+			case AppConstants.START_EXPERIMENT_USER_COMMAND:
 				
 				if(experimentIsRunning)
 					break;
@@ -128,28 +119,21 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 				experimentIsRunning = true;
 				result = "";
-				dataToWaitFor = 0;
-				for(String gType : launchedGroups.keySet())
-					if(gType.equals("monitoring"))
-						for(int i : launchedGroups.get(gType).keySet())
-							dataToWaitFor += launchedGroups.get(gType).get(i).size();
+				resetCount();
 				
-				if(launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty())
-					dataToWaitFor++;
-				
-				message.reason = MainActivity.START_EXPERIMENT;
+				message.reason = AppConstants.START_EXPERIMENT;
 				channel.sendBroadcast(message);
 				sendToConnectedSupervisors(message);
 				break;
 				
-			case MainActivity.LONG_RTT:
+			case AppConstants.LONG_RTT:
 				
 				if(message.object.equals(channel.getChannelId()) || !experimentIsRunning)
 					break;
 				
 				experimentIsRunning = false;
 				sd = Environment.getExternalStorageDirectory();
-				f = new File(sd, MainActivity.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".txt");
+				f = new File(sd, AppConstants.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".txt");
 	
 				try {
 					fw = new FileWriter(f, true);
@@ -162,15 +146,15 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				sendToConnectedSupervisors(message);				
 				break;
 				
-			case MainActivity.DATA:
+			case AppConstants.DATA:
 							
-				result = result + ((String)message.object).replace(".", ",") + "\n";
+				result = result + ((String)message.object).replace(".", ",") + "\n";	
 				dataToWaitFor --;
 				
 				if(dataToWaitFor <= 0){
 					
 					try {
-						bw.write(result);
+					bw.write(result);
 						bw.flush();
 					} catch (IOException e) {showOnScreen("ECCEZIONE IN CtrlSupRole [bw.flush()]: " + e.getLocalizedMessage());}
 					
@@ -180,7 +164,7 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				
 				break;
 				
-			case MainActivity.STOP_EXPERIMENT:
+			case AppConstants.STOP_EXPERIMENT:
 				
 				showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
 				
@@ -204,12 +188,27 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				launchedGroups.clear();
 				showOnScreen("--- ESPERIMENTO TERMINATO ---");
 				break;
-			
-			case Constants.MEMBER_REMOVED:
 				
-				showOnScreen("hip uha!");
+			default:
 				break;
 		}	
+	}	
+	
+	@Override
+	protected void removeGroupMember(String uuid) {
+		super.removeGroupMember(uuid);
+		vmIds.remove(uuid);
+	}
+	
+	private void resetCount(){
+		dataToWaitFor = 0;
+		for(String gType : launchedGroups.keySet())
+			if(gType.equals("monitoring"))
+				for(int i : launchedGroups.get(gType).keySet())
+					dataToWaitFor += launchedGroups.get(gType).get(i).size();
+		
+		if(launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty())
+			dataToWaitFor++;
 	}
 	
 	private void sendToConnectedSupervisors(A3Message message){
@@ -218,14 +217,21 @@ public class ControlSupervisorRole extends A3SupervisorRole {
 				if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 					node.sendToSupervisor(message,
 						gType + "_" + i);
+	}	
+
+	@Override
+	public void memberAdded(String name) {
+		showOnScreen("Entered: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
+		channel.sendBroadcast(msg);
+		sendToConnectedSupervisors(msg);
 	}
-	
-	private void cleanGroupMember(String uuid){
-		for(String type : launchedGroups.keySet())			
-			for(int i : launchedGroups.get(type).keySet())
-				if(launchedGroups.get(type).get(i).contains(uuid)){
-					launchedGroups.get(type).get(i).remove(uuid);
-					return;
-				}
+
+	@Override
+	public void memberRemoved(String name) {	
+		showOnScreen("Exited: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
+		channel.sendBroadcast(msg);
+		sendToConnectedSupervisors(msg);
 	}
 }

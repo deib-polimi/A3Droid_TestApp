@@ -432,7 +432,9 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 
 		mSessionId = sessionId.value;
 		mIsConnected = true;
-		myId = mBus.getUniqueName();
+		if(myId == null)
+			myId = mBus.getUniqueName();
+		showOnScreen("Channel ID: " + myId);
 
 		String id = String.valueOf(myId.hashCode());
 
@@ -602,7 +604,8 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 			mIsConnected = true;
 		}
 
-		myId = mBus.getUniqueName();
+		if (myId == null)
+			myId = mBus.getUniqueName();
 
 		switch (message.reason) {
 		case Constants.NEW_SUPERVISOR:
@@ -1073,6 +1076,7 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 					try {
 						onMessage(message);
 					} catch (Exception e) {
+						e.printStackTrace();
 					}
 				}
 			};
@@ -1184,13 +1188,14 @@ public class A3Channel extends Thread implements BusObject, TimerInterface,
 			while (true) {
 				try {
 					message = inputQueue.get();
-					while (activeRole == null)
+					while (activeRole == null || activeRole.isActive())
 						synchronized (inputQueue) {
 							inputQueue.wait();
 						}
 					activeRole.onMessage(message);
 					inputQueue.dequeue();
 				} catch (Exception e) {
+					e.printStackTrace();
 					return;
 				}
 			}

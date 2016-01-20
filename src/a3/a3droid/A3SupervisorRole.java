@@ -27,6 +27,10 @@ public abstract class A3SupervisorRole extends A3Role implements BusObject, Time
 
 	@Override
 	public abstract void receiveApplicationMessage(A3Message message);
+	
+	public abstract void memberAdded(String name);
+	
+	public abstract void memberRemoved(String name);
 
 	@BusSignalHandler(iface = Constants.PACKAGE_NAME + ".A3ServiceInterface", signal = "SupervisorReceive")
 	public void SupervisorReceive(A3Message message) {
@@ -104,6 +108,14 @@ public abstract class A3SupervisorRole extends A3Role implements BusObject, Time
 				 * without notifying anyone. 
 				 */
 				fitnessFunctions.onMessage(message);
+				break;
+				
+			case Constants.MEMBER_ADDED:
+				memberAdded(message.object);
+				break;
+				
+			case Constants.MEMBER_REMOVED:
+				memberRemoved(message.object);
 				break;
 
 			default: receiveApplicationMessage(message); break;

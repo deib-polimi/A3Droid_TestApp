@@ -1,6 +1,6 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 import it.polimi.greenhouse.util.StringTimeUtil;
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
@@ -34,7 +34,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 		sentCont = 0;
 		avgRTT = 0;
 		node.connect("server_0", true, true);
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	public void receiveApplicationMessage(A3Message message) {
 		switch(message.reason){
 		
-		case MainActivity.SET_PARAMS:						
+		case AppConstants.SET_PARAMS:						
 			if(message.senderAddress.equals(this.channel.getChannelId()) && !paramsSet){
 				String params [] = message.object.split("_");
 				if(!params[0].equals("S"))
@@ -61,28 +61,26 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			}
 			break;
 			
-		case MainActivity.ADD_MEMBER:
+		case AppConstants.ADD_MEMBER:
 			if(experimentIsRunning){
-				message.reason = MainActivity.SET_PARAMS;
+				message.reason = AppConstants.SET_PARAMS;
 				message.object = (60 * 1000 / this.MAX_INTERNAL) + "_" + PAYLOAD_SIZE;
 				channel.sendBroadcast(message);
 			}
 			break;
 		
-		case MainActivity.SENSOR_PING:
-			//showOnScreen("Forwarding sensor data to server");
+		case AppConstants.SENSOR_PING:
 			message.object = message.senderAddress + "#" + (String)message.object;
 			node.sendToSupervisor(message, "server_0");
 			break;
 			
-		case MainActivity.SENSOR_PONG:
+		case AppConstants.SENSOR_PONG:
 			String sensorAddress = ((String)message.object).split("#")[0];
 			//String experiment = ((String)message.object).split("#")[1];
 			String sendTime = ((String)message.object).split("#")[2];
 			message.object = sendTime;
 
 			if(!sensorAddress.equals(channel.getChannelId())){
-				//showOnScreen("Forwarding server response to follower sensor");
 				channel.sendUnicast(message, sensorAddress);
 			}else{
 				showOnScreen("Server response received");
@@ -92,7 +90,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 	
 				if(rtt > TIMEOUT && experimentIsRunning){
 					experimentIsRunning = false;
-					node.sendToSupervisor(new A3Message(MainActivity.LONG_RTT, ""), "control");
+					node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
 				}
 				else{
 					new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
@@ -103,7 +101,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			}
 			break;
 
-		case MainActivity.START_EXPERIMENT:
+		case AppConstants.START_EXPERIMENT:
 			if(startExperiment){
 				if(!experimentIsRunning){
 					startExperiment = false;
@@ -120,30 +118,46 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 			
 			break;
 			
-		case MainActivity.LONG_RTT:
+		case AppConstants.LONG_RTT:
 			
-			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
+			channel.sendBroadcast(new A3Message(AppConstants.STOP_EXPERIMENT_COMMAND, ""));
 
 			if(experimentIsRunning){
 				paramsSet = false;
 				experimentIsRunning = false;
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / (float)(runningTime);
-				node.sendToSupervisor(new A3Message(MainActivity.DATA, "StoS: " + sentCont + "\t" +
+				node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS: " + sentCont + "\t" +
 						runningTime + "\t" + frequency + "\t" + avgRTT), "control");
 			}
 			break;
-
+			
+		default:
+			break;
 		}
 	}
 	
 	private void sendMessage() {
 		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(MainActivity.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
+			channel.sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
 	}
 
 	@Override
 	public void timerFired(int reason) {
 		sendMessage();
+	}
+
+	@Override
+	public void memberAdded(String name) {
+		showOnScreen("Entered: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
+		node.sendToSupervisor(msg, "control");
+	}
+
+	@Override
+	public void memberRemoved(String name) {	
+		showOnScreen("Exited: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
+		node.sendToSupervisor(msg, "control");
 	}
 }

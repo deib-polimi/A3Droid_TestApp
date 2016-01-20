@@ -1,6 +1,6 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 import a3.a3droid.A3FollowerRole;
 import a3.a3droid.A3Message;
 
@@ -11,7 +11,7 @@ public class ActuatorFollowerRole extends A3FollowerRole{
 	}
 	@Override
 	public void onActivation() {
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
 	}
 	
 	@Override
@@ -24,9 +24,9 @@ public class ActuatorFollowerRole extends A3FollowerRole{
 	public void receiveApplicationMessage(A3Message message) {
 
 		switch(message.reason){		
-		case MainActivity.SERVER_PING:
+		case AppConstants.SERVER_PING:
 			showOnScreen("Received new data from a server");
-			message.reason = MainActivity.SERVER_PONG;
+			message.reason = AppConstants.SERVER_PONG;
 			String [] content = ((String)message.object).split("#");
 			//String serverAddress = content[0];
 			String experiment = content[1];
@@ -35,6 +35,9 @@ public class ActuatorFollowerRole extends A3FollowerRole{
 			message.object = experiment + "#" + sendTime;
 			channel.sendToSupervisor(message);
 			showOnScreen("Sent response to server");
+			break;
+			
+		default:
 			break;
 		}
 	}

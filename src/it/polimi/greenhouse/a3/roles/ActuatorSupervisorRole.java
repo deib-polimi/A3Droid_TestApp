@@ -1,6 +1,6 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 import a3.a3droid.A3Message;
 import a3.a3droid.A3SupervisorRole;
 
@@ -18,7 +18,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 		startExperiment = true;
 		serverPinged = false;
 		node.connect("server_0", true, true);
-		node.sendToSupervisor(new A3Message(MainActivity.JOINED, getGroupName() + "_" + node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
 	}	
 
 	@Override
@@ -30,7 +30,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
 		switch(message.reason){
-		case MainActivity.SERVER_PING:
+		case AppConstants.SERVER_PING:
 			if(serverPinged){
 				serverPinged = false;
 				break;
@@ -45,12 +45,12 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			message.object = serverAddress + "#" + experiment + "#" + sendTime;
 			channel.sendBroadcast(message);
 			showOnScreen("Broadcasted data to follower actuators");
-			message.reason = MainActivity.SERVER_PONG;
+			message.reason = AppConstants.SERVER_PONG;
 			message.object = sendTime;
 			node.sendToSupervisor(message, "server_0");
 			break;
 			
-		case MainActivity.SERVER_PONG:
+		case AppConstants.SERVER_PONG:
 			showOnScreen("Received follower actuator response");
 			content = ((String)message.object).split("#");
 			experiment = content[0];
@@ -59,7 +59,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			node.sendToSupervisor(message, "server_0");
 			break;
 		
-		case MainActivity.START_EXPERIMENT:
+		case AppConstants.START_EXPERIMENT:
 			if(startExperiment){
 				startExperiment = false;
 				channel.sendBroadcast(message);
@@ -69,13 +69,30 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			
 			break;
 			
-		case MainActivity.STOP_EXPERIMENT:
+		case AppConstants.STOP_EXPERIMENT:
 			break;
 			
-		case MainActivity.LONG_RTT:
+		case AppConstants.LONG_RTT:
 			
-			channel.sendBroadcast(new A3Message(MainActivity.STOP_EXPERIMENT_COMMAND, ""));
+			channel.sendBroadcast(new A3Message(AppConstants.STOP_EXPERIMENT_COMMAND, ""));
+			break;
+			
+		default:
 			break;
 		}
+	}
+	
+	@Override
+	public void memberAdded(String name) {
+		showOnScreen("Entered: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
+		node.sendToSupervisor(msg, "control");
+	}
+
+	@Override
+	public void memberRemoved(String name) {	
+		showOnScreen("Exited: " + name);
+		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
+		node.sendToSupervisor(msg, "control");
 	}
 }

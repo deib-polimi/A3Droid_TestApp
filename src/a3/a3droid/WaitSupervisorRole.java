@@ -9,24 +9,27 @@ package a3.a3droid;
 public class WaitSupervisorRole extends A3SupervisorRole {
 
 	public WaitSupervisorRole() {
-		// TODO Auto-generated constructor stub
 		super();
 	}
 
 	@Override
 	public void logic() {
-		// TODO Auto-generated method stub
 		showOnScreen("(WaitSupervisorRole)");
 		active = false;
 	}
 
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
-		// TODO Auto-generated method stub
 		showOnScreen(message.toString());
 	}
 
 	@Override
 	public void onActivation() {}
+
+	@Override
+	public void memberAdded(String name) {}
+
+	@Override
+	public void memberRemoved(String name) {}
 
 }

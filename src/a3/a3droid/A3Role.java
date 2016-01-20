@@ -89,6 +89,10 @@ public abstract class A3Role implements Runnable{
 			handler = new RoleMessageHandler();
 		}
 	}
+	
+	public boolean isActive(){
+		return active;
+	}
 
 	/**
 	 * The logic that must be executed when receiving an application message.
@@ -97,7 +101,7 @@ public abstract class A3Role implements Runnable{
 	 * @param message The received message.
 	 */
 	public abstract void receiveApplicationMessage(A3Message message);
-
+	
 	/**It receives the incoming messages and passes them to another thread.
 	 * 
 	 * @param message The incoming message.
@@ -162,7 +166,7 @@ public abstract class A3Role implements Runnable{
 			object = message.object.split(Constants.A3_SEPARATOR);
 			node.hierarchyReply(object[0], object[1], getGroupName(), Boolean.valueOf(object[2]));
 			break;
-
+			
 		default:
 			break;
 		}

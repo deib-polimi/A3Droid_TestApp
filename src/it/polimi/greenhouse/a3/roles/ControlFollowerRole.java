@@ -1,6 +1,6 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.greenhouse.activities.MainActivity;
+import it.polimi.greenhouse.util.AppConstants;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 	@Override
 	public void logic() {
 		showOnScreen("[CtrlFolRole]");
-		node.sendToSupervisor(new A3Message(MainActivity.NEW_PHONE, node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUUID()), "control");
 		active = false;
 	}
 
@@ -41,7 +41,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 		
 		switch(message.reason){
 		
-		case MainActivity.ADD_MEMBER:			
+		case AppConstants.ADD_MEMBER:			
 			String content [] = ((String)message.object).split("_");
 			String type = content[0];
 			int experimentId = Integer.valueOf(content[1]);
@@ -61,9 +61,9 @@ public class ControlFollowerRole extends A3FollowerRole {
 							gType + "_" + i);
 			break;
 			
-		case MainActivity.START_EXPERIMENT:
-		case MainActivity.LONG_RTT:		
-		case MainActivity.SET_PARAMS:
+		case AppConstants.START_EXPERIMENT:
+		case AppConstants.LONG_RTT:		
+		case AppConstants.SET_PARAMS:
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
@@ -72,7 +72,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 							gType + "_" + i);
 			break;
 		
-		case MainActivity.STOP_EXPERIMENT:
+		case AppConstants.STOP_EXPERIMENT:
 
 			showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
 			
@@ -96,6 +96,9 @@ public class ControlFollowerRole extends A3FollowerRole {
 			
 			launchedGroups.clear();
 			showOnScreen("--- ESPERIMENTO TERMINATO ---");
+			break;
+			
+		default:
 			break;
 		}
 	}
