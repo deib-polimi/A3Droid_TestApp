@@ -1,0 +1,2 @@
+include ':alljoyn_java'
+include ':a3Test_Greenhouse'
