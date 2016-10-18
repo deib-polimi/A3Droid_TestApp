@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
+import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.greenhouse.util.AppConstants;
 
 
@@ -31,7 +32,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void logic() {
-		showOnScreen("[CtrlFolRole]");
+		//showOnScreen("[CtrlFolRole]");
 		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
 		active = false;
 	}
@@ -74,28 +75,36 @@ public class ControlFollowerRole extends A3FollowerRole {
 		
 		case AppConstants.STOP_EXPERIMENT:
 
-			showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
+			//showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
 					if(node.isConnectedForApplication(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
-						node.disconnect(gType + "_" + i);
-						
+						try {
+							node.disconnect(gType + "_" + i);
+						} catch (A3ChannelNotFoundException e) {
+							e.printStackTrace();
+						}
+
 			synchronized(this){
 				try {
 					wait(10000);
 				} catch (InterruptedException e) {}
 			}
 
-			showOnScreen("--- DISCONNESSIONE SUPERVISORI IN CORSO ---");
+			//showOnScreen("--- DISCONNESSIONE SUPERVISORI IN CORSO ---");
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
 					if(node.isConnectedForApplication(gType + "_" + i))
+						try {
 							node.disconnect(gType + "_" + i);
-			
+						} catch (A3ChannelNotFoundException e) {
+							e.printStackTrace();
+						}
+
 			launchedGroups.clear();
-			showOnScreen("--- ESPERIMENTO TERMINATO ---");
+			//showOnScreen("--- ESPERIMENTO TERMINATO ---");
 			break;
 			
 		default:

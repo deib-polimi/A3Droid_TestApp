@@ -235,14 +235,18 @@ public class MainActivity extends A3DroidActivity {
         Log.i(TAG, Build.MODEL);
     }
 
-    public void createTestControlGroup(int size, boolean server) throws A3NoGroupDescriptionException {
+    public void createTestControlGroup(int size, boolean server){
         ArrayList<String> roles = new ArrayList<String>();
         roles.add(TestControlSupervisorRole.class.getName());
         roles.add(TestControlFollowerRole.class.getName());
         ArrayList<A3GroupDescriptor> groupDescriptors = new ArrayList<A3GroupDescriptor>();
         groupDescriptors.add(new TestControlDescriptor());
         testNode = new TestControlNode((A3Application) getApplication(), server, size, toGuiHandler, getUUID(), roles, groupDescriptors);
-        testNode.connect("test_control");
+        try {
+            testNode.connect(TestControlDescriptor.TEST_GROUP_NAME);
+        } catch (A3NoGroupDescriptionException e) {
+            e.printStackTrace();
+        }
     }
 
     public void createGroup(View v) {

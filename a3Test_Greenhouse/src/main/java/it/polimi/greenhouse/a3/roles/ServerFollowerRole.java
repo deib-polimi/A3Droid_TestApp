@@ -17,7 +17,7 @@ public class ServerFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void logic() {
-		showOnScreen("[" + getGroupName() + "_FolRole]");
+		//showOnScreen("[" + getGroupName() + "_FolRole]");
 		active = false;
 	}
 
@@ -28,7 +28,7 @@ public class ServerFollowerRole extends A3FollowerRole {
 		String experiment;
 		switch(message.reason){
 		case AppConstants.SENSOR_PONG:
-			showOnScreen("Forwarding server data to sensor");
+			//showOnScreen("Forwarding server data to sensor");
 			content = ((String)message.object).split("#");
 			experiment = content[1];
 			node.sendToSupervisor(message, "monitoring_" + experiment);
@@ -39,7 +39,7 @@ public class ServerFollowerRole extends A3FollowerRole {
 			experiment = content[0];
 			message.object = message.senderAddress + "#" + (String)message.object;
 			if(node.isConnectedForApplication("actuators_" + experiment)){
-				showOnScreen("Forwarding server data to actuators");
+				//showOnScreen("Forwarding server data to actuators");
 				node.sendToSupervisor(message, "actuators_" + experiment);
 			}
 			break;

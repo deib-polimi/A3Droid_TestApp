@@ -12,8 +12,10 @@ import it.polimi.greenhouse.a3.roles.TestControlSupervisorRole;
  */
 public class TestControlDescriptor extends A3GroupDescriptor {
 
+	public final static String TEST_GROUP_NAME = "test_control";
+
 	public TestControlDescriptor(){
-		super("test_control", TestControlSupervisorRole.class.getName(), TestControlFollowerRole.class.getName());
+		super(TEST_GROUP_NAME, TestControlSupervisorRole.class.getName(), TestControlFollowerRole.class.getName());
 	}
 
 	@Override

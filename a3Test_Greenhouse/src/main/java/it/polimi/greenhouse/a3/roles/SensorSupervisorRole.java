@@ -3,8 +3,8 @@ package it.polimi.greenhouse.a3.roles;
 import android.util.Log;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
-import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
+import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimi.greenhouse.util.StringTimeUtil;
@@ -41,11 +41,13 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 
     @Override
     public void logic() {
-        showOnScreen("[" + getGroupName() + "_SupRole]");
+        //showOnScreen("[" + getGroupName() + "_SupRole]");
         active = false;
     }
 
+    @Override
     public void receiveApplicationMessage(A3Message message) {
+
         switch (message.reason) {
             case AppConstants.SET_PARAMS:
                 if (message.senderAddress.equals(getChannelId()) && !paramsSet) {
@@ -57,7 +59,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     long freq = Long.valueOf(params[1]);
                     this.MAX_INTERNAL = 60 * 1000 / freq;
                     this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
-                    showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
+                    //showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
                 }
                 break;
 
@@ -83,7 +85,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 if (!sensorAddress.equals(getChannelId())) {
                     sendUnicast(message, sensorAddress);
                 } else {
-                    showOnScreen("Server response received");
+                    //showOnScreen("Server response received");
                     sentCont++;
                     double rtt = StringTimeUtil.roundTripTime(((String) message.object), StringTimeUtil.getTimestamp()) / 1000;
                     avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
@@ -95,8 +97,8 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                         //new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
                     }
 
-                    if (sentCont % 100 == 0)
-                        showOnScreen(sentCont + " mex spediti.");
+                    if (sentCont % 100 == 0);
+                        //showOnScreen(sentCont + " mex spediti.");
                 }
                 break;
 
@@ -105,7 +107,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     if (!experimentIsRunning) {
                         startExperiment = false;
                         experimentIsRunning = true;
-                        showOnScreen("Experiment has started");
+                        //showOnScreen("Experiment has started");
                         sendBroadcast(message);
                         startTimestamp = StringTimeUtil.getTimestamp();
                         sentCont = 0;
@@ -125,7 +127,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 if (experimentIsRunning) {
                     paramsSet = false;
                     experimentIsRunning = false;
-                    showOnScreen("Experiment has stopped");
+                    //showOnScreen("Experiment has stopped");
                     double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
                     float frequency = sentCont / (float) (runningTime);
                     node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS: " + sentCont + "\t" +
@@ -155,7 +157,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         message.object = message.senderAddress + "#" + sendTime;
         //channel.sendUnicast(message, message.senderAddress);
         sendBroadcast(message);
-        showOnScreen("Sensor data received");
+        //showOnScreen("Sensor data received");
     }
 
     @Override
@@ -164,13 +166,13 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
     }
 
     public void memberAdded(String name) {
-        showOnScreen("Entered: " + name);
+        //showOnScreen("Entered: " + name);
         A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
         node.sendToSupervisor(msg, "control");
     }
 
     public void memberRemoved(String name) {
-        showOnScreen("Exited: " + name);
+        //showOnScreen("Exited: " + name);
         A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
         node.sendToSupervisor(msg, "control");
     }

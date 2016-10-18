@@ -28,7 +28,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 
 	@Override
 	public void logic() {
-		showOnScreen("[" + getGroupName() + "_SupRole]");
+		//showOnScreen("[" + getGroupName() + "_SupRole]");
 		active = false;
 	}
 
@@ -41,7 +41,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 				break;
 			}else
 				serverPinged = true;
-			showOnScreen("Received new data from a server");
+			//showOnScreen("Received new data from a server");
 			String [] content = ((String)message.object).split("#");
 			String serverAddress = content[0];
 			String experiment = content[1];
@@ -49,14 +49,14 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			//byte serverData [] = message.bytes;
 			message.object = serverAddress + "#" + experiment + "#" + sendTime;
 			sendBroadcast(message);
-			showOnScreen("Broadcasted data to follower actuators");
+			//showOnScreen("Broadcasted data to follower actuators");
 			message.reason = AppConstants.SERVER_PONG;
 			message.object = sendTime;
 			node.sendToSupervisor(message, "server_0");
 			break;
 			
 		case AppConstants.SERVER_PONG:
-			showOnScreen("Received follower actuator response");
+			//showOnScreen("Received follower actuator response");
 			content = ((String)message.object).split("#");
 			experiment = content[0];
 			sendTime = content[1];
@@ -88,13 +88,13 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 	}
 	
 	public void memberAdded(String name) {
-		showOnScreen("Entered: " + name);
+		//showOnScreen("Entered: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
 		node.sendToSupervisor(msg, "control");
 	}
 
 	public void memberRemoved(String name) {
-		showOnScreen("Exited: " + name);
+		//showOnScreen("Exited: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
 		node.sendToSupervisor(msg, "control");
 	}
