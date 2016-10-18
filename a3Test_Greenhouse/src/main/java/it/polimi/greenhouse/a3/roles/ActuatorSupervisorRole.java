@@ -1,7 +1,8 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.deepse.a3droid.A3SupervisorRole;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
+import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.util.AppConstants;
 
 public class ActuatorSupervisorRole extends A3SupervisorRole {
@@ -17,9 +18,13 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 	public void onActivation() {
 		startExperiment = true;
 		serverPinged = false;
-		node.connect("server_0", true, true);
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
-	}	
+		try {
+			node.connect("server_0");
+			node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		} catch (A3NoGroupDescriptionException e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Override
 	public void logic() {
@@ -43,7 +48,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			String sendTime = content[2];
 			//byte serverData [] = message.bytes;
 			message.object = serverAddress + "#" + experiment + "#" + sendTime;
-			channel.sendBroadcast(message);
+			sendBroadcast(message);
 			showOnScreen("Broadcasted data to follower actuators");
 			message.reason = AppConstants.SERVER_PONG;
 			message.object = sendTime;
@@ -62,7 +67,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 		case AppConstants.START_EXPERIMENT:
 			if(startExperiment){
 				startExperiment = false;
-				channel.sendBroadcast(message);
+				sendBroadcast(message);
 			}
 			else
 				startExperiment = true;
@@ -74,7 +79,7 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			
 		case AppConstants.LONG_RTT:
 			
-			channel.sendBroadcast(new A3Message(AppConstants.STOP_EXPERIMENT_COMMAND, ""));
+			sendBroadcast(new A3Message(AppConstants.STOP_EXPERIMENT_COMMAND, ""));
 			break;
 			
 		default:
@@ -82,15 +87,13 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 		}
 	}
 	
-	@Override
 	public void memberAdded(String name) {
 		showOnScreen("Entered: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
 		node.sendToSupervisor(msg, "control");
 	}
 
-	@Override
-	public void memberRemoved(String name) {	
+	public void memberRemoved(String name) {
 		showOnScreen("Exited: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
 		node.sendToSupervisor(msg, "control");

@@ -1,8 +1,6 @@
 package it.polimi.greenhouse.a3.groups;
 
-import it.polimi.deepse.a3droid.GroupDescriptor;
-import it.polimi.greenhouse.a3.roles.ControlFollowerRole;
-import it.polimi.greenhouse.a3.roles.ControlSupervisorRole;
+import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.greenhouse.a3.roles.TestControlFollowerRole;
 import it.polimi.greenhouse.a3.roles.TestControlSupervisorRole;
 
@@ -12,7 +10,7 @@ import it.polimi.greenhouse.a3.roles.TestControlSupervisorRole;
  * @author Francesco
  *
  */
-public class TestControlDescriptor extends GroupDescriptor {
+public class TestControlDescriptor extends A3GroupDescriptor {
 
 	public TestControlDescriptor(){
 		super("test_control", TestControlSupervisorRole.class.getName(), TestControlFollowerRole.class.getName());
@@ -20,7 +18,6 @@ public class TestControlDescriptor extends GroupDescriptor {
 
 	@Override
 	public int getSupervisorFitnessFunction() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 

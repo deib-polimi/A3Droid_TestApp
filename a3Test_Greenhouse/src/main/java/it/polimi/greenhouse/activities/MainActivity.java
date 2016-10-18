@@ -1,11 +1,11 @@
 package it.polimi.greenhouse.activities;
 
-import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.EditText;
@@ -13,9 +13,14 @@ import android.widget.EditText;
 import java.util.ArrayList;
 
 import it.polimi.deepse.a3droid.A3DroidActivity;
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.deepse.a3droid.A3Node;
-import it.polimi.deepse.a3droid.GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3Application;
+import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.A3Node;
+import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationParameters;
+import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationRole;
+import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.a3.groups.ActuatorsDescriptor;
 import it.polimi.greenhouse.a3.groups.ControlDescriptor;
 import it.polimi.greenhouse.a3.groups.MonitoringDescriptor;
@@ -39,27 +44,30 @@ public class MainActivity extends A3DroidActivity {
 
     private A3Node node;
     private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
-    private Handler toGuiThread;
-    private Handler fromGuiThread;
+    private HandlerThread fromGUIThread;
+    private Handler toGuiHandler;
+    private Handler fromGuiHandler;
     private EditText experiment;
     public static int runningExperiment;
-    private boolean experimentRunning = false;
-    private volatile boolean groupReady = false;
     protected TestControlNode testNode;
     public static final String TAG = "MainActivity";
+    private boolean experimentRunning = false;
+    private A3Application application = null;
 
     public static void setRunningExperiment(int runningExperiment) {
         MainActivity.runningExperiment = runningExperiment;
     }
 
-    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
 
-        toGuiThread = new Handler() {
+        application = ((A3Application) getApplication());
+        application.checkin();
+
+        toGuiHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
@@ -67,10 +75,14 @@ public class MainActivity extends A3DroidActivity {
                         inText.append(msg.obj + "\n");
                         break;
                     case 1:
-                        groupReady = (Boolean) msg.obj;
+                        boolean groupReady = (Boolean) msg.obj;
                         if(groupReady) {
-                            testNode.disconnect("test_control", true);
-                            showOnScreen("Test group ready, starting test");
+                            try {
+                                testNode.disconnect("test_control");
+                            } catch (A3ChannelNotFoundException e) {
+                                e.printStackTrace();
+                            }
+                            Log.i(TAG, "Test group ready, starting test");
                         }
                         break;
                     default:
@@ -80,17 +92,19 @@ public class MainActivity extends A3DroidActivity {
             }
         };
 
-        HandlerThread thread = new HandlerThread("Handler");
-        thread.start();
+        fromGUIThread = new HandlerThread("GreenhouseGUIHandler");
+        fromGUIThread.start();
+        fromGuiHandler = new Handler(fromGUIThread.getLooper()) {
 
-        fromGuiThread = new Handler(thread.getLooper()) {
+            it.polimi.deepse.a3droid.a3.A3Node nodeV2;
+
             @Override
             public void handleMessage(Message msg) {
 
                 ArrayList<String> roles = new ArrayList<String>();
                 roles.add(ControlSupervisorRole.class.getName());
                 roles.add(ControlFollowerRole.class.getName());
-                ArrayList<GroupDescriptor> groupDescriptors = new ArrayList<GroupDescriptor>();
+                ArrayList<A3GroupDescriptor> groupDescriptors = new ArrayList<A3GroupDescriptor>();
                 groupDescriptors.add(new ControlDescriptor());
 
                 switch (msg.what) {
@@ -101,6 +115,7 @@ public class MainActivity extends A3DroidActivity {
                         }
                         break;
                     case AppConstants.START_EXPERIMENT_USER_COMMAND:
+
                         if (!experimentRunning) {
                             experimentRunning = true;
                             if (node.isConnectedForApplication("server_0"))
@@ -115,22 +130,30 @@ public class MainActivity extends A3DroidActivity {
                     case AppConstants.START_SENSOR:
                         if (experimentRunning)
                             break;
-                        roles.add(SensorSupervisorRole.class.getName());
+                        roles.add(SensorSupervisorRole.class.getName());//removed to easy tests
                         roles.add(SensorFollowerRole.class.getName());
                         roles.add(ServerFollowerRole.class.getName());
                         groupDescriptors.add(new MonitoringDescriptor() {
-
                             @Override
                             public int getSupervisorFitnessFunction() {
-
                                 return 0;
                             }
-
                         });
                         groupDescriptors.add(new ServerDescriptor());
-                        node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
-                        node.connect("control", true, true);
-                        node.connect("monitoring_" + experiment.getText().toString(), true, true);
+
+                        nodeV2 = ((A3Application) getApplication()).createNode(
+                                groupDescriptors,
+                                roles);
+                        try {
+                            //nodeV2.connect("control");
+                            nodeV2.connect("monitoring_" + experiment.getText().toString());
+                        } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        }
+
+                        //node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
+                        //node.connect("control", true, true);
+                        //node.connect("monitoring_" + experiment.getText().toString(), true, true);
                         break;
                     case AppConstants.START_ACTUATOR:
                         if (experimentRunning)
@@ -140,19 +163,57 @@ public class MainActivity extends A3DroidActivity {
                         roles.add(ServerFollowerRole.class.getName());
                         groupDescriptors.add(new ActuatorsDescriptor());
                         groupDescriptors.add(new ServerDescriptor());
-                        node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
-                        node.connect("control", true, true);
-                        node.connect("actuators_" + experiment.getText().toString(), true, true);
+                        //node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
+                        //nodeV2 = ((A3Application) getApplication()).createNode(
+                        //groupDescriptors,
+                        //roles);
+                        try {
+                            //nodeV2.stack("control", "monitoring_" + experiment.getText().toString());
+                            nodeV2.merge("control", "monitoring_" + experiment.getText().toString());
+                        } catch (A3NoGroupDescriptionException a3NoGroupDescriptionException) {
+                            a3NoGroupDescriptionException.printStackTrace();
+                        } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
+                            a3InvalidOperationParameters.printStackTrace();
+                        } catch (A3InvalidOperationRole a3InvalidOperationRole) {
+                            a3InvalidOperationRole.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        //node.connect("control", true, true);
+                        //node.connect("actuators_" + experiment.getText().toString(), true, true);
                         break;
                     case AppConstants.START_SERVER:
                         if (experimentRunning)
                             break;
                         roles.add(ServerSupervisorRole.class.getName());
                         roles.add(ServerFollowerRole.class.getName());
+                        roles.add(SensorSupervisorRole.class.getName());//added to easy tests
+                        roles.add(SensorFollowerRole.class.getName());//added to easy tests
                         groupDescriptors.add(new ServerDescriptor());
-                        node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
-                        node.connect("control", true, true);
-                        node.connect("server_0", true, true);
+                        groupDescriptors.add(new MonitoringDescriptor() {
+
+                            @Override
+                            public int getSupervisorFitnessFunction() {
+                                return 0;
+                            }
+
+                        });
+                        //node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
+                        nodeV2 = ((A3Application) getApplication()).createNode(
+                                groupDescriptors,
+                                roles);
+                        nodeV2 = ((A3Application) getApplication()).createNode(
+                                groupDescriptors,
+                                roles);
+                        try {
+                            nodeV2.connect("control");
+                            //nodeV2.connect("monitoring_" + experiment.getText().toString());
+                        } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        }
+                        //node.connect("control", true, true);
+                        ////node.connect("server_0", true, true);
+                        //node.connect("monitoring_" + experiment.getText().toString(), true, true);
                         break;
                     default:
                         break;
@@ -161,6 +222,7 @@ public class MainActivity extends A3DroidActivity {
             }
         };
 
+
         inText = (EditText) findViewById(R.id.oneInEditText);
         experiment = (EditText) findViewById(R.id.editText1);
         sensorsFrequency = (EditText) findViewById(R.id.editText2);
@@ -168,46 +230,46 @@ public class MainActivity extends A3DroidActivity {
         actuatorsFrequency = (EditText) findViewById(R.id.editText3);
         actuatorsPayload = (EditText) findViewById(R.id.editText5);
 
-        showOnScreen(Build.MANUFACTURER);
-        showOnScreen(Build.PRODUCT);
-        showOnScreen(Build.MODEL);
+        Log.i(TAG, Build.MANUFACTURER);
+        Log.i(TAG, Build.PRODUCT);
+        Log.i(TAG, Build.MODEL);
     }
 
-    public void createTestControlGroup(int size, boolean server){
+    public void createTestControlGroup(int size, boolean server) throws A3NoGroupDescriptionException {
         ArrayList<String> roles = new ArrayList<String>();
         roles.add(TestControlSupervisorRole.class.getName());
         roles.add(TestControlFollowerRole.class.getName());
-        ArrayList<GroupDescriptor> groupDescriptors = new ArrayList<GroupDescriptor>();
+        ArrayList<A3GroupDescriptor> groupDescriptors = new ArrayList<A3GroupDescriptor>();
         groupDescriptors.add(new TestControlDescriptor());
-        testNode = new TestControlNode(server, size, toGuiThread, getUUID(), this, roles, groupDescriptors);
-        testNode.connect("test_control", true, true);
+        testNode = new TestControlNode((A3Application) getApplication(), server, size, toGuiHandler, getUUID(), roles, groupDescriptors);
+        testNode.connect("test_control");
     }
 
     public void createGroup(View v) {
-        fromGuiThread.sendEmptyMessage(AppConstants.CREATE_GROUP_USER_COMMAND);
+        fromGuiHandler.sendEmptyMessage(AppConstants.CREATE_GROUP_USER_COMMAND);
     }
 
     public void stopExperiment(View v) {
-        fromGuiThread.sendEmptyMessage(AppConstants.STOP_EXPERIMENT_COMMAND);
+        fromGuiHandler.sendEmptyMessage(AppConstants.STOP_EXPERIMENT_COMMAND);
     }
 
     public void startExperiment(View v) {
-        fromGuiThread.sendEmptyMessage(AppConstants.START_EXPERIMENT_USER_COMMAND);
+        fromGuiHandler.sendEmptyMessage(AppConstants.START_EXPERIMENT_USER_COMMAND);
     }
 
     public void startSensor(View v) {
         if (!experimentRunning)
-            fromGuiThread.sendEmptyMessage(AppConstants.START_SENSOR);
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_SENSOR);
     }
 
     public void startActuator(View v) {
         if (!experimentRunning)
-            fromGuiThread.sendEmptyMessage(AppConstants.START_ACTUATOR);
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_ACTUATOR);
     }
 
     public void startServer(View v) {
         if (!experimentRunning)
-            fromGuiThread.sendEmptyMessage(AppConstants.START_SERVER);
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_SERVER);
     }
 
     @Override
@@ -220,17 +282,19 @@ public class MainActivity extends A3DroidActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        fromGUIThread.quit();
         if (experimentRunning)
-            node.disconnect("control", true);
+            try {
+                node.disconnect("control");
+            } catch (A3ChannelNotFoundException e) {
+                e.printStackTrace();
+            }
+        application.quit();
         System.exit(0);
     }
 
-    @Override
-    public void showOnScreen(String message) {
-        toGuiThread.sendMessage(toGuiThread.obtainMessage(0, message));
-    }
 
     public boolean isTestGroupReady() {
-        return groupReady;
+        return testNode.isReady();
     }
 }

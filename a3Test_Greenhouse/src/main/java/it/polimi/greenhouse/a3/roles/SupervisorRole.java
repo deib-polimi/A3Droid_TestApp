@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import it.polimi.deepse.a3droid.A3SupervisorRole;
-import it.polimi.deepse.a3droid.TimerInterface;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
 
 
-public abstract class SupervisorRole extends A3SupervisorRole implements TimerInterface {
+public abstract class SupervisorRole extends A3SupervisorRole{
 	
 	protected Map<String, Map<Integer, Set<String[]>>> launchedGroups;
 	
@@ -35,8 +35,9 @@ public abstract class SupervisorRole extends A3SupervisorRole implements TimerIn
 		}
 		
 	}
-	
-	
+
+
+
 	protected void removeGroupMember(String uuid){
 		for(String type : launchedGroups.keySet())			
 			for(int i : launchedGroups.get(type).keySet())

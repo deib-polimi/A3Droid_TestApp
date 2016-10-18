@@ -1,7 +1,7 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.deepse.a3droid.A3SupervisorRole;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
 import it.polimi.greenhouse.a3.nodes.TestControlNode;
 import it.polimi.greenhouse.util.AppConstants;
 
@@ -11,7 +11,7 @@ public class TestControlSupervisorRole  extends A3SupervisorRole{
     @Override
     public void onActivation() {
         showOnScreen("[TestGroupCtrlSupRole]");
-        ((TestControlNode) node).addMember(channel.getChannelId(), ((TestControlNode) node).isServer());
+        ((TestControlNode) node).addMember(getChannelId(), ((TestControlNode) node).isServer());
         active = false;
     }
 
@@ -34,12 +34,10 @@ public class TestControlSupervisorRole  extends A3SupervisorRole{
         }
     }
 
-    @Override
     public void memberAdded(String s) {
         //((TestControlNode) node).addMember(s);
     }
 
-    @Override
     public void memberRemoved(String s) {
         //((TestControlNode) node).removeMember(s);
     }

@@ -1,10 +1,10 @@
 package it.polimi.greenhouse.a3.groups;
 
-import it.polimi.deepse.a3droid.GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.greenhouse.a3.roles.ServerFollowerRole;
 import it.polimi.greenhouse.a3.roles.ServerSupervisorRole;
 
-public class ServerDescriptor extends GroupDescriptor {
+public class ServerDescriptor extends A3GroupDescriptor {
 
 	public ServerDescriptor() {
 		super("server", ServerSupervisorRole.class.getName(), ServerFollowerRole.class.getName());

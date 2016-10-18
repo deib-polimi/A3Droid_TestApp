@@ -2,10 +2,10 @@ package it.polimi.greenhouse.a3.roles;
 
 import android.util.Log;
 
-import it.polimi.deepse.a3droid.A3FollowerRole;
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.deepse.a3droid.Timer;
-import it.polimi.deepse.a3droid.TimerInterface;
+import it.polimi.deepse.a3droid.a3.A3FollowerRole;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.pattern.Timer;
+import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimi.greenhouse.util.StringTimeUtil;
@@ -36,7 +36,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}
 
 	@Override
@@ -62,10 +62,17 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			break;
 			
 		case AppConstants.SENSOR_PONG:
-			
+
+			String [] content = message.object.split("#");
+			String sensorAddress = content[0];
+			String date = content[1];
+
+			if(!sensorAddress.equals(getChannelId()))
+				return;
+
 			showOnScreen("Server response received");
 			sentCont ++;			
-			rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp()) / 1000;
+			rtt = StringTimeUtil.roundTripTime(date, StringTimeUtil.getTimestamp()) / 1000;
 			avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
 			
 			if(rtt > TIMEOUT && experimentIsRunning){
@@ -116,11 +123,12 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	private void sendMessage() {
 		if(experimentIsRunning)
-			channel.sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
+			sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
+			//node.sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, channel.getChannelId() + "#" + currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad), "server_" + currentExperiment);
 	}
 
 	@Override
-	public void timerFired(int reason) {
+	public void handleTimeEvent(int reason, Object object) {
 		sendMessage();
 	}	
 }

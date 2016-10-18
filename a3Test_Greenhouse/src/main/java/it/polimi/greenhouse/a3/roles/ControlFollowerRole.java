@@ -1,17 +1,14 @@
 package it.polimi.greenhouse.a3.roles;
 
-import android.util.Log;
-
-import it.polimi.deepse.a3droid.A3FollowerRole;
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.greenhouse.activities.MainActivity;
-import it.polimi.greenhouse.util.AppConstants;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.A3FollowerRole;
+import it.polimi.greenhouse.util.AppConstants;
 
 
 /**
@@ -35,7 +32,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 	@Override
 	public void logic() {
 		showOnScreen("[CtrlFolRole]");
-		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUUID()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
 		active = false;
 	}
 
@@ -82,7 +79,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
 					if(node.isConnectedForApplication(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
-						node.disconnect(gType + "_" + i, true);
+						node.disconnect(gType + "_" + i);
 						
 			synchronized(this){
 				try {
@@ -95,7 +92,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
 					if(node.isConnectedForApplication(gType + "_" + i))
-							node.disconnect(gType + "_" + i, true);
+							node.disconnect(gType + "_" + i);
 			
 			launchedGroups.clear();
 			showOnScreen("--- ESPERIMENTO TERMINATO ---");

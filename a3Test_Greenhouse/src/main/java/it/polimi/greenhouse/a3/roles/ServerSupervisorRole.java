@@ -1,8 +1,8 @@
 package it.polimi.greenhouse.a3.roles;
 
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.deepse.a3droid.Timer;
-import it.polimi.deepse.a3droid.TimerInterface;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.pattern.Timer;
+import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimi.greenhouse.util.StringTimeUtil;
 
@@ -31,7 +31,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUUID() + "_" + channel.getChannelId()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}	
 	
 	@Override
@@ -87,7 +87,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 				String experiment = content[1];
 				String sendTime = content[2];
 				message.object = sensorAddress + "#" + experiment + "#" + sendTime;
-				channel.sendUnicast(message, message.senderAddress);
+				sendUnicast(message, message.senderAddress);
 				break;
 				
 				
@@ -122,7 +122,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 						startTimestamp = StringTimeUtil.getTimestamp();
 						resetCount();
 						sPayLoad = StringTimeUtil.createPayload(groupSize("actuators") * PAYLOAD_SIZE);
-						channel.sendBroadcast(message);
+						sendBroadcast(message);
 						sendMessage();
 					}
 				}
@@ -166,27 +166,25 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		if(experimentIsRunning)
 			if(launchedGroups.containsKey("actuators"))
 				for(int groupId : launchedGroups.get("actuators").keySet())
-					channel.sendBroadcast(new A3Message(AppConstants.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
+					sendBroadcast(new A3Message(AppConstants.SERVER_PING, groupId + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
 	}	
 	
-	@Override
 	public void memberAdded(String name) {
 		showOnScreen("Entered: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
-		channel.sendBroadcast(msg);
+		sendBroadcast(msg);
 		node.sendToSupervisor(msg, "control");
 	}
 
-	@Override
-	public void memberRemoved(String name) {	
+	public void memberRemoved(String name) {
 		showOnScreen("Exited: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
-		channel.sendBroadcast(msg);
+		sendBroadcast(msg);
 		node.sendToSupervisor(msg, "control");
 	}
 
 	@Override
-	public void timerFired(int reason) {
+	public void handleTimeEvent(int reason, Object object) {
 		if(experimentIsRunning)
 			sendMessage();
 	}

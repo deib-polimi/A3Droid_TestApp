@@ -3,8 +3,8 @@ package it.polimi.greenhouse.a3.roles;
 import java.util.Arrays;
 import java.util.List;
 
-import it.polimi.deepse.a3droid.A3FollowerRole;
-import it.polimi.deepse.a3droid.A3Message;
+import it.polimi.deepse.a3droid.a3.A3FollowerRole;
+import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.greenhouse.a3.nodes.TestControlNode;
 import it.polimi.greenhouse.util.AppConstants;
 
@@ -19,7 +19,7 @@ public class TestControlFollowerRole extends A3FollowerRole {
 	@Override
 	public void onActivation() {
 		showOnScreen("[TestGroupCtrlFolRole]");
-		channel.sendToSupervisor(new A3Message(AppConstants.MEMBER_ADDED, ((TestControlNode) node).isServer() + ""));
+		sendToSupervisor(new A3Message(AppConstants.MEMBER_ADDED, ((TestControlNode) node).isServer() + ""));
 		active = false;
 	}
 
@@ -33,7 +33,7 @@ public class TestControlFollowerRole extends A3FollowerRole {
 
 			case AppConstants.TEST_GROUP_READY:
 				List<String> ids = Arrays.asList(a3Message.object.split("_"));
-				((TestControlNode) node).setGroupReady(checkId(ids, channel.getChannelId()));
+				((TestControlNode) node).setReady(checkId(ids, getChannelId()));
 				break;
 			case AppConstants.MEMBER_ADDED:
 				//((TestControlNode) node).addMember(a3Message.object);

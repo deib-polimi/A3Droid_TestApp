@@ -1,6 +1,7 @@
 package it.polimi.greenhouse.a3.nodes;
 
 import android.os.Handler;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,10 +9,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import it.polimi.deepse.a3droid.A3Message;
-import it.polimi.deepse.a3droid.A3Node;
-import it.polimi.deepse.a3droid.GroupDescriptor;
-import it.polimi.deepse.a3droid.UserInterface;
+import it.polimi.deepse.a3droid.a3.A3Application;
+import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.A3Node;
 import it.polimi.greenhouse.util.AppConstants;
 
 /**
@@ -25,23 +26,26 @@ public class TestControlNode extends A3Node{
     private Set<String> membersSet;
     private String serverId = null;
     private boolean server;
+    private boolean ready = false;
 
-    public TestControlNode(boolean server, int testSize, Handler activityHandler, String uuId, UserInterface ui, ArrayList<String> roles, ArrayList<GroupDescriptor> groupDescriptors) {
-        super(uuId, ui, roles, groupDescriptors);
+    public TestControlNode(A3Application application, boolean server, int testSize, Handler activityHandler, String uuId, ArrayList<String> roles, ArrayList<A3GroupDescriptor> groupDescriptors) {
+        super(application, groupDescriptors, roles);
         this.testSize = testSize;
         this.activityHandler = activityHandler;
         this.membersSet = Collections.synchronizedSet(new TreeSet<String>());
         this.server = server;
     }
 
-    //Used by supervisor
+    /**
+     * Used by supervisor
+     */
     public void addMember(String s, boolean server){
         s = s.replaceFirst("\\.[A-Za-z0-9]+", "");
         if(server)
             this.serverId = s;
         else
             membersSet.add(s);
-        showOnScreen("Test member " + s + " entered");
+        Log.i(TAG, "Test member " + s + " entered");
         if(isGroupReady())
             new TestStarter().start();
     }
@@ -49,16 +53,22 @@ public class TestControlNode extends A3Node{
     public void removeMember(String s){
         s = s.replaceFirst("\\.[A-Za-z0-9]+", "");
         membersSet.remove(s);
-        showOnScreen("Test member " + s + " exited");
+        Log.i(TAG, "Test member " + s + " exited");
     }
 
     public boolean isGroupReady(){
         return serverId != null && membersSet.size() >= testSize - 1;
     }
 
-    //Used by follower
-    public void setGroupReady(boolean ready){
-        activityHandler.sendMessage(activityHandler.obtainMessage(1, ready));
+    /**
+     * Used by both
+     */
+    public boolean isReady(){
+        return ready;
+    }
+
+    public void setReady(boolean ready){
+        this.ready = ready;
     }
 
     public class TestStarter extends Thread {
@@ -90,7 +100,8 @@ public class TestControlNode extends A3Node{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            activityHandler.sendMessage(activityHandler.obtainMessage(1, true));
+            setReady(true);
+            //activityHandler.sendMessage(activityHandler.obtainMessage(1, true));
         }
     }
 
