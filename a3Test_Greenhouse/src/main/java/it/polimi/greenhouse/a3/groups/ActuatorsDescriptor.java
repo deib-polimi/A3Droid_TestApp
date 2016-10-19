@@ -18,6 +18,11 @@ public class ActuatorsDescriptor extends A3GroupDescriptor {
 		return 0;
 	}
 
+	@Override
+	public void groupStateChangeListener(A3GroupState oldState, A3GroupState actualState) {
+
+	}
+
 	/*@Override
 	public int getSupervisorFitnessFunction() {
 		// TODO Auto-generated method stub

@@ -23,6 +23,11 @@ public class TestControlDescriptor extends A3GroupDescriptor {
 		return 0;
 	}
 
+	@Override
+	public void groupStateChangeListener(A3GroupState a3GroupState, A3GroupState a3GroupState1) {
+
+	}
+
 	/*@Override
 	public int getSupervisorFitnessFunction() {
 		// TODO Auto-generated method stub

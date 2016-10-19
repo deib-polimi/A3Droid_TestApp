@@ -31,7 +31,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		//node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}	
 	
 	@Override

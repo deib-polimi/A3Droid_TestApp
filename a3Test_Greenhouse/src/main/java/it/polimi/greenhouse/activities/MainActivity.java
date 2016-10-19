@@ -138,6 +138,9 @@ public class MainActivity extends A3DroidActivity {
                             public int getSupervisorFitnessFunction() {
                                 return 0;
                             }
+
+                            @Override
+                            public void groupStateChangeListener(A3GroupState a3GroupState, A3GroupState a3GroupState1) {}
                         });
                         groupDescriptors.add(new ServerDescriptor());
 
@@ -146,7 +149,7 @@ public class MainActivity extends A3DroidActivity {
                                 roles);
                         try {
                             //nodeV2.connect("control");
-                            nodeV2.connect("monitoring_" + experiment.getText().toString());
+                            nodeV2.connect("monitoring");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         }
@@ -191,7 +194,6 @@ public class MainActivity extends A3DroidActivity {
                         roles.add(SensorFollowerRole.class.getName());//added to easy tests
                         groupDescriptors.add(new ServerDescriptor());
                         groupDescriptors.add(new MonitoringDescriptor() {
-
                             @Override
                             public int getSupervisorFitnessFunction() {
                                 return 0;
@@ -202,17 +204,13 @@ public class MainActivity extends A3DroidActivity {
                         nodeV2 = ((A3Application) getApplication()).createNode(
                                 groupDescriptors,
                                 roles);
-                        nodeV2 = ((A3Application) getApplication()).createNode(
-                                groupDescriptors,
-                                roles);
                         try {
-                            nodeV2.connect("control");
+                            nodeV2.connect("server");
                             //nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         }
                         //node.connect("control", true, true);
-                        ////node.connect("server_0", true, true);
                         //node.connect("monitoring_" + experiment.getText().toString(), true, true);
                         break;
                     default:
