@@ -41,7 +41,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	@Override
 	public void logic() {
-		//showOnScreen("[" + getGroupName() + "_FolRole]");
+		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
 		active = false;
 	}
 
@@ -58,7 +58,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			long freq = Long.valueOf(params[1]);
 			this.MAX_INTERNAL = 60 * 1000 / freq;
 			this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
-			//showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
+			postUIEvent(0, "Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
 			break;
 			
 		case AppConstants.SENSOR_PONG:
@@ -70,7 +70,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			if(!sensorAddress.equals(getChannelId()))
 				return;
 
-			//showOnScreen("Server response received");
+			postUIEvent(0, "Server response received");
 			sentCont ++;			
 			rtt = StringTimeUtil.roundTripTime(date, StringTimeUtil.getTimestamp()) / 1000;
 			avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
@@ -84,14 +84,14 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			}
 			
 			if(sentCont % 100 == 0)
-				//showOnScreen(sentCont + " mex spediti.");
+				postUIEvent(0, sentCont + " mex spediti.");
 			
 			break;
 
 		case AppConstants.START_EXPERIMENT:
 
 			if(!experimentIsRunning){
-				//showOnScreen("Experiment has started");
+				postUIEvent(0, "Experiment has started");
 				experimentIsRunning = true;
 				startTimestamp = StringTimeUtil.getTimestamp();
 				sentCont = 0;
@@ -105,7 +105,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			Log.i(MainActivity.TAG, "Stopping the experiment");
 
 			if(experimentIsRunning){
-				//showOnScreen("Experiment has stopped");
+				postUIEvent(0, "Experiment has stopped");
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / ((float)runningTime);
 				

@@ -8,12 +8,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
+import it.polimi.greenhouse.activities.MainActivity;
 
 
 public abstract class SupervisorRole extends A3SupervisorRole{
 	
 	protected Map<String, Map<Integer, Set<String[]>>> launchedGroups;
-	
+
 	public SupervisorRole() {
 		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String[]>>>();
 	}
@@ -35,8 +36,6 @@ public abstract class SupervisorRole extends A3SupervisorRole{
 		}
 		
 	}
-
-
 
 	protected void removeGroupMember(String uuid){
 		for(String type : launchedGroups.keySet())			
@@ -63,5 +62,4 @@ public abstract class SupervisorRole extends A3SupervisorRole{
 						return id[0];
 		return null;
 	}
-
 }

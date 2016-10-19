@@ -46,7 +46,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 
     @Override
     public void logic() {
-        //showOnScreen("[" + getGroupName() + "_SupRole]");
+        postUIEvent(0, "[" + getGroupName() + "_SupRole]");
         active = false;
     }
 
@@ -64,7 +64,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     long freq = Long.valueOf(params[1]);
                     this.MAX_INTERNAL = 60 * 1000 / freq;
                     this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
-                    //showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
+                    postUIEvent(0, "Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
                 }
                 break;
 
@@ -90,7 +90,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 if (!sensorAddress.equals(getChannelId())) {
                     sendUnicast(message, sensorAddress);
                 } else {
-                    //showOnScreen("Server response received");
+                    postUIEvent(0, "Server response received");
                     sentCont++;
                     double rtt = StringTimeUtil.roundTripTime(((String) message.object), StringTimeUtil.getTimestamp()) / 1000;
                     avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
@@ -103,7 +103,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     }
 
                     if (sentCont % 100 == 0);
-                        //showOnScreen(sentCont + " mex spediti.");
+                        postUIEvent(0, sentCont + " mex spediti.");
                 }
                 break;
 
@@ -112,7 +112,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     if (!experimentIsRunning) {
                         startExperiment = false;
                         experimentIsRunning = true;
-                        //showOnScreen("Experiment has started");
+                        postUIEvent(0, "Experiment has started");
                         sendBroadcast(message);
                         startTimestamp = StringTimeUtil.getTimestamp();
                         sentCont = 0;
@@ -132,7 +132,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 if (experimentIsRunning) {
                     paramsSet = false;
                     experimentIsRunning = false;
-                    //showOnScreen("Experiment has stopped");
+                    postUIEvent(0, "Experiment has stopped");
                     double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
                     float frequency = sentCont / (float) (runningTime);
                     node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS: " + sentCont + "\t" +
@@ -162,7 +162,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         message.object = message.senderAddress + "#" + sendTime;
         //channel.sendUnicast(message, message.senderAddress);
         sendBroadcast(message);
-        //showOnScreen("Sensor data received");
+        postUIEvent(0, "Sensor data received");
     }
 
     @Override
@@ -171,13 +171,13 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
     }
 
     public void memberAdded(String name) {
-        //showOnScreen("Entered: " + name);
+        postUIEvent(0, "Entered: " + name);
         A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
         node.sendToSupervisor(msg, "control");
     }
 
     public void memberRemoved(String name) {
-        //showOnScreen("Exited: " + name);
+        postUIEvent(0, "Exited: " + name);
         A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
         node.sendToSupervisor(msg, "control");
     }

@@ -12,7 +12,8 @@ import android.widget.EditText;
 
 import java.util.ArrayList;
 
-import it.polimi.deepse.a3droid.A3DroidActivity;
+import it.polimi.deepse.a3droid.a3.A3UIEvent;
+import it.polimi.deepse.a3droid.android.A3DroidActivity;
 import it.polimi.deepse.a3droid.a3.A3Application;
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.A3Message;
@@ -298,5 +299,10 @@ public class MainActivity extends A3DroidActivity {
 
     public boolean isTestGroupReady() {
         return testNode.isReady();
+    }
+
+    @Override
+    public void handleUIEvent(A3UIEvent event) {
+        inText.append(event.message + "\n");
     }
 }

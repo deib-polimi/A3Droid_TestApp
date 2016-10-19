@@ -21,7 +21,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 	private int PAYLOAD_SIZE = 32;
 	
 	public ServerSupervisorRole() {
-		super();		
+		super();
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 	
 	@Override
 	public void logic() {
-		//showOnScreen("[" + getGroupName() + "_SupRole]");
+		postUIEvent(0, "[" + getGroupName() + "_SupRole]");
 		active = false;
 	}
 
@@ -75,12 +75,12 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 					long freq = Long.valueOf(params[1]);
 					this.MAX_INTERNAL = 60 * 1000 / freq;
 					this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
-					//showOnScreen("Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
+					postUIEvent(0, "Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
 				}
 				break;
 			
 			case AppConstants.SENSOR_PING:
-				//showOnScreen("Received new data from a sensor");
+				postUIEvent(0, "Received new data from a sensor");
 				message.reason = AppConstants.SENSOR_PONG;
 				content = ((String)message.object).split("#");
 				String sensorAddress = content[0];
@@ -92,7 +92,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 				
 				
 			case AppConstants.SERVER_PONG:
-				//showOnScreen("Actuator response received");
+				postUIEvent(0, "Actuator response received");
 				sentCont ++;
 				rtt = StringTimeUtil.roundTripTime(((String)message.object), StringTimeUtil.getTimestamp()) / 1000;
 				avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont; 
@@ -109,13 +109,13 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 				}
 				
 				if(sentCont % 100 == 0)
-					//showOnScreen(sentCont + " mex spediti.");
+					postUIEvent(0, sentCont + " mex spediti.");
 				break;
 
 			case AppConstants.START_EXPERIMENT:
 				if(startExperiment){
 					if(!experimentIsRunning && launchedGroups.containsKey("actuators") && !launchedGroups.get("actuators").isEmpty()){
-						//showOnScreen("Experiment has started");
+						postUIEvent(0, "Experiment has started");
 						startExperiment = false;
 						experimentIsRunning = true;
 						sentCont = 0;
@@ -136,7 +136,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 				
 			case AppConstants.LONG_RTT:
 				if(experimentIsRunning){
-					//showOnScreen("Experiment has stopped");
+					postUIEvent(0, "Experiment has stopped");
 					experimentIsRunning = false;
 					paramsSet = false;
 					double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
@@ -162,7 +162,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 	}
 
 	private void sendMessage() {
-		//showOnScreen("Sendind command to actuators");
+		postUIEvent(0, "Sendind command to actuators");
 		if(experimentIsRunning)
 			if(launchedGroups.containsKey("actuators"))
 				for(int groupId : launchedGroups.get("actuators").keySet())
@@ -170,14 +170,14 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 	}	
 	
 	public void memberAdded(String name) {
-		//showOnScreen("Entered: " + name);
+		postUIEvent(0, "Entered: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
 		sendBroadcast(msg);
 		node.sendToSupervisor(msg, "control");
 	}
 
 	public void memberRemoved(String name) {
-		//showOnScreen("Exited: " + name);
+		postUIEvent(0, "Exited: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
 		sendBroadcast(msg);
 		node.sendToSupervisor(msg, "control");
