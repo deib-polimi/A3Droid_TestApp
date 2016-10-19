@@ -12,7 +12,7 @@ public class ServerFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void onActivation() {
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		//node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}
 
 	@Override

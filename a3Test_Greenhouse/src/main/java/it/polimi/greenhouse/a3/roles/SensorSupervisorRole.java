@@ -4,6 +4,7 @@ import android.util.Log;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
+import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
@@ -30,12 +31,16 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 
     @Override
     public void onActivation() {
-        currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
+        currentExperiment = 0; //Integer.valueOf(getGroupName().split("_")[1]);
         startExperiment = true;
         experimentIsRunning = false;
         sentCont = 0;
         avgRTT = 0;
-        //node.connect("server_0", true, true);
+        try {
+            node.connect("server");
+        } catch (A3NoGroupDescriptionException e) {
+            e.printStackTrace();
+        }
         //node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
     }
 

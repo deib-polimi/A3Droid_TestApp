@@ -194,7 +194,7 @@ public class MainActivity extends A3DroidActivity {
 
                             @Override
                             public int getSupervisorFitnessFunction() {
-                                return 0;
+                                return 10;
                             }
 
                         });
@@ -202,17 +202,14 @@ public class MainActivity extends A3DroidActivity {
                         nodeV2 = ((A3Application) getApplication()).createNode(
                                 groupDescriptors,
                                 roles);
-                        nodeV2 = ((A3Application) getApplication()).createNode(
-                                groupDescriptors,
-                                roles);
                         try {
-                            nodeV2.connect("control");
+                            //nodeV2.connect("control");
+                            nodeV2.connect("server");
                             //nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         }
                         //node.connect("control", true, true);
-                        ////node.connect("server_0", true, true);
                         //node.connect("monitoring_" + experiment.getText().toString(), true, true);
                         break;
                     default:
