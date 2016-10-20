@@ -12,16 +12,17 @@ import android.widget.EditText;
 
 import java.util.ArrayList;
 
-import it.polimi.deepse.a3droid.a3.A3UIEvent;
-import it.polimi.deepse.a3droid.android.A3DroidActivity;
 import it.polimi.deepse.a3droid.a3.A3Application;
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3Node;
+import it.polimi.deepse.a3droid.a3.events.A3ErrorEvent;
+import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationParameters;
 import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.deepse.a3droid.android.A3DroidActivity;
 import it.polimi.greenhouse.a3.groups.ActuatorsDescriptor;
 import it.polimi.greenhouse.a3.groups.ControlDescriptor;
 import it.polimi.greenhouse.a3.groups.MonitoringDescriptor;
@@ -122,7 +123,7 @@ public class MainActivity extends A3DroidActivity {
                             if (node.isConnectedForApplication("server_0"))
                                 node.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
                                         "control");
-                            if (node.isConnectedForApplication("monitoring_" + experiment.getText().toString()))
+                            if (node.isConnectedForApplication("monitoring"))
                                 node.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
                                         "control");
                             node.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
@@ -149,7 +150,7 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            //nodeV2.connect("control");
+                            nodeV2.connect("control");
                             nodeV2.connect("monitoring");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
@@ -206,12 +207,12 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connect("server");
+                            nodeV2.connect("control");
+                            nodeV2.connect("server_0");
                             //nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         }
-                        //node.connect("control", true, true);
                         //node.connect("monitoring_" + experiment.getText().toString(), true, true);
                         break;
                     default:
@@ -304,5 +305,10 @@ public class MainActivity extends A3DroidActivity {
     @Override
     public void handleUIEvent(A3UIEvent event) {
         inText.append(event.message + "\n");
+    }
+
+    @Override
+    public void handleErrorEvent(A3ErrorEvent event) {
+        inText.append(event.exception.getMessage() + "\n");
     }
 }

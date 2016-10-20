@@ -31,7 +31,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		//node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}	
 	
 	@Override
@@ -52,7 +52,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
 				String name = content[3];
-				if(!type.equals("server"))
+				if(!type.equals("server_0"))
 					removeGroupMember(uuid);
 				addGroupMember(type, experimentId, uuid, name);
 				break;

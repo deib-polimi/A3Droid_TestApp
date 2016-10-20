@@ -36,7 +36,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
-		//node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}
 
 	@Override
@@ -124,7 +124,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private void sendMessage() {
 		if(experimentIsRunning)
 			sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
-			//node.sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, channel.getChannelId() + "#" + currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad), "server_" + currentExperiment);
+			//node.sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, channel.getChannelId() + "#" + currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad), "_" + currentExperiment);
 	}
 
 	@Override

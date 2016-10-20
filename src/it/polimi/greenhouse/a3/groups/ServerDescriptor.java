@@ -7,7 +7,7 @@ import a3.a3droid.GroupDescriptor;
 public class ServerDescriptor extends GroupDescriptor {
 
 	public ServerDescriptor() {
-		super("server", ServerSupervisorRole.class.getName(), ServerFollowerRole.class.getName());
+		super("server_0", ServerSupervisorRole.class.getName(), ServerFollowerRole.class.getName());
 		// TODO Auto-generated constructor stub
 	}
 

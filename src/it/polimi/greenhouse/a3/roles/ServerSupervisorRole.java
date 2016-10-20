@@ -52,7 +52,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 				int experimentId = Integer.valueOf(content[1]);
 				String uuid = content[2];
 				String name = content[3];
-				if(!type.equals("server"))
+				if(!type.equals("server_0"))
 					removeGroupMember(uuid);
 				addGroupMember(type, experimentId, uuid, name);
 				break;
