@@ -44,7 +44,7 @@ import it.polimit.greenhouse.R;
 
 public class MainActivity extends A3DroidActivity {
 
-    private A3Node node;
+    private A3Node nodeV2;
     private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
     private HandlerThread fromGUIThread;
     private Handler toGuiHandler;
@@ -112,7 +112,7 @@ public class MainActivity extends A3DroidActivity {
                 switch (msg.what) {
                     case AppConstants.STOP_EXPERIMENT_COMMAND:
                         if (experimentRunning) {
-                            node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+                            nodeV2.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
                             experimentRunning = false;
                         }
                         break;
@@ -120,13 +120,13 @@ public class MainActivity extends A3DroidActivity {
 
                         if (!experimentRunning) {
                             experimentRunning = true;
-                            if (node.isConnectedForApplication("server_0"))
-                                node.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
+                            if (nodeV2.isConnectedForApplication("server_0"))
+                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
                                         "control");
-                            if (node.isConnectedForApplication("monitoring"))
-                                node.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
+                            if (nodeV2.isConnectedForApplication("monitoring"))
+                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
                                         "control");
-                            node.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
+                            nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
                         }
                         break;
                     case AppConstants.START_SENSOR:
@@ -151,7 +151,7 @@ public class MainActivity extends A3DroidActivity {
                                 roles);
                         try {
                             nodeV2.connect("control");
-                            nodeV2.connect("monitoring");
+                            nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         }
@@ -168,13 +168,12 @@ public class MainActivity extends A3DroidActivity {
                         roles.add(ServerFollowerRole.class.getName());
                         groupDescriptors.add(new ActuatorsDescriptor());
                         groupDescriptors.add(new ServerDescriptor());
-                        //node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
-                        //nodeV2 = ((A3Application) getApplication()).createNode(
-                        //groupDescriptors,
-                        //roles);
+                        nodeV2 = ((A3Application) getApplication()).createNode(
+                        groupDescriptors,
+                        roles);
                         try {
-                            //nodeV2.stack("control", "monitoring_" + experiment.getText().toString());
                             nodeV2.merge("control", "monitoring_" + experiment.getText().toString());
+                            nodeV2.connect("actuators_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException a3NoGroupDescriptionException) {
                             a3NoGroupDescriptionException.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
@@ -185,7 +184,6 @@ public class MainActivity extends A3DroidActivity {
                             e.printStackTrace();
                         }
                         //node.connect("control", true, true);
-                        //node.connect("actuators_" + experiment.getText().toString(), true, true);
                         break;
                     case AppConstants.START_SERVER:
                         if (experimentRunning)
@@ -202,18 +200,15 @@ public class MainActivity extends A3DroidActivity {
                             }
 
                         });
-                        //node = new A3Node(getUUID(), MainActivity.this, roles, groupDescriptors);
                         nodeV2 = ((A3Application) getApplication()).createNode(
                                 groupDescriptors,
                                 roles);
                         try {
                             nodeV2.connect("control");
                             nodeV2.connect("server_0");
-                            //nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         }
-                        //node.connect("monitoring_" + experiment.getText().toString(), true, true);
                         break;
                     default:
                         break;
@@ -289,7 +284,7 @@ public class MainActivity extends A3DroidActivity {
         fromGUIThread.quit();
         if (experimentRunning)
             try {
-                node.disconnect("control");
+                nodeV2.disconnect("control");
             } catch (A3ChannelNotFoundException e) {
                 e.printStackTrace();
             }
