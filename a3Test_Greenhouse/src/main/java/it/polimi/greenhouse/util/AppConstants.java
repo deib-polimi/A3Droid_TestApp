@@ -28,5 +28,9 @@ public class AppConstants {
 	public static final int SERVER_PONG = 52;
 	public static final int SET_PARAMS = 60;
 	public static final int SET_PARAMS_COMMAND = 61;
+	public static final int START_MERGE = 62;
+	public static final int START_SPLIT = 63;
+	public static final int START_STACK = 64;
+	public static final int START_REVERSE_STACK = 65;
 	public static final int TEST_GROUP_READY = 80;
 }

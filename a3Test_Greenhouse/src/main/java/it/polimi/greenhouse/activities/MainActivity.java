@@ -210,6 +210,32 @@ public class MainActivity extends A3DroidActivity {
                             e.printStackTrace();
                         }
                         break;
+                    case AppConstants.START_MERGE:
+                        try {
+                            nodeV2.merge("monitoring_" + experiment.getText().toString(), "server_0");
+                        } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
+                            a3InvalidOperationParameters.printStackTrace();
+                        } catch (A3InvalidOperationRole a3InvalidOperationRole) {
+                            a3InvalidOperationRole.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case AppConstants.START_SPLIT:
+                        try {
+                            nodeV2.split("server_0", 1);
+                        } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
+                            a3InvalidOperationParameters.printStackTrace();
+                        } catch (A3InvalidOperationRole a3InvalidOperationRole) {
+                            a3InvalidOperationRole.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -269,6 +295,16 @@ public class MainActivity extends A3DroidActivity {
     public void startServer(View v) {
         if (!experimentRunning)
             fromGuiHandler.sendEmptyMessage(AppConstants.START_SERVER);
+    }
+
+    public void startMerge(View v) {
+        if (!experimentRunning)
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_MERGE);
+    }
+
+    public void startSplit(View v) {
+        if (!experimentRunning)
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_SPLIT);
     }
 
     @Override
