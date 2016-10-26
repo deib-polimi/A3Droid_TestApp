@@ -204,7 +204,7 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connect("control");
+                            //nodeV2.connect("control");
                             nodeV2.connect("server_0");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
@@ -225,7 +225,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_SPLIT:
                         try {
-                            nodeV2.split("server_0", 1);
+                            nodeV2.split("monitoring_" + experiment.getText().toString(), 1);
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
