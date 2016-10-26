@@ -102,23 +102,23 @@
 	            android:layout_height="wrap_content"
 	            android:text="@string/start_sensor"
 	            android:onClick="startSensor" 
-	            style="?android:attr/buttonBarButtonStyle" />
-	        
+	            style="@android:attr/buttonBarButtonStyle" />
+
 	        <Button
 	            android:id="@+id/button3"
 	            android:layout_width="0px"
 	            android:layout_height="wrap_content"
 	            android:text="@string/start_actuator"
-	            android:onClick="startActuator" 
-	            style="?android:attr/buttonBarButtonStyle" />
-	        
+	            android:onClick="startActuator"
+	            style="@android:attr/buttonBarButtonStyle" />
+
 	        <Button
 	            android:id="@+id/button4"
 	            android:layout_width="0px"
 	            android:layout_height="wrap_content"
 	            android:text="@string/start_server"
-	            android:onClick="startServer" 
-	            style="?android:attr/buttonBarButtonStyle" />
+	            android:onClick="startServer"
+	            style="@android:attr/buttonBarButtonStyle" />
 		</TableRow>
 	</TableLayout>
 	<TableLayout
@@ -126,8 +126,8 @@
 	    android:layout_height="50dp"
 	    android:shrinkColumns="*"
 	    android:stretchColumns="*"
-	    android:orientation="vertical">		
-		<TableRow>	        	
+	    android:orientation="vertical">
+		<TableRow>
 			<Button
 				android:id="@+id/button6"
 				android:layout_width="0px"
@@ -135,7 +135,7 @@
 				android:onClick="startMerge"
 				android:text="@string/merge"
 				android:layout_weight="0.5"
-				style="?android:attr/buttonBarButtonStyle"/>
+				style="@android:attr/buttonBarButtonStyle"/>
 			<Button
 				android:id="@+id/button5"
 				android:layout_width="0px"
@@ -143,7 +143,7 @@
 				android:onClick="startSplit"
 				android:text="@string/split"
 				android:layout_weight="0.5"
-				style="?android:attr/buttonBarButtonStyle"/>
+				style="@android:attr/buttonBarButtonStyle"/>
 			<Button
 				android:id="@+id/button8"
 				android:layout_width="0px"
@@ -151,7 +151,7 @@
 				android:onClick="startStack"
 				android:text="@string/stack"
 				android:layout_weight="0.5"
-				style="?android:attr/buttonBarButtonStyle"/>
+				style="@android:attr/buttonBarButtonStyle"/>
 			<Button
 				android:id="@+id/button7"
 				android:layout_width="0px"
@@ -159,7 +159,7 @@
 				android:onClick="startReverseStack"
 				android:text="@string/reverse_stack"
 				android:layout_weight="0.5"
-				style="?android:attr/buttonBarButtonStyle"/>
+				style="@android:attr/buttonBarButtonStyle"/>
 		</TableRow>
 		<TableRow>
 			<Button
@@ -169,7 +169,7 @@
 				android:onClick="startExperiment"
 				android:text="@string/start_experiment"
 				android:layout_weight="0.5"
-				style="?android:attr/buttonBarButtonStyle"/>
+				style="@android:attr/buttonBarButtonStyle"/>
 			<Button
 				android:id="@+id/button9"
 				android:layout_width="0px"
@@ -177,7 +177,7 @@
 				android:onClick="stopExperiment"
 				android:text="@string/stop_experiment"
 				android:layout_weight="0.5"
-				style="?android:attr/buttonBarButtonStyle"/>
+				style="@android:attr/buttonBarButtonStyle"/>
 		</TableRow>
     </TableLayout>   	
 	    <EditText
