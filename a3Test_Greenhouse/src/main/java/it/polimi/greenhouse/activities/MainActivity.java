@@ -236,6 +236,32 @@ public class MainActivity extends A3DroidActivity {
                             e.printStackTrace();
                         }
                         break;
+                    case AppConstants.START_STACK:
+                        try {
+                            nodeV2.stack("server_0", "monitoring_" + experiment.getText().toString());
+                        } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
+                            a3InvalidOperationParameters.printStackTrace();
+                        } catch (A3InvalidOperationRole a3InvalidOperationRole) {
+                            a3InvalidOperationRole.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case AppConstants.START_REVERSE_STACK:
+                        try {
+                            nodeV2.reverseStack("server_0", "monitoring_" + experiment.getText().toString());
+                        } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
+                            a3InvalidOperationParameters.printStackTrace();
+                        } catch (A3InvalidOperationRole a3InvalidOperationRole) {
+                            a3InvalidOperationRole.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -305,6 +331,16 @@ public class MainActivity extends A3DroidActivity {
     public void startSplit(View v) {
         if (!experimentRunning)
             fromGuiHandler.sendEmptyMessage(AppConstants.START_SPLIT);
+    }
+
+    public void startStack(View v) {
+        if (!experimentRunning)
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_STACK);
+    }
+
+    public void startReverseStack(View v) {
+        if (!experimentRunning)
+            fromGuiHandler.sendEmptyMessage(AppConstants.START_REVERSE_STACK);
     }
 
     @Override

@@ -26,7 +26,7 @@
     <string name="merge">Merge</string>
     <string name="split">Split</string>
     <string name="stack">Stack</string>
-    <string name="reverse_stack">ReverseStack</string>
+    <string name="reverse_stack">Reverse Stack</string>
     <string name="mes_s">(Mes/min)</string>
     <string name="bytes">(Bytes)</string>
 
