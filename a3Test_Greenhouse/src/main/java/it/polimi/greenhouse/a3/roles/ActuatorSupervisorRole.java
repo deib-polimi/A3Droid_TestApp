@@ -29,7 +29,6 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 	@Override
 	public void logic() {
 		//showOnScreen("[" + getGroupName() + "_SupRole]");
-		active = false;
 	}
 
 	@Override

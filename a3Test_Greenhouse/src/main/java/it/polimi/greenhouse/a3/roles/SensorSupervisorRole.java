@@ -48,7 +48,6 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
     @Override
     public void logic() {
         postUIEvent(0, "[" + getGroupName() + "_SupRole]");
-        active = false;
     }
 
     @Override

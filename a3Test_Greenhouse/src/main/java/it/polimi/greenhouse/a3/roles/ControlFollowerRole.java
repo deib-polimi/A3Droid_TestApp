@@ -34,7 +34,6 @@ public class ControlFollowerRole extends A3FollowerRole {
 	public void logic() {
 		//showOnScreen("[CtrlFolRole]");
 		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
-		active = false;
 	}
 
 	@Override

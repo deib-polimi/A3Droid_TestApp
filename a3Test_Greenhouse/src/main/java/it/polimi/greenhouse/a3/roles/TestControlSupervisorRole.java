@@ -12,7 +12,6 @@ public class TestControlSupervisorRole  extends A3SupervisorRole{
     public void onActivation() {
         //showOnScreen("[TestGroupCtrlSupRole]");
         ((TestControlNode) node).addMember(getChannelId(), ((TestControlNode) node).isServer());
-        active = false;
     }
 
     @Override

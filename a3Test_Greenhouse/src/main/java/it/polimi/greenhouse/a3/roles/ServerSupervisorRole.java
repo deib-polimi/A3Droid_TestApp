@@ -37,7 +37,6 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 	@Override
 	public void logic() {
 		postUIEvent(0, "[" + getGroupName() + "_SupRole]");
-		active = false;
 	}
 
 	@Override

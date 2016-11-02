@@ -42,7 +42,6 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	@Override
 	public void logic() {
 		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
-		active = false;
 	}
 
 	@Override

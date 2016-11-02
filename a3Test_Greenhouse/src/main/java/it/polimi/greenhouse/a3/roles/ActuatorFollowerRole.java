@@ -17,7 +17,6 @@ public class ActuatorFollowerRole extends A3FollowerRole {
 	@Override
 	public void logic() {
 		//showOnScreen("[" + getGroupName() + "_FolRole]");
-		active = false;
 	}
 
 	@Override

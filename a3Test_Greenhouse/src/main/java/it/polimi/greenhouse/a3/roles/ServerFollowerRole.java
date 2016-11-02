@@ -18,7 +18,6 @@ public class ServerFollowerRole extends A3FollowerRole {
 	@Override
 	public void logic() {
 		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
-		active = false;
 	}
 
 	@Override

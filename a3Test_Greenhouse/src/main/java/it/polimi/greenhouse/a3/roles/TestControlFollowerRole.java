@@ -20,7 +20,6 @@ public class TestControlFollowerRole extends A3FollowerRole {
 	public void onActivation() {
 		//showOnScreen("[TestGroupCtrlFolRole]");
 		sendToSupervisor(new A3Message(AppConstants.MEMBER_ADDED, ((TestControlNode) node).isServer() + ""));
-		active = false;
 	}
 
 	@Override
