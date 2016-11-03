@@ -30,7 +30,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 @LargeTest
 public class TestDeviceBehavior extends TestBase{
 
-    private static final int DEVICES_NUMBER = 20;
+    private static final int DEVICES_NUMBER = 2;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -39,7 +39,7 @@ public class TestDeviceBehavior extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 5;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "Nexus 7";
+    public final static String SUPERVISOR_MODEL = "Nexus 9";
     //public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "TENTATIVO";
     private final static String SPV_EXP_STOPPED_OUTPUT = "TERMINATO";
@@ -60,8 +60,8 @@ public class TestDeviceBehavior extends TestBase{
     public void initIds(){
         startServerButton = R.id.button4;
         startSensorButton = R.id.button2;
-        startExpertimentButton = R.id.button6;
-        stopExpertimentButton = R.id.button5;
+        startExpertimentButton = R.id.button10;
+        stopExpertimentButton = R.id.button9;
     }
 
     public void initValidString() {

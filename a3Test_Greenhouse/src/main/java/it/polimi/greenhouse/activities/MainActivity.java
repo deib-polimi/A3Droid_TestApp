@@ -65,7 +65,7 @@ public class MainActivity extends A3DroidActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
+        //start Alljoin Service
         application = ((A3Application) getApplication());
         application.checkin();
 
@@ -123,7 +123,7 @@ public class MainActivity extends A3DroidActivity {
                             if (nodeV2.isConnectedForApplication("server_0"))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
                                         "control");
-                            if (nodeV2.isConnectedForApplication("monitoring"))
+                            if (nodeV2.isConnectedForApplication("monitoring_" + experiment.getText().toString()))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
                                         "control");
                             nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
@@ -150,11 +150,9 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connectAndWaitForActivation("control");
+                            nodeV2.connect("control");
                             nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
-                            e.printStackTrace();
-                        } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
 
@@ -206,11 +204,9 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connectAndWaitForActivation("control");
+                            nodeV2.connect("control");
                             nodeV2.connect("server_0");
                         } catch (A3NoGroupDescriptionException e) {
-                            e.printStackTrace();
-                        } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
                         break;
@@ -284,6 +280,7 @@ public class MainActivity extends A3DroidActivity {
         Log.i(TAG, Build.MANUFACTURER);
         Log.i(TAG, Build.PRODUCT);
         Log.i(TAG, Build.MODEL);
+        inText.append(Build.MANUFACTURER);
     }
 
     public void createTestControlGroup(int size, boolean server){

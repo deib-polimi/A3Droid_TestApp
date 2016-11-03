@@ -27,6 +27,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void onActivation() {
+		postUIEvent(0, "[CtrlFolRole]");
 		launchedGroups = new ConcurrentHashMap<String, Set<Integer>>();
 	}
 

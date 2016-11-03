@@ -47,7 +47,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 
 	@Override
 	public void logic() {
-		//showOnScreen("[CtrlSupRole]");
+		postUIEvent(0, "[CtrlSupRole]");
 		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
 	}
 

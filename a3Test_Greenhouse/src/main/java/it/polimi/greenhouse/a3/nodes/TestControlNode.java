@@ -20,6 +20,7 @@ import it.polimi.greenhouse.util.AppConstants;
  */
 public class TestControlNode extends A3Node{
 
+    public static final String TAG = "TestControlNode";
     int testSize;
     Handler activityHandler;
 
@@ -40,6 +41,7 @@ public class TestControlNode extends A3Node{
      * Used by supervisor
      */
     public void addMember(String s, boolean server){
+        Log.i(TAG, "addMember(" + s + "," + server + ")");
         s = s.replaceFirst("\\.[A-Za-z0-9]+", "");
         if(server)
             this.serverId = s;
