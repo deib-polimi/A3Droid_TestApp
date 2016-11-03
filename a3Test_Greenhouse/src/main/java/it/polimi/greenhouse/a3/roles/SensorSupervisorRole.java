@@ -42,7 +42,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         } catch (A3NoGroupDescriptionException e) {
             e.printStackTrace();
         }
-        //node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+        node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
     }
 
     @Override

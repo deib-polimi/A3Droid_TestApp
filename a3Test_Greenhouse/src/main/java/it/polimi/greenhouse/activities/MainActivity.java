@@ -150,9 +150,11 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connect("control");
+                            nodeV2.connectAndWaitForActivation("control");
                             nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
 
@@ -204,9 +206,11 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            //nodeV2.connect("control");
+                            nodeV2.connectAndWaitForActivation("control");
                             nodeV2.connect("server_0");
                         } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
                         break;

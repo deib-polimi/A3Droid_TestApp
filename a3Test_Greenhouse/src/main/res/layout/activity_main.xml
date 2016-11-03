@@ -10,7 +10,7 @@
    
     <TableLayout
 	    android:layout_width="match_parent"
-	    android:layout_height="120dp"
+	    android:layout_height="wrap_content"
 	    android:shrinkColumns="*"
 	    android:stretchColumns="*"
 	    android:orientation="vertical">
@@ -73,7 +73,7 @@
 	</TableLayout>
 	<TableLayout
 	    android:layout_width="match_parent"
-	    android:layout_height="92dp"
+	    android:layout_height="wrap_content"
 	    android:shrinkColumns="*"
 	    android:stretchColumns="*"
 	    android:orientation="vertical">
@@ -123,7 +123,7 @@
 	</TableLayout>
 	<TableLayout
 	    android:layout_width="match_parent"
-	    android:layout_height="50dp"
+	    android:layout_height="wrap_content"
 	    android:shrinkColumns="*"
 	    android:stretchColumns="*"
 	    android:orientation="vertical">
@@ -186,6 +186,7 @@
 	        android:layout_height="match_parent"
 	        android:ems="10"
 	        android:scrollHorizontally="true"
+			android:background="@android:color/holo_blue_bright"
 	        android:inputType="none">
 	    </EditText>
 </LinearLayout>
