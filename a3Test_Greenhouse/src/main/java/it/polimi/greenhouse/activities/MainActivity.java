@@ -369,6 +369,16 @@ public class MainActivity extends A3DroidActivity {
         return testNode.isReady();
     }
 
+    public boolean isGroupActive(String groupName){
+        try {
+            return nodeV2.getChannel(groupName).getGroupState() == A3GroupDescriptor.A3GroupState.ACTIVE;
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            return false;
+        }
+    }
+
     @Override
     public void handleUIEvent(A3UIEvent event) {
         inText.append(event.message + "\n");
@@ -378,4 +388,5 @@ public class MainActivity extends A3DroidActivity {
     public void handleErrorEvent(A3ErrorEvent event) {
         inText.append(event.exception.getMessage() + "\n");
     }
+
 }
