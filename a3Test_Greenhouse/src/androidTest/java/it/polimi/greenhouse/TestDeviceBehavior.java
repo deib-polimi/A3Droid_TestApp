@@ -10,6 +10,8 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,6 +19,7 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
+import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimit.greenhouse.R;
 
@@ -254,6 +257,12 @@ public class TestDeviceBehavior extends TestBase{
         Espresso.unregisterIdlingResources(idlingResource);
         Espresso.unregisterIdlingResources(idlingResource2);
         Espresso.unregisterIdlingResources(idlingResource3);
+    }
+
+    // This method will be called when a MessageEvent is posted
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGroupEvent(A3GroupEvent event) {
+        
     }
 
     private void checkModel(){

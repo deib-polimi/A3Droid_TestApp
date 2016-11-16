@@ -17,6 +17,7 @@ import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3Node;
 import it.polimi.deepse.a3droid.a3.events.A3ErrorEvent;
+import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationParameters;
@@ -368,7 +369,6 @@ public class MainActivity extends A3DroidActivity {
         System.exit(0);
     }
 
-
     public boolean isTestGroupReady() {
         return testNode.isReady();
     }
@@ -381,6 +381,11 @@ public class MainActivity extends A3DroidActivity {
         } finally {
             return false;
         }
+    }
+
+    @Override
+    public void handleGroupEvent(A3GroupEvent event) {
+
     }
 
     @Override
