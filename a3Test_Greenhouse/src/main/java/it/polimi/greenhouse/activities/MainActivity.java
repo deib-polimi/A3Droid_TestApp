@@ -53,7 +53,7 @@ public class MainActivity extends A3DroidActivity {
     private Handler fromGuiHandler;
     private EditText experiment;
     public static int runningExperiment;
-    public static final String TAG = "TestDeviceBehavior";
+    public static final String TAG = "MainActivity";
     private boolean experimentRunning = false;
     private A3Application application = null;
 
@@ -121,10 +121,10 @@ public class MainActivity extends A3DroidActivity {
 
                         if (!experimentRunning) {
                             experimentRunning = true;
-                            if (nodeV2.isConnectedForApplication("server_0"))
+                            if (nodeV2.isConnected("server_0"))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
                                         "control");
-                            if (nodeV2.isConnectedForApplication("monitoring"))
+                            if (nodeV2.isConnected("monitoring"))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
                                         "control");
                             nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
@@ -369,16 +369,6 @@ public class MainActivity extends A3DroidActivity {
 
     public boolean isTestGroupReady() {
         return testNode.isReady();
-    }
-
-    public boolean isGroupActive(String groupName){
-        try {
-            return appNode.getChannel(groupName).getGroupState() == A3GroupDescriptor.A3GroupState.ACTIVE;
-        } catch (A3ChannelNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            return false;
-        }
     }
 
     @Override

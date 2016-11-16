@@ -187,7 +187,7 @@ public class ControlSupervisorRole extends SupervisorRole {
         sendBroadcast(message);
         for(String gType : launchedGroups.keySet())
             for(int i : launchedGroups.get(gType).keySet())
-                if(node.isConnectedForApplication(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
+                if(node.isConnected(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
                     node.disconnect(gType + "_" + i);
 
         synchronized(this){
@@ -198,7 +198,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 
         for(String gType : launchedGroups.keySet())
             for(int i : launchedGroups.get(gType).keySet())
-                if(node.isConnectedForApplication(gType + "_" + i))
+                if(node.isConnected(gType + "_" + i))
                     node.disconnect(gType + "_" + i);
 
         launchedGroups.clear();
@@ -243,7 +243,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 	private void sendToConnectedSupervisors(A3Message message){
 		for(String gType : launchedGroups.keySet())
 			for(int i : launchedGroups.get(gType).keySet())
-				if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+				if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 					node.sendToSupervisor(message,
 						gType + "_" + i);
 	}
