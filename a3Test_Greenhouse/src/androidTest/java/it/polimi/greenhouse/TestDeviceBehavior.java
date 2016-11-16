@@ -33,7 +33,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 @LargeTest
 public class TestDeviceBehavior extends TestBase{
 
-    private static final int DEVICES_NUMBER = 20;
+    private static final int DEVICES_NUMBER = 1;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -261,8 +261,8 @@ public class TestDeviceBehavior extends TestBase{
 
     // This method will be called when a MessageEvent is posted
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onGroupEvent(A3GroupEvent event) {
-        
+    public void handleGroupEvent(A3GroupEvent event) {
+
     }
 
     private void checkModel(){

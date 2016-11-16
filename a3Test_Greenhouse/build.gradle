@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
+    compileSdkVersion 23
+    buildToolsVersion '23.0.3'
 
     defaultConfig {
         applicationId "it.polimit.greenhouse"
@@ -33,12 +33,12 @@ android {
 }
 
 dependencies {
-    compile project(':alljoyn_java')
-    compile 'com.android.support:support-v4:24.2.1'
+    //compile project(':alljoyn_java')
+    compile 'com.android.support:support-v4:23.1.+'
     compile fileTree(dir: 'libs', include: ['*.jar'])
     //library for events in android
     compile 'org.greenrobot:eventbus:3.0.0'
-    androidTestCompile 'com.android.support:support-annotations:24.2.1'
+    androidTestCompile 'com.android.support:support-annotations:23.1.+'
     androidTestCompile 'com.android.support.test:runner:0.5'
     androidTestCompile 'com.android.support.test:rules:0.5'
     // Optional -- Hamcrest library

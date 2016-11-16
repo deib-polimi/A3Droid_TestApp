@@ -186,7 +186,7 @@
 	        android:layout_height="match_parent"
 	        android:ems="10"
 	        android:scrollHorizontally="true"
-			android:background="@android:color/holo_blue_bright"
+			android:background="@android:color/white"
 	        android:inputType="none">
 	    </EditText>
 </LinearLayout>

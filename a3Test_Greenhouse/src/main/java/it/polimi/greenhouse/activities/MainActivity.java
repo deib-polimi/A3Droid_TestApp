@@ -45,15 +45,15 @@ import it.polimit.greenhouse.R;
 
 public class MainActivity extends A3DroidActivity {
 
-    private A3Node nodeV2;
+    private A3Node appNode;
+    protected TestControlNode testNode;
     private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
     private HandlerThread fromGUIThread;
     private Handler toGuiHandler;
     private Handler fromGuiHandler;
     private EditText experiment;
     public static int runningExperiment;
-    protected TestControlNode testNode;
-    public static final String TAG = "MainActivity";
+    public static final String TAG = "TestDeviceBehavior";
     private boolean experimentRunning = false;
     private A3Application application = null;
 
@@ -141,9 +141,6 @@ public class MainActivity extends A3DroidActivity {
                             public int getSupervisorFitnessFunction() {
                                 return 0;
                             }
-
-                            @Override
-                            public void groupStateChangeListener(A3GroupState a3GroupState, A3GroupState a3GroupState1) {}
                         });
                         groupDescriptors.add(new ServerDescriptor());
 
@@ -285,6 +282,7 @@ public class MainActivity extends A3DroidActivity {
         Log.i(TAG, Build.MANUFACTURER);
         Log.i(TAG, Build.PRODUCT);
         Log.i(TAG, Build.MODEL);
+        inText.append(Build.MANUFACTURER + '\n' + Build.PRODUCT + '\n' + Build.MODEL);
     }
 
     public void createTestControlGroup(int size, boolean server){
@@ -361,7 +359,7 @@ public class MainActivity extends A3DroidActivity {
         fromGUIThread.quit();
         if (experimentRunning)
             try {
-                nodeV2.disconnect("control");
+                appNode.disconnect("control");
             } catch (A3ChannelNotFoundException e) {
                 e.printStackTrace();
             }
@@ -375,7 +373,7 @@ public class MainActivity extends A3DroidActivity {
 
     public boolean isGroupActive(String groupName){
         try {
-            return nodeV2.getChannel(groupName).getGroupState() == A3GroupDescriptor.A3GroupState.ACTIVE;
+            return appNode.getChannel(groupName).getGroupState() == A3GroupDescriptor.A3GroupState.ACTIVE;
         } catch (A3ChannelNotFoundException e) {
             e.printStackTrace();
         } finally {

@@ -11,10 +11,6 @@ public abstract class MonitoringDescriptor extends A3GroupDescriptor {
 		// TODO Auto-generated constructor stub
 	}
 
-	public void groupStateChangeListener(A3GroupDescriptor.A3GroupState oldState, A3GroupDescriptor.A3GroupState newState){
-
-	}
-
 	/*@Override
 	public int getSupervisorFitnessFunction() {
 		

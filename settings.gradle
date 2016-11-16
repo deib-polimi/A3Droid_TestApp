@@ -1,2 +1,2 @@
-include ':alljoyn_java'
+//include ':alljoyn_java'
 include ':a3Test_Greenhouse'
