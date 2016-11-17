@@ -2,6 +2,9 @@ package it.polimi.greenhouse.a3.roles;
 
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
@@ -21,6 +24,8 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
     private double avgRTT;
     private byte sPayLoad[];
     private String startTimestamp;
+    private List<Double> listRTT;
+    private  String allFollowerRTTs;
 
     private final static long TIMEOUT = 60 * 1000;
     private long MAX_INTERNAL = 10 * 1000;
@@ -37,6 +42,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         experimentIsRunning = false;
         sentCont = 0;
         avgRTT = 0;
+        listRTT=new ArrayList<>();
         try {
             node.connect("server_0");
         } catch (A3NoGroupDescriptionException e) {
@@ -93,6 +99,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     postUIEvent(0, "Server response received");
                     sentCont++;
                     double rtt = StringTimeUtil.roundTripTime(((String) message.object), StringTimeUtil.getTimestamp()) / 1000;
+                    listRTT.add(rtt);
                     avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
 
                     if (rtt > TIMEOUT && experimentIsRunning) {
@@ -116,6 +123,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                         sendBroadcast(message);
                         startTimestamp = StringTimeUtil.getTimestamp();
                         sentCont = 0;
+                        allFollowerRTTs="";
                         sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
                         sendMessage();
                     }
@@ -135,8 +143,14 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     postUIEvent(0, "Experiment has stopped");
                     double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
                     float frequency = sentCont / (float) (runningTime);
-                    node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS: " + sentCont + "\t" +
-                            runningTime + "\t" + frequency + "\t" + avgRTT), "control");
+
+                    for (double indiRTT: listRTT
+                            ) {
+                        allFollowerRTTs+=String.valueOf(indiRTT)+" ";
+                    }
+
+                    node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_Supervisor: " + sentCont + "\t " +
+                            runningTime + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
                 }
                 break;
 

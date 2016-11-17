@@ -2,6 +2,9 @@ package it.polimi.greenhouse.a3.roles;
 
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.pattern.Timer;
@@ -18,6 +21,8 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private boolean experimentIsRunning;
 	private int sentCont;
 	private double avgRTT;
+	private List<Double> listRTT;
+    private  String allFollowerRTTs;
 	private String startTimestamp;
 	
 	private final static long TIMEOUT = 60 * 1000;
@@ -36,6 +41,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		experimentIsRunning = false;
 		sentCont = 0;
 		avgRTT = 0;
+		listRTT=new ArrayList<>();
 		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
 	}
 
@@ -72,6 +78,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			postUIEvent(0, "Server response received");
 			sentCont ++;			
 			rtt = StringTimeUtil.roundTripTime(date, StringTimeUtil.getTimestamp()) / 1000;
+            listRTT.add(rtt);
 			avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
 			
 			if(rtt > TIMEOUT && experimentIsRunning){
@@ -94,6 +101,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				experimentIsRunning = true;
 				startTimestamp = StringTimeUtil.getTimestamp();
 				sentCont = 0;
+                allFollowerRTTs="";
 				sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
 				sendMessage();
 			}
@@ -107,9 +115,15 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				postUIEvent(0, "Experiment has stopped");
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / ((float)runningTime);
-				
-				node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS: " + sentCont + "\t" +
-						(runningTime) + "\t" + frequency + "\t" + avgRTT), "control");
+
+
+                for (double indiRTT: listRTT
+                     ) {
+                    allFollowerRTTs+=String.valueOf(indiRTT)+" ";
+                }
+
+                node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower: " + sentCont + "\t " +
+						(runningTime) + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
 				experimentIsRunning = false;
 			}
 			break;

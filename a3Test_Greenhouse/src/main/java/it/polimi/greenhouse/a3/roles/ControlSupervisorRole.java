@@ -146,7 +146,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 		if(experimentIsRunning)
 			return;
 
-		//showOnScreen("--- TENTATIVO " + numberOfTrials + "---");
+		postUIEvent(0, "--- Start of Expriment " + numberOfTrials + "---");
 
 		experimentIsRunning = true;
 		result = "";
@@ -170,6 +170,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 			bw = new BufferedWriter(fw);
 		} catch (IOException e) {
 			//showOnScreen(e.getLocalizedMessage());
+			postUIEvent(0,"cannot write the log file "+e.getLocalizedMessage());
 		}
 		message.object = getChannelId();
 		sendBroadcast(message);
@@ -214,12 +215,15 @@ public class ControlSupervisorRole extends SupervisorRole {
         dataToWaitFor --;
 
         if(dataToWaitFor <= 0){
-					/*try {
-					bw.write(result);
-						bw.flush();
-					} catch (IOException e) {//showOnScreen("ECCEZIONE IN CtrlSupRole [bw.flush()]: " + e.getLocalizedMessage());}*/
+			try {
+				bw.write(result);
+				bw.flush();
+			} catch (IOException e) {
+				Log.w(TAG, e.getMessage());
+				//showOnScreen("ECCEZIONE IN CtrlSupRole [bw.flush()]: " + e.getLocalizedMessage());}*/
+			}
 
-            //showOnScreen("--- TENTATIVO " + numberOfTrials + " TERMINATO ---");
+            postUIEvent(0,"--- End of Expriment with  " + numberOfTrials + " Trials  ---");
             numberOfTrials ++;
         }
     }

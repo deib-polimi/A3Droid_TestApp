@@ -39,10 +39,10 @@ public class TestDeviceBehavior extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 5;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    public final static String SUPERVISOR_MODEL = "SM-P605";
     //public final static String SUPERVISOR_MODEL = "XT1052";
-    private final static String SPV_EXP_STARTED_OUTPUT =  "TENTATIVO";
-    private final static String SPV_EXP_STOPPED_OUTPUT = "TERMINATO";
+    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
+    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
@@ -95,6 +95,11 @@ public class TestDeviceBehavior extends TestBase{
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
                     DateUtils.SECOND_IN_MILLIS * EXPERIMENT_TIME,
                     DateUtils.SECOND_IN_MILLIS * STOP_TIME);
+    }
+
+    @Override
+    public void testGroup() {
+
     }
 
     public void initServerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopStime) {

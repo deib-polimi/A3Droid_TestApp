@@ -30,6 +30,8 @@ public abstract class TestBase {
 
     public abstract void testDevice();
 
+    public  abstract void testGroup();
+
 
     /**
      * Returns a matcher that matches {@link TextView} based on its text property value. Note: View's
