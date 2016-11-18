@@ -10,6 +10,10 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,6 +21,7 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
+import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimit.greenhouse.R;
 
@@ -30,7 +35,9 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 @LargeTest
 public class TestDeviceBehavior extends TestBase{
 
-    private static final int DEVICES_NUMBER = 2;
+    private final String TAG = "TestDeviceBehavior";
+
+    private static final int DEVICES_NUMBER = 1;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -39,10 +46,10 @@ public class TestDeviceBehavior extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 5;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "SM-P605";
+    public final static String SUPERVISOR_MODEL = "Nexus 7";
     //public final static String SUPERVISOR_MODEL = "XT1052";
-    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
-    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
+    private final static String SPV_EXP_STARTED_OUTPUT =  "TENTATIVO";
+    private final static String SPV_EXP_STOPPED_OUTPUT = "TERMINATO";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
@@ -55,13 +62,19 @@ public class TestDeviceBehavior extends TestBase{
         initIds();
         initValidString();
         resetTimeout();
+        EventBus.getDefault().register(this);
+    }
+
+    @After
+    public void finalize(){
+        EventBus.getDefault().unregister(this);
     }
 
     public void initIds(){
         startServerButton = R.id.button4;
         startSensorButton = R.id.button2;
-        startExpertimentButton = R.id.button10;
-        stopExpertimentButton = R.id.button9;
+        startExpertimentButton = R.id.button6;
+        stopExpertimentButton = R.id.button5;
     }
 
     public void initValidString() {
@@ -79,7 +92,7 @@ public class TestDeviceBehavior extends TestBase{
 
     @Test
     public void testDevice(){
-        Log.i(MainActivity.TAG, "Starting the test");
+        Log.i(TAG, "Starting the test");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
 
@@ -97,11 +110,6 @@ public class TestDeviceBehavior extends TestBase{
                     DateUtils.SECOND_IN_MILLIS * STOP_TIME);
     }
 
-    @Override
-    public void testGroup() {
-
-    }
-
     public void initServerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopStime) {
         // Type text and then press the button.
         //onView(withId(R.id.editText1))
@@ -113,7 +121,7 @@ public class TestDeviceBehavior extends TestBase{
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
 
         mainActivity.createTestControlGroup(DEVICES_NUMBER, true);
-        Log.i(MainActivity.TAG, "Server: waiting for others");
+        Log.i(TAG, "Server: waiting for others");
 
         int counter = WAITING_COUNT;
         IdlingResource idlingResource = null;
@@ -128,38 +136,38 @@ public class TestDeviceBehavior extends TestBase{
 
         if(!mainActivity.isTestGroupReady()) {
             Espresso.unregisterIdlingResources(idlingResource);
-            Log.w(MainActivity.TAG, "Server: counter reached 0, test cancelled");
+            Log.w(TAG, "Server: counter reached 0, test cancelled");
             return;
         }
 
-        Log.i(MainActivity.TAG, "Server: starting test with counter=" + counter);
+        Log.i(TAG, "Server: starting test with counter=" + counter);
 
         onView(withId(startServerButton)).perform(click());
 
         // Now we wait 3x START_TIME for all the sensors to be connected
         // TODO: check if 3x is enough
-        Log.i(MainActivity.TAG, "Server: wait for sensors");
+        Log.i(TAG, "Server: wait for sensors");
         IdlingResource idlingResource2 = new ElapsedTimeIdlingResource(startTime * 3);
         Espresso.registerIdlingResources(idlingResource2);
 
         checkModel();
 
         // Start the experiment by pressing the start button
-        Log.i(MainActivity.TAG, "Server: starting experiment");
+        Log.i(TAG, "Server: starting experiment");
         onView(withId(startExpertimentButton)).perform(click());
 
         // Now we wait EXPERIMENT_TIME for the experiment to run
-        Log.i(MainActivity.TAG, "Server: waiting for the experiment to run");
+        Log.i(TAG, "Server: waiting for the experiment to run");
         IdlingResource idlingResource3 = new ElapsedTimeIdlingResource(experimentTime);
         Espresso.registerIdlingResources(idlingResource3);
 
         // Check for the right role according to the device model
-        Log.i(MainActivity.TAG, "Server: check the role");
+        Log.i(TAG, "Server: check the role");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(ROLE_OUTPUT)));
 
         // Stop the experiment by pressing the stop button
-        Log.i(MainActivity.TAG, "Server: stopping experiment");
+        Log.i(TAG, "Server: stopping experiment");
         onView(withId(stopExpertimentButton)).perform(click());
 
         // Now we wait STOP_TIME for the experiment to be terminated
@@ -167,12 +175,12 @@ public class TestDeviceBehavior extends TestBase{
         Espresso.registerIdlingResources(idlingResource4);
 
         // Check for the start experiment output in the log
-        Log.i(MainActivity.TAG, "Server: check for experiment start");
+        Log.i(TAG, "Server: check for experiment start");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(SPV_EXP_STARTED_OUTPUT)));
 
         // Check for the stop experiment output in the log
-        Log.i(MainActivity.TAG, "Server: check for experiment stop");
+        Log.i(TAG, "Server: check for experiment stop");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(SPV_EXP_STOPPED_OUTPUT)));
 
@@ -193,13 +201,13 @@ public class TestDeviceBehavior extends TestBase{
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
 
         //Waits for a 0 - 10 seconds to avoid too many simultaneous devices joining the same group
-        Log.i(MainActivity.TAG, "Sensor: random wait to connect");
+        Log.i(TAG, "Sensor: random wait to connect");
         long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 2);
         IdlingResource idlingResource = new ElapsedTimeIdlingResource(randomWait);
         Espresso.registerIdlingResources(idlingResource);
         checkModel();
 
-        Log.i(MainActivity.TAG, "Sensor: waiting for others");
+        Log.i(TAG, "Sensor: waiting for others");
         mainActivity.createTestControlGroup(DEVICES_NUMBER, false);
 
         int counter = WAITING_COUNT;
@@ -213,12 +221,12 @@ public class TestDeviceBehavior extends TestBase{
         }while(--counter > 0 && !mainActivity.isTestGroupReady());
 
         if(!mainActivity.isTestGroupReady()) {
-            Log.w(MainActivity.TAG, "Sensor: counter reached 0, test cancelled");
+            Log.w(TAG, "Sensor: counter reached 0, test cancelled");
             Espresso.unregisterIdlingResources(idlingResource);
             return;
         }
 
-        Log.i(MainActivity.TAG, "Sensor: starting test with counter=" + counter);
+        Log.i(TAG, "Sensor: starting test with counter=" + counter);
 
         // Now we wait 1x START_TIME for the server to start
         IdlingResource idlingResource2 = new ElapsedTimeIdlingResource(startTime);
@@ -227,7 +235,7 @@ public class TestDeviceBehavior extends TestBase{
         checkModel();
 
         // We start the sensor by pressing the button
-        Log.i(MainActivity.TAG, "Sensor: starting");
+        Log.i(TAG, "Sensor: starting");
         onView(withId(startSensorButton)).perform(click());
 
         // Now we wait 1x START_TIME for the sensor to start
@@ -236,22 +244,22 @@ public class TestDeviceBehavior extends TestBase{
         //Espresso.registerIdlingResources(idlingResource2);
 
         // Now we wait EXPERIMENT_TIME + STOP_TIME * 2 for the experiment to finish and to supervisor receive all the data
-        Log.i(MainActivity.TAG, "Sensor: wait for experiment to run and stop");
+        Log.i(TAG, "Sensor: wait for experiment to run and stop");
         IdlingResource idlingResource3 = new ElapsedTimeIdlingResource(experimentTime + stopTime * 2);
         Espresso.registerIdlingResources(idlingResource3);
 
         // Check for the right role according to the device model
-        Log.i(MainActivity.TAG, "Sensor: check role");
+        Log.i(TAG, "Sensor: check role");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(ROLE_OUTPUT)));
 
         // Check for the start experiment output in the log
-        Log.i(MainActivity.TAG, "Sensor: check experiment start");
+        Log.i(TAG, "Sensor: check experiment start");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(FLW_EXP_STARTED_OUTPUT)));
 
         // Check for the stop experiment output in the log
-        Log.i(MainActivity.TAG, "Sensor: check experiment stop");
+        Log.i(TAG, "Sensor: check experiment stop");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(FLW_EXP_STOPPED_OUTPUT)));
 
@@ -259,6 +267,12 @@ public class TestDeviceBehavior extends TestBase{
         Espresso.unregisterIdlingResources(idlingResource);
         Espresso.unregisterIdlingResources(idlingResource2);
         Espresso.unregisterIdlingResources(idlingResource3);
+    }
+
+    // This method will be called when a MessageEvent is posted
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void handleGroupEvent(A3GroupEvent event) {
+        Log.i(TAG, event.toString());
     }
 
     private void checkModel(){
