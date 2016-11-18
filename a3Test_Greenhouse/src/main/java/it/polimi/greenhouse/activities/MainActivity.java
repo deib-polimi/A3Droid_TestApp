@@ -363,7 +363,6 @@ public class MainActivity extends A3DroidActivity {
                 e.printStackTrace();
             }
         application.quit();
-        System.exit(0);
     }
 
     public boolean isTestGroupReady() {
