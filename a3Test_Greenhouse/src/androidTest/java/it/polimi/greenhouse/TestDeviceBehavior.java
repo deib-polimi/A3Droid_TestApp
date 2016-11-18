@@ -37,7 +37,7 @@ public class TestDeviceBehavior extends TestBase{
 
     private final String TAG = "TestDeviceBehavior";
 
-    private static final int DEVICES_NUMBER = 1;
+    private static final int DEVICES_NUMBER = 2;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;

@@ -30,7 +30,7 @@ public abstract class TestBase {
 
     public abstract void testDevice();
 
-    public  abstract void testGroup();
+
 
 
     /**
