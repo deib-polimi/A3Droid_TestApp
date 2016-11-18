@@ -284,7 +284,18 @@ public class MainActivity extends A3DroidActivity {
         inText.append(Build.MANUFACTURER + '\n' + Build.PRODUCT + '\n' + Build.MODEL);
     }
 
-    public void createTestControlGroup(int size, boolean server){
+    public void createAppNode(){
+        ArrayList<String> roles = new ArrayList<String>();
+        roles.add(ControlSupervisorRole.class.getName());
+        roles.add(ControlFollowerRole.class.getName());
+        ArrayList<A3GroupDescriptor> groupDescriptors = new ArrayList<A3GroupDescriptor>();
+        groupDescriptors.add(new ControlDescriptor());
+        appNode = ((A3Application) getApplication()).createNode(
+                groupDescriptors,
+                roles);
+    }
+
+    public void createTestControlNode(int size, boolean server){
         ArrayList<String> roles = new ArrayList<String>();
         roles.add(TestControlSupervisorRole.class.getName());
         roles.add(TestControlFollowerRole.class.getName());
@@ -363,6 +374,10 @@ public class MainActivity extends A3DroidActivity {
                 e.printStackTrace();
             }
         application.quit();
+    }
+
+    public A3Node getAppNode(){
+        return appNode;
     }
 
     public boolean isTestGroupReady() {

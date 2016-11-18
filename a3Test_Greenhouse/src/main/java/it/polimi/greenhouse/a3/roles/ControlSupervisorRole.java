@@ -211,7 +211,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 
         if(dataToWaitFor <= 0){
 			try {
-			bw.write(result);
+			    bw.write(result);
 				bw.flush();
 			} catch (IOException e) {
 				postUIEvent(0, "ECCEZIONE IN CtrlSupRole [bw.flush()]: " + e.getLocalizedMessage());

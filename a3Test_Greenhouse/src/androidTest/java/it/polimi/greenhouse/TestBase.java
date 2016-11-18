@@ -1,5 +1,6 @@
 package it.polimi.greenhouse;
 
+import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingResource;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.test.ApplicationTestCase;
@@ -75,7 +76,10 @@ public abstract class TestBase {
 
     protected void waitFor(long waitingTime){
         try {
+            IdlingResource idlingResource = new ElapsedTimeIdlingResource(waitingTime);
+            Espresso.registerIdlingResources(idlingResource);
             Thread.sleep(waitingTime);
+            Espresso.unregisterIdlingResources(idlingResource);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

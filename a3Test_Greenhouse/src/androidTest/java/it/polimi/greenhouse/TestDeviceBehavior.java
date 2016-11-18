@@ -120,7 +120,7 @@ public class TestDeviceBehavior extends TestBase{
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
 
-        mainActivity.createTestControlGroup(DEVICES_NUMBER, true);
+        mainActivity.createTestControlNode(DEVICES_NUMBER, true);
         Log.i(TAG, "Server: waiting for others");
 
         int counter = WAITING_COUNT;
@@ -208,7 +208,7 @@ public class TestDeviceBehavior extends TestBase{
         checkModel();
 
         Log.i(TAG, "Sensor: waiting for others");
-        mainActivity.createTestControlGroup(DEVICES_NUMBER, false);
+        mainActivity.createTestControlNode(DEVICES_NUMBER, false);
 
         int counter = WAITING_COUNT;
         do{
