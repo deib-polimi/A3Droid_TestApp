@@ -40,7 +40,8 @@
         </activity>
 
         <service
-            android:name="it.polimi.deepse.a3droid.bus.alljoyn.AlljoynBus">
+            android:name="it.polimi.deepse.a3droid.bus.alljoyn.AlljoynBus"
+            android:stopWithTask="true">
         </service>service>
     </application>
 </manifest>

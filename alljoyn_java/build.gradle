@@ -1,9 +1,0 @@
-apply plugin: 'java'
-
-dependencies {
-    compile files('bin/jar/alljoyn.jar')
-    compile files('libs/android.jar')
-}
-
-sourceCompatibility = 1.7
-targetCompatibility = 1.7

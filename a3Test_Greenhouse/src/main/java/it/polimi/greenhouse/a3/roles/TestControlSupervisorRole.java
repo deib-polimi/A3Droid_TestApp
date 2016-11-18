@@ -15,9 +15,6 @@ public class TestControlSupervisorRole  extends A3SupervisorRole{
     }
 
     @Override
-    public void logic() {}
-
-    @Override
     public void receiveApplicationMessage(A3Message a3Message) {
         switch (a3Message.reason){
             case AppConstants.MEMBER_ADDED:

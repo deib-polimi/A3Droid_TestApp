@@ -21,14 +21,10 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 		try {
 			node.connect("server_0");
 			node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+			postUIEvent(0, "[" + getGroupName() + "_SupRole]");
 		} catch (A3NoGroupDescriptionException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void logic() {
-		//showOnScreen("[" + getGroupName() + "_SupRole]");
 	}
 
 	@Override

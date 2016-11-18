@@ -17,6 +17,7 @@ import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3Node;
 import it.polimi.deepse.a3droid.a3.events.A3ErrorEvent;
+import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationParameters;
@@ -44,14 +45,14 @@ import it.polimit.greenhouse.R;
 
 public class MainActivity extends A3DroidActivity {
 
-    private A3Node nodeV2;
+    private A3Node appNode;
+    protected TestControlNode testNode;
     private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
     private HandlerThread fromGUIThread;
     private Handler toGuiHandler;
     private Handler fromGuiHandler;
     private EditText experiment;
     public static int runningExperiment;
-    protected TestControlNode testNode;
     public static final String TAG = "MainActivity";
     private boolean experimentRunning = false;
     private A3Application application = null;
@@ -65,7 +66,7 @@ public class MainActivity extends A3DroidActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        //start Alljoin Service
+
         application = ((A3Application) getApplication());
         application.checkin();
 
@@ -120,10 +121,10 @@ public class MainActivity extends A3DroidActivity {
 
                         if (!experimentRunning) {
                             experimentRunning = true;
-                            if (nodeV2.isConnectedForApplication("server_0"))
+                            if (nodeV2.isConnected("server_0"))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
                                         "control");
-                            if (nodeV2.isConnectedForApplication("monitoring_" + experiment.getText().toString()))
+                            if (nodeV2.isConnected("monitoring"))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
                                         "control");
                             nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
@@ -140,9 +141,6 @@ public class MainActivity extends A3DroidActivity {
                             public int getSupervisorFitnessFunction() {
                                 return 0;
                             }
-
-                            @Override
-                            public void groupStateChangeListener(A3GroupState a3GroupState, A3GroupState a3GroupState1) {}
                         });
                         groupDescriptors.add(new ServerDescriptor());
 
@@ -150,9 +148,11 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connect("control");
+                            nodeV2.connectAndWaitForActivation("control");
                             nodeV2.connect("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
 
@@ -183,7 +183,6 @@ public class MainActivity extends A3DroidActivity {
                         } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
-                        //node.connect("control", true, true);
                         break;
                     case AppConstants.START_SERVER:
                         if (experimentRunning)
@@ -204,9 +203,11 @@ public class MainActivity extends A3DroidActivity {
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connect("control");
-                            nodeV2.connect("server_0");
+                            nodeV2.connectAndWaitForActivation("control");
+                            nodeV2.connectAndWaitForActivation("server_0");
                         } catch (A3NoGroupDescriptionException e) {
+                            e.printStackTrace();
+                        } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
                         break;
@@ -280,7 +281,7 @@ public class MainActivity extends A3DroidActivity {
         Log.i(TAG, Build.MANUFACTURER);
         Log.i(TAG, Build.PRODUCT);
         Log.i(TAG, Build.MODEL);
-        inText.append(Build.MANUFACTURER);
+        inText.append(Build.MANUFACTURER + '\n' + Build.PRODUCT + '\n' + Build.MODEL);
     }
 
     public void createTestControlGroup(int size, boolean server){
@@ -357,26 +358,30 @@ public class MainActivity extends A3DroidActivity {
         fromGUIThread.quit();
         if (experimentRunning)
             try {
-                nodeV2.disconnect("control");
+                appNode.disconnect("control");
             } catch (A3ChannelNotFoundException e) {
                 e.printStackTrace();
             }
         application.quit();
-        System.exit(0);
     }
-
 
     public boolean isTestGroupReady() {
         return testNode.isReady();
     }
 
     @Override
+    public void handleGroupEvent(A3GroupEvent event) {
+
+    }
+
+    @Override
     public void handleUIEvent(A3UIEvent event) {
-        inText.append(event.message + "\n");
+        inText.append("\n" + event.message);
     }
 
     @Override
     public void handleErrorEvent(A3ErrorEvent event) {
-        inText.append(event.exception.getMessage() + "\n");
+        inText.append("\n" + event.exception.getMessage());
     }
+
 }

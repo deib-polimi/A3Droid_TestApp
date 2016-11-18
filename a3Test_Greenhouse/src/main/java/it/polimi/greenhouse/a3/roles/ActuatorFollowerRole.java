@@ -12,11 +12,7 @@ public class ActuatorFollowerRole extends A3FollowerRole {
 	@Override
 	public void onActivation() {
 		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
-	}
-	
-	@Override
-	public void logic() {
-		//showOnScreen("[" + getGroupName() + "_FolRole]");
+		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
 	}
 
 	@Override

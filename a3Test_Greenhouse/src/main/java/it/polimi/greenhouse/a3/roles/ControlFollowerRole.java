@@ -29,12 +29,8 @@ public class ControlFollowerRole extends A3FollowerRole {
 	public void onActivation() {
 		postUIEvent(0, "[CtrlFolRole]");
 		launchedGroups = new ConcurrentHashMap<String, Set<Integer>>();
-	}
-
-	@Override
-	public void logic() {
-		//showOnScreen("[CtrlFolRole]");
 		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
+		postUIEvent(0, "[CtrlFolRole]");
 	}
 
 	@Override

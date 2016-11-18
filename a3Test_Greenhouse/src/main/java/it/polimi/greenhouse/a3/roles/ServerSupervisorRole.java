@@ -32,13 +32,9 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		avgRTT = 0;
 		dataToWaitFor = 0;
 		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		postUIEvent(0, "[" + getGroupName() + "_SupRole]");
 	}	
 	
-	@Override
-	public void logic() {
-		postUIEvent(0, "[" + getGroupName() + "_SupRole]");
-	}
-
 	@Override
 	public void receiveApplicationMessage(A3Message message) {
 		
