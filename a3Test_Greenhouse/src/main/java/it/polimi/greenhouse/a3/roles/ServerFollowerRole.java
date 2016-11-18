@@ -32,7 +32,7 @@ public class ServerFollowerRole extends A3FollowerRole {
 			content = ((String)message.object).split("#");
 			experiment = content[0];
 			message.object = message.senderAddress + "#" + (String)message.object;
-			if(node.isConnectedForApplication("actuators_" + experiment)){
+			if(node.isConnected("actuators_" + experiment)){
 				postUIEvent(0, "Forwarding server data to actuators");
 				node.sendToSupervisor(message, "actuators_" + experiment);
 			}

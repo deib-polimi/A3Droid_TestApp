@@ -53,7 +53,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
-					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+					if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 						node.sendToSupervisor(message,
 							gType + "_" + i);
 			break;
@@ -64,7 +64,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
-					if(node.isConnectedForApplication(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+					if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
 						node.sendToSupervisor(message,
 							gType + "_" + i);
 			break;
@@ -75,7 +75,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
-					if(node.isConnectedForApplication(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
+					if(node.isConnected(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
 						try {
 							node.disconnect(gType + "_" + i);
 						} catch (A3ChannelNotFoundException e) {
@@ -92,7 +92,7 @@ public class ControlFollowerRole extends A3FollowerRole {
 			
 			for(String gType : launchedGroups.keySet())
 				for(int i : launchedGroups.get(gType))
-					if(node.isConnectedForApplication(gType + "_" + i))
+					if(node.isConnected(gType + "_" + i))
 						try {
 							node.disconnect(gType + "_" + i);
 						} catch (A3ChannelNotFoundException e) {
