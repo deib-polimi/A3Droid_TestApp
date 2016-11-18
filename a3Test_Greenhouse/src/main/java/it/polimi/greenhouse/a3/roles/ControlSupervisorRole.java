@@ -43,11 +43,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 		vmIds = Collections.synchronizedSet(new HashSet<String>());
 		dataToWaitFor = 0;
 		numberOfTrials = 1;
-	}
-
-	@Override
-	public void logic() {
-		//showOnScreen("[CtrlSupRole]");
+		postUIEvent(0, "[CtrlSupRole]");
 		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
 	}
 

@@ -183,7 +183,6 @@ public class MainActivity extends A3DroidActivity {
                         } catch (A3ChannelNotFoundException e) {
                             e.printStackTrace();
                         }
-                        //node.connect("control", true, true);
                         break;
                     case AppConstants.START_SERVER:
                         if (experimentRunning)
@@ -205,7 +204,7 @@ public class MainActivity extends A3DroidActivity {
                                 roles);
                         try {
                             nodeV2.connectAndWaitForActivation("control");
-                            nodeV2.connect("server_0");
+                            nodeV2.connectAndWaitForActivation("server_0");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3ChannelNotFoundException e) {
@@ -378,12 +377,12 @@ public class MainActivity extends A3DroidActivity {
 
     @Override
     public void handleUIEvent(A3UIEvent event) {
-        inText.append(event.message + "\n");
+        inText.append("\n" + event.message);
     }
 
     @Override
     public void handleErrorEvent(A3ErrorEvent event) {
-        inText.append(event.exception.getMessage() + "\n");
+        inText.append("\n" + event.exception.getMessage());
     }
 
 }

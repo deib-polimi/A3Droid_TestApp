@@ -43,10 +43,6 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
             e.printStackTrace();
         }
         node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
-    }
-
-    @Override
-    public void logic() {
         postUIEvent(0, "[" + getGroupName() + "_SupRole]");
     }
 
