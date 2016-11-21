@@ -32,5 +32,7 @@ public class AppConstants {
 	public static final int START_SPLIT = 63;
 	public static final int START_STACK = 64;
 	public static final int START_REVERSE_STACK = 65;
+
 	public static final int TEST_GROUP_READY = 80;
+	public static final int NEW_SUPERVISOR_ELECTED = 81;
 }

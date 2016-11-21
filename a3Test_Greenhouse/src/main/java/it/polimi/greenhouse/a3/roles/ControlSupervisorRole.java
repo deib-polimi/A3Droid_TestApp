@@ -3,6 +3,8 @@ package it.polimi.greenhouse.a3.roles;
 import android.os.Environment;
 import android.util.Log;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -12,7 +14,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
+import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 
@@ -111,6 +115,11 @@ public class ControlSupervisorRole extends SupervisorRole {
 
 				case AppConstants.STOP_EXPERIMENT:
 					stopExperimentOld(message);
+					break;
+
+				case AppConstants.NEW_SUPERVISOR_ELECTED:
+					String groupName = message.object;
+					EventBus.getDefault().post(new TestEvent(AppConstants.NEW_SUPERVISOR_ELECTED, groupName));
 					break;
 
 				default:

@@ -174,7 +174,7 @@ public class TestGroupInitialization extends TestBase{
     }
 
 
-    // This method will be called when a MessageEvent is posted
+    // This method will be called whenntrol a MessageEvent is posted
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void handleGroupEvent(A3GroupEvent event) {
         if(event.groupName.equals("control"))
