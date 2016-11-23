@@ -290,6 +290,17 @@ public class MainActivity extends A3DroidActivity {
         roles.add(ControlFollowerRole.class.getName());
         ArrayList<A3GroupDescriptor> groupDescriptors = new ArrayList<A3GroupDescriptor>();
         groupDescriptors.add(new ControlDescriptor());
+
+        //for new supervisor election test
+        roles.add(SensorSupervisorRole.class.getName());
+        roles.add(SensorFollowerRole.class.getName());
+        groupDescriptors.add(new MonitoringDescriptor() {
+            @Override
+            public int getSupervisorFitnessFunction() {
+                return 0;
+            }
+        });
+
         appNode = ((A3Application) getApplication()).createNode(
                 groupDescriptors,
                 roles);

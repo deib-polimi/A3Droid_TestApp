@@ -48,8 +48,8 @@ public class TestDeviceBehavior extends TestBase{
 
     public final static String SUPERVISOR_MODEL = "Nexus 7";
     //public final static String SUPERVISOR_MODEL = "XT1052";
-    private final static String SPV_EXP_STARTED_OUTPUT =  "TENTATIVO";
-    private final static String SPV_EXP_STOPPED_OUTPUT = "TERMINATO";
+    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Experiment";
+    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
