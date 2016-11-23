@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="A3Droid">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/a3Test_Greenhouse/libs/A3Droid.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
