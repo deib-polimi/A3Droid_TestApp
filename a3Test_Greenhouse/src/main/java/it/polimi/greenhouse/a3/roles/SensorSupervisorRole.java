@@ -43,11 +43,11 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         sentCont = 0;
         avgRTT = 0;
         listRTT=new ArrayList<>();
-        try {
+        /*try {
             node.connect("server_0");
         } catch (A3NoGroupDescriptionException e) {
             e.printStackTrace();
-        }
+        }*/
         node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
         postUIEvent(0, "[" + getGroupName() + "_SupRole]");
     }
