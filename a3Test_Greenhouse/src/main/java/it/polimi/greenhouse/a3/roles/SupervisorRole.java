@@ -18,6 +18,11 @@ public abstract class SupervisorRole extends A3SupervisorRole{
 	public SupervisorRole() {
 		launchedGroups = new ConcurrentHashMap<String, Map<Integer, Set<String[]>>>();
 	}
+
+	@Override
+	public void onDeactivation() {
+		postUIEvent(0, "[CtrlSupRole] deactivated");
+	}
 	
 	protected void addGroupMember(String type, Integer experimentId, String uuid, String name) {
 		if(launchedGroups.containsKey(type))
