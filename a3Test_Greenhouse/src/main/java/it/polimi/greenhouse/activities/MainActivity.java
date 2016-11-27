@@ -122,10 +122,10 @@ public class MainActivity extends A3DroidActivity {
                         if (!experimentRunning) {
                             experimentRunning = true;
                             if (nodeV2.isConnected("server_0"))
-                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A_" + actuatorsFrequency.getText().toString() + "_" + actuatorsPayload.getText().toString()),
+                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A." + actuatorsFrequency.getText().toString() + "." + actuatorsPayload.getText().toString()),
                                         "control");
                             if (nodeV2.isConnected("monitoring"))
-                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + sensorsFrequency.getText().toString() + "_" + sensorsPayload.getText().toString()),
+                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + sensorsFrequency.getText().toString() + "." + sensorsPayload.getText().toString()),
                                         "control");
                             nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
                         }
@@ -149,7 +149,7 @@ public class MainActivity extends A3DroidActivity {
                                 roles);
                         try {
                             nodeV2.connectAndWaitForActivation("control");
-                            nodeV2.connect("monitoring_" + experiment.getText().toString());
+                            nodeV2.connectAndWaitForActivation("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3ChannelNotFoundException e) {
