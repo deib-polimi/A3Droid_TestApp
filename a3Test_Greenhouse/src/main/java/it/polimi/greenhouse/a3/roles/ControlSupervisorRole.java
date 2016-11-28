@@ -168,7 +168,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 
 		experimentIsRunning = false;
 		sd = Environment.getExternalStorageDirectory();
-		f = new File(sd, AppConstants.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".txt");
+		f = new File(sd, AppConstants.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".csv");
 
 		try {
 			fw = new FileWriter(f, true);
