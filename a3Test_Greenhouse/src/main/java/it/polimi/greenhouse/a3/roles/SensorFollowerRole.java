@@ -42,7 +42,10 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		sentCont = 0;
 		avgRTT = 0;
 		listRTT=new ArrayList<>();
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() +
+				"_" + currentExperiment +
+				"_" + node.getUID() +
+				"_" + getChannelId()), "control");
 		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
 	}
 
