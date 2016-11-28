@@ -35,8 +35,8 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	@Override
 	public void onActivation() {
-		
-		currentExperiment = 0;//Integer.valueOf(getGroupName().split("_")[1]);
+
+		currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
 		
 		experimentIsRunning = false;
 		sentCont = 0;
