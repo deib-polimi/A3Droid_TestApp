@@ -2,6 +2,7 @@ package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
 import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.util.AppConstants;
 
 public class ActuatorFollowerRole extends A3FollowerRole {
@@ -11,7 +12,11 @@ public class ActuatorFollowerRole extends A3FollowerRole {
 	}
 	@Override
 	public void onActivation() {
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		try {
+			node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
 	}
 

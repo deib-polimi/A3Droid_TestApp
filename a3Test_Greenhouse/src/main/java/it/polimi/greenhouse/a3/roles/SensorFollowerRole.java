@@ -7,6 +7,7 @@ import java.util.List;
 
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
 import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.deepse.a3droid.pattern.Timer;
 import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.activities.MainActivity;
@@ -42,10 +43,14 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		sentCont = 0;
 		avgRTT = 0;
 		listRTT=new ArrayList<>();
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() +
-				"_" + currentExperiment +
-				"_" + node.getUID() +
-				"_" + getChannelId()), "control");
+		try {
+			node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() +
+                    "_" + currentExperiment +
+                    "_" + node.getUID() +
+                    "_" + getChannelId()), "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
 	}
 
@@ -82,7 +87,11 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			
 			if(rtt > TIMEOUT && experimentIsRunning){
 				experimentIsRunning = false;
-				node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+				try {
+					node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+				} catch (A3SupervisorNotElectedException e) {
+					e.printStackTrace();
+				}
 			}
 			else{
 				new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
@@ -121,8 +130,12 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
                     allFollowerRTTs+=String.valueOf(indiRTT)+" ";
                 }
 
-                node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower: " + sentCont + "\t " +
-						(runningTime) + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
+				try {
+					node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower: " + sentCont + "\t " +
+                            (runningTime) + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
+				} catch (A3SupervisorNotElectedException e) {
+					e.printStackTrace();
+				}
 				experimentIsRunning = false;
 			}
 			break;

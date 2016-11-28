@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.util.AppConstants;
 
 
@@ -28,7 +29,11 @@ public class ControlFollowerRole extends A3FollowerRole {
 	@Override
 	public void onActivation() {
 		launchedGroups = new ConcurrentHashMap<String, Set<Integer>>();
-		node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
+		try {
+			node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 		postUIEvent(0, "[CtrlFolRole]");
 	}
 
@@ -105,7 +110,11 @@ public class ControlFollowerRole extends A3FollowerRole {
 		for(String gType : launchedGroups.keySet())
             for(int i : launchedGroups.get(gType))
                 if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-                    node.sendToSupervisor(message,
-                        gType + "_" + i);
+					try {
+						node.sendToSupervisor(message,
+                            gType + "_" + i);
+					} catch (A3SupervisorNotElectedException e) {
+						e.printStackTrace();
+					}
 	}
 }

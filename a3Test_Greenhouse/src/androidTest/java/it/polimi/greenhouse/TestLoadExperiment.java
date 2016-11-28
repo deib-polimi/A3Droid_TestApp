@@ -34,6 +34,7 @@ import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.activities.MainActivity;
@@ -214,9 +215,17 @@ public class TestLoadExperiment extends TestBase{
 
         if (mainActivity.getAppNode().isConnected("monitoring_1"))
             Log.i(TAG, "supervisor is connected to monitoring_1 group, sending message");
+        try {
             mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + followerMsgFreq + "_" + followerMsgPayload),
                     "monitoring_1");
-        mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "monitoring_1");
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
+        }
+        try {
+            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "monitoring_1");
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
+        }
 
         // Now we wait EXPERIMENT_TIME for the experiment to run
         Log.i(TAG, "Server: waiting for the experiment to run");
