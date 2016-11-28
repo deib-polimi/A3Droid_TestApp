@@ -124,7 +124,7 @@ public class MainActivity extends A3DroidActivity {
                             if (nodeV2.isConnected("server_0"))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A." + actuatorsFrequency.getText().toString() + "." + actuatorsPayload.getText().toString()),
                                         "control");
-                            if (nodeV2.isConnected("monitoring"))
+                            if (nodeV2.isConnected("monitoring_" + experiment.getText().toString()))
                                 nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + sensorsFrequency.getText().toString() + "." + sensorsPayload.getText().toString()),
                                         "control");
                             nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");

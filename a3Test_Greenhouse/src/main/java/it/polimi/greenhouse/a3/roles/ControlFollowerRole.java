@@ -49,23 +49,15 @@ public class ControlFollowerRole extends A3FollowerRole {
 				experiments.add(experimentId);
 				launchedGroups.put(type, experiments);
 			}
-			
-			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
-					if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-						node.sendToSupervisor(message,
-							gType + "_" + i);
+
+			sendToConnectedSupervisors(message);
 			break;
 			
 		case AppConstants.START_EXPERIMENT:
 		case AppConstants.LONG_RTT:		
 		case AppConstants.SET_PARAMS:
 
-			for(String gType : launchedGroups.keySet())
-				for(int i : launchedGroups.get(gType))
-					if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
-						node.sendToSupervisor(message,
-							gType + "_" + i);
+			sendToConnectedSupervisors(message);
 			break;
 		
 		case AppConstants.STOP_EXPERIMENT:
@@ -105,5 +97,13 @@ public class ControlFollowerRole extends A3FollowerRole {
 		default:
 			break;
 		}
+	}
+
+	private void sendToConnectedSupervisors(A3Message message) {
+		for(String gType : launchedGroups.keySet())
+            for(int i : launchedGroups.get(gType))
+                if(node.isConnected(gType + "_" + i) && node.isSupervisor(gType + "_" + i))
+                    node.sendToSupervisor(message,
+                        gType + "_" + i);
 	}
 }
