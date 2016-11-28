@@ -7,7 +7,9 @@ import java.util.List;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
+import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.deepse.a3droid.pattern.Timer;
 import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.activities.MainActivity;
@@ -40,21 +42,23 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         currentExperiment = Integer.valueOf(getGroupName().split("_")[1]);
         startExperiment = true;
         listRTT=new ArrayList<>();
-        //try {
-            //node.connect("server_0");
-            experimentIsRunning = false;
-            sentCont = 0;
-            avgRTT = 0;
-        /*} catch (A3NoGroupDescriptionException e) {
-            e.printStackTrace();
-        }*/
-        node.sendToSupervisor(
+        experimentIsRunning = false;
+        sentCont = 0;
+        avgRTT = 0;
+        try {
+            if(node.isConnected("control") || node.waitForActivation("control"))
+            node.sendToSupervisor(
                 new A3Message(AppConstants.JOINED, getGroupName() +
                     "_" + currentExperiment +
                     "_" + node.getUID() +
                     "_" + getChannelId()
                 ), "control"
-        );
+            );
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
         postUIEvent(0, "[" + getGroupName() + "_SupRole]");
     }
 
@@ -106,7 +110,11 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 
                     if (rtt > TIMEOUT && experimentIsRunning) {
                         experimentIsRunning = false;
-                        node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+                        try {
+                            node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+                        } catch (A3SupervisorNotElectedException e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
                     }
@@ -151,8 +159,12 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                         allFollowerRTTs+=String.valueOf(indiRTT)+" ";
                     }
 
-                    node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_Supervisor: " + sentCont + "\t " +
-                            runningTime + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
+                    try {
+                        node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_Supervisor: " + sentCont + "\t " +
+                                runningTime + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
+                    } catch (A3SupervisorNotElectedException e) {
+                        e.printStackTrace();
+                    }
                 }
                 break;
 
