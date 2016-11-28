@@ -85,14 +85,14 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 break;
 
             case AppConstants.SENSOR_PING:
-                sensorPing(message);
-                //sensorPingBack(message);
+                //sensorPing(message);
+                sensorPingBack(message);
                 break;
 
             case AppConstants.SENSOR_PONG:
                 String sensorAddress = ((String) message.object).split("#")[0];
-                String experiment = ((String)message.object).split("#")[1];
-                String sendTime = ((String) message.object).split("#")[2];
+               // String experiment = ((String)message.object).split("#")[1];
+                String sendTime = ((String) message.object).split("#")[1];
                 message.object = sendTime;
 
                 if (!sensorAddress.equals(getChannelId())) {
