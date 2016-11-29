@@ -45,7 +45,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		avgRTT = 0;
 		listRTT=new ArrayList<>();
 		try {
-			if(node.isConnected("control") || node.waitForActivation("control"))
+			if(node.isConnected("control") && node.waitForActivation("control"))
 				node.sendToSupervisor(
 						new A3Message(AppConstants.JOINED, getGroupName() +
 								"_" + currentExperiment +
