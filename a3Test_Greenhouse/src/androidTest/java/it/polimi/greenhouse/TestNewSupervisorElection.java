@@ -53,7 +53,7 @@ public class TestNewSupervisorElection extends TestBase{
 
     private final String TAG = "NewSupervisorElection";
 
-    private static final int DEVICES_NUMBER = 3;
+    private static final int DEVICES_NUMBER = 2;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -62,7 +62,8 @@ public class TestNewSupervisorElection extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "SM-P605";
+    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    //public final static String SUPERVISOR_MODEL = "SM-P605";
 
     // public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";

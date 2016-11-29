@@ -46,7 +46,7 @@ public class TestDeviceBehavior extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 5;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "Nexus 7";
+    public final static String SUPERVISOR_MODEL = "Nexus 9";
     //public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Experiment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";

@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
+import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
@@ -41,12 +42,12 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
+public class TestGroupSplit extends TestBase{
 
-public class TestGroupAccession extends TestBase{
-
-    private final String TAG = "TestGroupAccession";
+    private final String TAG = "TestGroupSplit";
 
     private static final int DEVICES_NUMBER = 3;
+    //private static final int DEVICES_TO
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -56,7 +57,7 @@ public class TestGroupAccession extends TestBase{
     private static final int STOP_TIME = 40;
 
     public final static String SUPERVISOR_MODEL = "SM-P605";
-   // public final static String SUPERVISOR_MODEL = "XT1052";
+    // public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
@@ -155,10 +156,13 @@ public class TestGroupAccession extends TestBase{
 
         //onView(withId(startSensorButton)).perform(click());
         try {
-            mainActivity.getAppNode().connect("control");
+            mainActivity.getAppNode().connectAndWaitForActivation("control");
+            mainActivity.getAppNode().connect("monitoring_1");
         } catch (A3NoGroupDescriptionException e) {
             Log.e(TAG, e.getMessage());
             return;
+        } catch (A3ChannelNotFoundException e) {
+            Log.e(TAG, e.getMessage());;
         }
 
         groupInitializationStart = System.currentTimeMillis();
@@ -173,6 +177,9 @@ public class TestGroupAccession extends TestBase{
 
         //End of Group Initialization
         Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
+
+
+        Log.i(TAG,"Split Group Starting");
 
         /* Start the experiment by pressing the start button
         Log.i(TAG, "Server: starting experiment");
@@ -208,7 +215,7 @@ public class TestGroupAccession extends TestBase{
         */
 
         // Clean up
-       // Espresso.unregisterIdlingResources(idlingResource3);
+        // Espresso.unregisterIdlingResources(idlingResource3);
         //Espresso.unregisterIdlingResources(idlingResource4);
     }
 
@@ -251,10 +258,13 @@ public class TestGroupAccession extends TestBase{
         //onView(withId(startSensorButton)).perform(click());
         try {
             groupInitializationStart = System.currentTimeMillis();
-            mainActivity.getAppNode().connect("control");
+            mainActivity.getAppNode().connectAndWaitForActivation("control");
+            mainActivity.getAppNode().connect("monitoring_1");
         } catch (A3NoGroupDescriptionException e) {
             Log.e(TAG, e.getMessage());
             return;
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
         }
 
         // Now we wait 1x START_TIME for this node to start as a follower

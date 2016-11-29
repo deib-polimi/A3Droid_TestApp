@@ -22,6 +22,9 @@ public abstract class TestBase {
     protected int startExpertimentButton;
     protected int stopExpertimentButton;
     protected int startSensorButton;
+    protected int followerMsgFrequencyEditText;
+    protected int followerMsgPayloadEditText;
+
 
     public abstract void initialize();
 

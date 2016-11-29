@@ -59,6 +59,8 @@ public class ControlFollowerRole extends A3FollowerRole {
 			break;
 			
 		case AppConstants.START_EXPERIMENT:
+			postUIEvent(0, "wrong place to start experiment control follower role");
+
 		case AppConstants.LONG_RTT:		
 		case AppConstants.SET_PARAMS:
 
