@@ -23,6 +23,7 @@ import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationParameters;
 import it.polimi.deepse.a3droid.a3.exceptions.A3InvalidOperationRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.deepse.a3droid.android.A3DroidActivity;
 import it.polimi.greenhouse.a3.groups.ActuatorsDescriptor;
 import it.polimi.greenhouse.a3.groups.ControlDescriptor;
@@ -113,7 +114,11 @@ public class MainActivity extends A3DroidActivity {
                 switch (msg.what) {
                     case AppConstants.STOP_EXPERIMENT_COMMAND:
                         if (experimentRunning) {
-                            nodeV2.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+                            try {
+                                nodeV2.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+                            } catch (A3SupervisorNotElectedException e) {
+                                e.printStackTrace();
+                            }
                             experimentRunning = false;
                         }
                         break;
@@ -122,12 +127,24 @@ public class MainActivity extends A3DroidActivity {
                         if (!experimentRunning) {
                             experimentRunning = true;
                             if (nodeV2.isConnected("server_0"))
-                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A." + actuatorsFrequency.getText().toString() + "." + actuatorsPayload.getText().toString()),
-                                        "control");
+                                try {
+                                    nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A." + actuatorsFrequency.getText().toString() + "." + actuatorsPayload.getText().toString()),
+                                            "control");
+                                } catch (A3SupervisorNotElectedException e) {
+                                    e.printStackTrace();
+                                }
                             if (nodeV2.isConnected("monitoring_" + experiment.getText().toString()))
-                                nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + sensorsFrequency.getText().toString() + "." + sensorsPayload.getText().toString()),
-                                        "control");
-                            nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
+                                try {
+                                    nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + sensorsFrequency.getText().toString() + "." + sensorsPayload.getText().toString()),
+                                            "control");
+                                } catch (A3SupervisorNotElectedException e) {
+                                    e.printStackTrace();
+                                }
+                            try {
+                                nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
+                            } catch (A3SupervisorNotElectedException e) {
+                                e.printStackTrace();
+                            }
                         }
                         break;
                     case AppConstants.START_SENSOR:

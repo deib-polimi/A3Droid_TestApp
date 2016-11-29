@@ -1,6 +1,7 @@
 package it.polimi.greenhouse.a3.roles;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.deepse.a3droid.pattern.Timer;
 import it.polimi.deepse.a3droid.pattern.TimerInterface;
 import it.polimi.greenhouse.util.AppConstants;
@@ -31,7 +32,11 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		sentCont = 0;
 		avgRTT = 0;
 		dataToWaitFor = 0;
-		node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		try {
+			node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 		postUIEvent(0, "[" + getGroupName() + "_SupRole]");
 	}	
 	
@@ -94,7 +99,11 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 
 				if(rtt > TIMEOUT && experimentIsRunning){
 					experimentIsRunning = false;
-					node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+					try {
+						node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+					} catch (A3SupervisorNotElectedException e) {
+						e.printStackTrace();
+					}
 				}
 				else{
 					if(--dataToWaitFor <= 0){
@@ -136,9 +145,13 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 					paramsSet = false;
 					double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 					float frequency = sentCont / ((float)(runningTime));
-					
-					node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoA: " + sentCont + "\t" +
-							runningTime + "\t" + frequency + "\t" + avgRTT), "control");
+
+					try {
+						node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoA: " + sentCont + "\t" +
+                                runningTime + "\t" + frequency + "\t" + avgRTT), "control");
+					} catch (A3SupervisorNotElectedException e) {
+						e.printStackTrace();
+					}
 				}
 				break;
 				
@@ -168,14 +181,22 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 		postUIEvent(0, "Entered: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
 		sendBroadcast(msg);
-		node.sendToSupervisor(msg, "control");
+		try {
+			node.sendToSupervisor(msg, "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void memberRemoved(String name) {
 		postUIEvent(0, "Exited: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
 		sendBroadcast(msg);
-		node.sendToSupervisor(msg, "control");
+		try {
+			node.sendToSupervisor(msg, "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

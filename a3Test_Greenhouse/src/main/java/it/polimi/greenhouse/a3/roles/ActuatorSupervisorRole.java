@@ -3,6 +3,7 @@ package it.polimi.greenhouse.a3.roles;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.util.AppConstants;
 
 public class ActuatorSupervisorRole extends A3SupervisorRole {
@@ -20,7 +21,11 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 		serverPinged = false;
 		try {
 			node.connect("server_0");
-			node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+			try {
+				node.sendToSupervisor(new A3Message(AppConstants.JOINED, getGroupName() + "_" + node.getUID() + "_" + getChannelId()), "control");
+			} catch (A3SupervisorNotElectedException e) {
+				e.printStackTrace();
+			}
 			postUIEvent(0, "[" + getGroupName() + "_SupRole]");
 		} catch (A3NoGroupDescriptionException e) {
 			e.printStackTrace();
@@ -47,7 +52,11 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			//showOnScreen("Broadcasted data to follower actuators");
 			message.reason = AppConstants.SERVER_PONG;
 			message.object = sendTime;
-			node.sendToSupervisor(message, "server_0");
+			try {
+				node.sendToSupervisor(message, "server_0");
+			} catch (A3SupervisorNotElectedException e) {
+				e.printStackTrace();
+			}
 			break;
 			
 		case AppConstants.SERVER_PONG:
@@ -56,7 +65,11 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 			experiment = content[0];
 			sendTime = content[1];
 			message.object = sendTime;
-			node.sendToSupervisor(message, "server_0");
+			try {
+				node.sendToSupervisor(message, "server_0");
+			} catch (A3SupervisorNotElectedException e) {
+				e.printStackTrace();
+			}
 			break;
 		
 		case AppConstants.START_EXPERIMENT:
@@ -85,12 +98,20 @@ public class ActuatorSupervisorRole extends A3SupervisorRole {
 	public void memberAdded(String name) {
 		//showOnScreen("Entered: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
-		node.sendToSupervisor(msg, "control");
+		try {
+			node.sendToSupervisor(msg, "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void memberRemoved(String name) {
 		//showOnScreen("Exited: " + name);
 		A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
-		node.sendToSupervisor(msg, "control");
+		try {
+			node.sendToSupervisor(msg, "control");
+		} catch (A3SupervisorNotElectedException e) {
+			e.printStackTrace();
+		}
 	}
 }

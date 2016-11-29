@@ -47,7 +47,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         avgRTT = 0;
         try {
             if(node.isConnected("control") || node.waitForActivation("control"))
-            node.sendToSupervisor(
+                node.sendToSupervisor(
                 new A3Message(AppConstants.JOINED, getGroupName() +
                     "_" + currentExperiment +
                     "_" + node.getUID() +
@@ -180,7 +180,11 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
 
     private void sensorPing(A3Message message) {
         message.object = message.senderAddress + "#" + (String) message.object;
-        node.sendToSupervisor(message, "server_0");
+        try {
+            node.sendToSupervisor(message, "server_0");
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sensorPingBack(A3Message message) {
@@ -200,12 +204,20 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
     public void memberAdded(String name) {
         postUIEvent(0, "Entered: " + name);
         A3Message msg = new A3Message(AppConstants.MEMBER_ADDED, name);
-        node.sendToSupervisor(msg, "control");
+        try {
+            node.sendToSupervisor(msg, "control");
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void memberRemoved(String name) {
         postUIEvent(0, "Exited: " + name);
         A3Message msg = new A3Message(AppConstants.MEMBER_REMOVED, name);
-        node.sendToSupervisor(msg, "control");
+        try {
+            node.sendToSupervisor(msg, "control");
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
+        }
     }
 }
