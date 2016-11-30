@@ -176,6 +176,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 		f = new File(sd, AppConstants.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".csv");
 
 		try {
+			postUIEvent(0,"writing to the csv log file ");
 			fw = new FileWriter(f, true);
 			bw = new BufferedWriter(fw);
 		} catch (IOException e) {
@@ -230,6 +231,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 			} catch (IOException e) {
 				postUIEvent(0, "ECCEZIONE IN CtrlSupRole [bw.flush()]: " + e.getLocalizedMessage());
 			}
+			Log.i(TAG,result);
 
 			postUIEvent(0,"--- End of Expriment with  " + numberOfTrials + " Trials  ---");
 			numberOfTrials ++;

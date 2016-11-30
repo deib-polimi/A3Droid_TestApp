@@ -298,7 +298,8 @@ public class MainActivity extends A3DroidActivity {
         Log.i(TAG, Build.MANUFACTURER);
         Log.i(TAG, Build.PRODUCT);
         Log.i(TAG, Build.MODEL);
-        inText.append(Build.MANUFACTURER + '\n' + Build.PRODUCT + '\n' + Build.MODEL);
+        Log.i(TAG,Build.SERIAL);
+        inText.append(Build.MANUFACTURER + '\n' + Build.PRODUCT + '\n' + Build.MODEL+ '\n'+ Build.SERIAL);
     }
 
     public void createAppNode(){

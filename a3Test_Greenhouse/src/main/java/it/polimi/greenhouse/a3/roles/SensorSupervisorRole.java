@@ -68,7 +68,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         switch (message.reason) {
             case AppConstants.SET_PARAMS:
                 if (message.senderAddress.equals(getChannelId()) && !paramsSet) {
-                    String params[] = message.object.split("_");
+                    String params[] = message.object.split("\\.");
                     if (!params[0].equals("S"))
                         break;
                     paramsSet = true;
@@ -160,8 +160,8 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     }
 
                     try {
-                        node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_Supervisor: " + sentCont + "\t " +
-                                runningTime + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
+                        node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_Supervisor:"+ "\t"+ sentCont +"\t"+
+                                runningTime +"\t"+ frequency + "\t" + avgRTT), "control");
                     } catch (A3SupervisorNotElectedException e) {
                         e.printStackTrace();
                     }

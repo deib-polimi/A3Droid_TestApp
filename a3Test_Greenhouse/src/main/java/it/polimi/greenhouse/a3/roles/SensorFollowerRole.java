@@ -1,5 +1,6 @@
 package it.polimi.greenhouse.a3.roles;
 
+import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		switch(message.reason){
 		
 		case AppConstants.SET_PARAMS:
-			String params [] = message.object.split("_");
+			String params [] = message.object.split("\\.");
 			if(!params[0].equals("S"))
 				break;
 			long freq = Long.valueOf(params[1]);
@@ -131,19 +132,21 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 				float frequency = sentCont / ((float)runningTime);
 
-
+  /*
                 for (double indiRTT: listRTT
                      ) {
                     allFollowerRTTs+=String.valueOf(indiRTT)+" ";
                 }
-
+*/
 				try {
-					node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower: " + sentCont + "\t " +
-                            (runningTime) + "\t " + frequency + "\t " + avgRTT+"\t IndividualRTT: "+allFollowerRTTs), "control");
+					node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower:"+ "\t" + sentCont + "\t" +
+                            (runningTime) + "\t" + frequency + "\t" + avgRTT), "control");
+					postUIEvent(0, "Average RTT of follower sent to Control supervisor");
 				} catch (A3SupervisorNotElectedException e) {
 					e.printStackTrace();
 				}
 				experimentIsRunning = false;
+
 			}
 			break;
 			

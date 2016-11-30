@@ -54,9 +54,9 @@ public class TestLoadExperiment extends TestBase{
 
     private final String TAG = "TestLoadExperiment";
 
-    private static final int DEVICES_NUMBER = 2;
-    private static final int MESSAGES_PER_MINUTE_NUMBER=2;
-    private static final int MESSAGE_PAYLOAD_SIZE_BYTE=32;
+    private static final int DEVICES_NUMBER = 3;
+    private static final int MESSAGES_PER_MINUTE_NUMBER=100;
+    private static final int MESSAGE_PAYLOAD_SIZE_BYTE=512;
 
 
 
@@ -66,8 +66,10 @@ public class TestLoadExperiment extends TestBase{
     private static final int START_TIME = 10;
     private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 40;
-
+//// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
     public final static String SUPERVISOR_MODEL = "Nexus 9";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00795";
+    //public final static String SUPERVISOR_MODEL = "OnePlus3";
     //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
@@ -77,6 +79,7 @@ public class TestLoadExperiment extends TestBase{
 
     private long groupInitializationStart = 0;
     private int jointNodes = 0;
+    private boolean experimentRunning = false;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(
@@ -107,7 +110,8 @@ public class TestLoadExperiment extends TestBase{
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL) && Build.SERIAL.equals(SUPERVISOR_SERIAL))
+
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -124,7 +128,9 @@ public class TestLoadExperiment extends TestBase{
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
         mainActivity.createAppNode();
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        
+         
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)  && Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -145,14 +151,14 @@ public class TestLoadExperiment extends TestBase{
 
 
 
-    public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopStime,
+    public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stoptime,
                                       int followerMsgFreq,int followerMsgPayload) {
 
 
         //changes the follower FREQUENCY to send messages to its supervisor in a higher or lower rate
-        //onView(withId(followerMsgFrequencyEditText)).perform(replaceText(String.valueOf(followerMsgFreq)));
+        onView(withId(followerMsgFrequencyEditText)).perform(replaceText(String.valueOf(followerMsgFreq)));
         //changes the follower PAYLOAD SIZE in bytes to send messages to its supervisor
-        //onView(withId(followerMsgPayloadEditText)).perform(replaceText(String.valueOf(followerMsgPayload)));
+        onView(withId(followerMsgPayloadEditText)).perform(replaceText(String.valueOf(followerMsgPayload)));
 
 
         // Make sure Espresso does not time out
@@ -180,8 +186,8 @@ public class TestLoadExperiment extends TestBase{
 
 
 
-        //onView(withId(startSensorButton)).perform(click());
-        //create a new group "control" and connect the supervisor to it
+        onView(withId(startSensorButton)).perform(click());
+        /*create a new group "control" and connect the supervisor to it
         try {
             mainActivity.getAppNode().connectAndWaitForActivation("control");
             mainActivity.getAppNode().connect("monitoring_1");
@@ -191,7 +197,7 @@ public class TestLoadExperiment extends TestBase{
             return;
         } catch (A3ChannelNotFoundException e) {
             e.printStackTrace();
-        }
+        }*/
 
 
 
@@ -211,37 +217,42 @@ public class TestLoadExperiment extends TestBase{
         //now we are sure that all the followers are in the control group and we can ask them to start sending packets to this supervisor
         // Start the experiment by pressing the start button
         Log.i(TAG, "Server: starting experiment");
-        //onView(withId(startExpertimentButton)).perform(click());
-
+        onView(withId(startExpertimentButton)).perform(click());
+/*
         if (mainActivity.getAppNode().isConnected("monitoring_1"))
             Log.i(TAG, "supervisor is connected to monitoring_1 group, sending message");
         try {
-            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S_" + followerMsgFreq + "_" + followerMsgPayload),
-                    "monitoring_1");
+            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + followerMsgFreq + "." + followerMsgPayload),
+                    "control");
         } catch (A3SupervisorNotElectedException e) {
             e.printStackTrace();
         }
         try {
-            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "monitoring_1");
+            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
         } catch (A3SupervisorNotElectedException e) {
             e.printStackTrace();
         }
-
+*/
         // Now we wait EXPERIMENT_TIME for the experiment to run
         Log.i(TAG, "Server: waiting for the experiment to run");
         waitFor(experimentTime);
 
-        // Check for the right role according to the device model
-        Log.i(TAG, "Supervisor: check the role");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(ROLE_OUTPUT)));
+
 
         // Stop the experiment by pressing the stop button
         Log.i(TAG, "Supervisor: stopping experiment");
         onView(withId(stopExpertimentButton)).perform(click());
-
+        waitFor(stoptime);
         // Now we wait STOP_TIME for the experiment to be terminated
-        waitFor(stopStime);
+        waitFor(experimentTime +stoptime* 2);
+
+        // Check for the right role according to the device model
+        Log.i(TAG, "Supervisor: check the role");
+        onView(withId(R.id.oneInEditText)).check(matches(withPat(ROLE_OUTPUT)));
+
+
+
+
 
         // Check for the start experiment output in the log
         Log.i(TAG, "Supervisor: check for experiment start");
@@ -266,9 +277,9 @@ public class TestLoadExperiment extends TestBase{
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
 
         //changes the follower FREQUENCY to send messages to its supervisor in a higher or lower rate
-        //onView(withId(followerMsgFrequencyEditText)).perform(replaceText(String.valueOf(followerMsgFreq)));
+        onView(withId(followerMsgFrequencyEditText)).perform(replaceText(String.valueOf(followerMsgFreq)));
         //changes the follower PAYLOAD SIZE in bytes to send messages to its supervisor
-       // onView(withId(followerMsgPayloadEditText)).perform(replaceText(String.valueOf(followerMsgPayload)));
+        onView(withId(followerMsgPayloadEditText)).perform(replaceText(String.valueOf(followerMsgPayload)));
 
         checkModel();
 
@@ -353,7 +364,11 @@ public class TestLoadExperiment extends TestBase{
                             //Log the results in each follower's sdCard
                             // logResult(System.currentTimeMillis() - groupInitializationStart);
                         Log.i(TAG, "Monitoring_1 is active Group Event");
+
+
+
                             break;
+
 
 
 
@@ -371,8 +386,12 @@ public class TestLoadExperiment extends TestBase{
         if (event.groupName.equals("control")){
             switch (event.eventType){
                 case AppConstants.START_EXPERIMENT:
-                    Log.i(TAG, event.groupName+" Start of experiment");
+                    Log.i(TAG, event.groupName+"test event: Start of Experiment");
+                    experimentRunning=true;
                     break;
+
+
+
 
             }
         }
