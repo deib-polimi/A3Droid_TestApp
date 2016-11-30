@@ -46,7 +46,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         sentCont = 0;
         avgRTT = 0;
         try {
-            if(node.isConnected("control") || node.waitForActivation("control"))
+            if(node.isConnected("control") && node.waitForActivation("control"))
                 node.sendToSupervisor(
                 new A3Message(AppConstants.JOINED, getGroupName() +
                     "_" + currentExperiment +
