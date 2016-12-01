@@ -221,7 +221,7 @@ public class ControlSupervisorRole extends SupervisorRole {
             Log.i(MainActivity.TAG, "###EXPERIMENT RESULTS###");
         Log.i(MainActivity.TAG, ((String)message.object).replace(".", ",") + "\n");
 
-        result = result + ((String)message.object).replace(".", ",") + "\n";
+        result =  ((String)message.object).replace(".", ",") + "\n";
         dataToWaitFor --;
 
         if(dataToWaitFor <= 0){

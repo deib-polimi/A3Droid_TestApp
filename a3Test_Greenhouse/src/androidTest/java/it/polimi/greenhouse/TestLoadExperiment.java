@@ -172,7 +172,6 @@ public class TestLoadExperiment extends TestBase{
 
         int counter = WAITING_COUNT;
         do{
-            //checkModel();
             //suspends the main thread of application, but not the Espresso thread
             waitFor(waitingTime);
         }while(--counter > 0 && !mainActivity.isTestGroupReady());
@@ -185,32 +184,12 @@ public class TestLoadExperiment extends TestBase{
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
 
-
+        //all the nodes have joint
+        //supervisor node starts to create  control and monitoring groups and becomes their supervisor
         onView(withId(startSensorButton)).perform(click());
-        /*create a new group "control" and connect the supervisor to it
-        try {
-            mainActivity.getAppNode().connectAndWaitForActivation("control");
-            mainActivity.getAppNode().connect("monitoring_1");
-
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        } catch (A3ChannelNotFoundException e) {
-            e.printStackTrace();
-        }*/
-
-
-
-        //groupInitializationStart = System.currentTimeMillis();
-       // Log.i(TAG, "GroupInitialization started at: " + groupInitializationStart);
-
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
         waitFor(startTime*5);
-
-        // Checks if this node has joint the group
-        //checkGroupAccession();
-
         //End of Group Initialization
         Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
 
@@ -218,40 +197,23 @@ public class TestLoadExperiment extends TestBase{
         // Start the experiment by pressing the start button
         Log.i(TAG, "Server: starting experiment");
         onView(withId(startExpertimentButton)).perform(click());
-/*
-        if (mainActivity.getAppNode().isConnected("monitoring_1"))
-            Log.i(TAG, "supervisor is connected to monitoring_1 group, sending message");
-        try {
-            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + followerMsgFreq + "." + followerMsgPayload),
-                    "control");
-        } catch (A3SupervisorNotElectedException e) {
-            e.printStackTrace();
-        }
-        try {
-            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
-        } catch (A3SupervisorNotElectedException e) {
-            e.printStackTrace();
-        }
-*/
+
         // Now we wait EXPERIMENT_TIME for the experiment to run
         Log.i(TAG, "Server: waiting for the experiment to run");
         waitFor(experimentTime);
 
 
 
-        // Stop the experiment by pressing the stop button
+        // Stop the experiment by pressing the stop button, supervisor broad cast to followers to send back their final results
         Log.i(TAG, "Supervisor: stopping experiment");
         onView(withId(stopExpertimentButton)).perform(click());
-        waitFor(stoptime);
+
         // Now we wait STOP_TIME for the experiment to be terminated
-        waitFor(experimentTime +stoptime* 2);
+        waitFor(stoptime*2);
 
         // Check for the right role according to the device model
         Log.i(TAG, "Supervisor: check the role");
         onView(withId(R.id.oneInEditText)).check(matches(withPat(ROLE_OUTPUT)));
-
-
-
 
 
         // Check for the start experiment output in the log
@@ -268,9 +230,7 @@ public class TestLoadExperiment extends TestBase{
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime,
                                     int followerMsgFreq, int followerMsgPayload) {
-        // Type text and then press the button.
-        //onView(withId(R.id.editText1))
-        // .perform(typeText(roleStringOutput), closeSoftKeyboard());
+
 
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
@@ -306,26 +266,13 @@ public class TestLoadExperiment extends TestBase{
         // Now we wait 1x START_TIME for the supervisor to start
         waitFor(startTime);
 
-        // We start the sensor by pressing the button
+        // We start the sensor by pressing the sensor button, then each follower starts to connect to
+        // the existing groups, in this case they are control and Monitoring_1 groups as a follower
         Log.i(TAG, "Follower: starting");
-        //onView(withId(startSensorButton)).perform(click());
-        try {
-            groupInitializationStart = System.currentTimeMillis();
-            mainActivity.getAppNode().connectAndWaitForActivation("control");
-            mainActivity.getAppNode().connect("monitoring_1");
+        onView(withId(startSensorButton)).perform(click());
 
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        } catch (A3ChannelNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        // Now we wait 1x START_TIME for this node to start as a follower
-        waitFor(startTime);
-
-        //wailt more sensors need to send message to supervisor
-        waitFor(experimentTime + stopTime * 2);
+        //wait for sensors to send message to supervisor and experiment to be completed
+        waitFor(experimentTime+ stopTime*2);
 
         // Checks if this node has joint the group
         checkGroupAccession();
@@ -346,9 +293,6 @@ public class TestLoadExperiment extends TestBase{
                             //Log the results in each follower's sdCard
                            // logResult(System.currentTimeMillis() - groupInitializationStart);
                     break;
-
-
-
                 default:
                     break;
             }
@@ -364,14 +308,7 @@ public class TestLoadExperiment extends TestBase{
                             //Log the results in each follower's sdCard
                             // logResult(System.currentTimeMillis() - groupInitializationStart);
                         Log.i(TAG, "Monitoring_1 is active Group Event");
-
-
-
                             break;
-
-
-
-
                 default:
                     break;
             }
@@ -389,10 +326,6 @@ public class TestLoadExperiment extends TestBase{
                     Log.i(TAG, event.groupName+"test event: Start of Experiment");
                     experimentRunning=true;
                     break;
-
-
-
-
             }
         }
     }

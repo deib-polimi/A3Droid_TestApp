@@ -90,7 +90,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			postUIEvent(0, "Server response received");
 			sentCont ++;			
 			rtt = StringTimeUtil.roundTripTime(date, StringTimeUtil.getTimestamp()) / 1000;
-            listRTT.add(rtt);
+            //listRTT.add(rtt);
 			avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
 			
 			if(rtt > TIMEOUT && experimentIsRunning){
