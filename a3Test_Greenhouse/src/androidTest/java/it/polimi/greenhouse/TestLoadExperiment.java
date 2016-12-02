@@ -110,7 +110,8 @@ public class TestLoadExperiment extends TestBase{
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL) && Build.SERIAL.equals(SUPERVISOR_SERIAL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)
+                )
 
             ROLE_OUTPUT = "CtrlSupRole";
         else
