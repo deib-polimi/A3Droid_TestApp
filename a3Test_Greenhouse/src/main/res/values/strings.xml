@@ -17,6 +17,7 @@
     <string name="start_server">Server</string>
     <string name="stop_experiment">Stop Experiment</string>
     <string name="group_id">Group ID</string>
+    <string name="split_num">Split Num</string>
     <string name="s_frequency">S. Frequency</string>
     <string name="a_frequency">A. Frequency</string>
     <string name="s_payload">S. Payload</string>

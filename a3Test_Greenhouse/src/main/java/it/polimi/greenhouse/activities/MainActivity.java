@@ -48,7 +48,7 @@ public class MainActivity extends A3DroidActivity {
 
     private A3Node appNode;
     protected TestControlNode testNode;
-    private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload;
+    private EditText inText, sensorsFrequency, actuatorsFrequency, sensorsPayload, actuatorsPayload,editTextSplitNumOfNodes;
     private HandlerThread fromGUIThread;
     private Handler toGuiHandler;
     private Handler fromGuiHandler;
@@ -241,7 +241,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_SPLIT:
                         try {
-                            appNode.split("monitoring_" + experiment.getText().toString(), 1);
+                            appNode.split("monitoring_" + experiment.getText().toString(), Integer.valueOf(editTextSplitNumOfNodes.getText().toString()));
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
@@ -292,6 +292,7 @@ public class MainActivity extends A3DroidActivity {
         sensorsPayload = (EditText) findViewById(R.id.editText4);
         actuatorsFrequency = (EditText) findViewById(R.id.editText3);
         actuatorsPayload = (EditText) findViewById(R.id.editText5);
+        editTextSplitNumOfNodes=(EditText) findViewById(R.id.editTextSplitNumber) ;
 
         Log.i(TAG, Build.MANUFACTURER);
         Log.i(TAG, Build.PRODUCT);
