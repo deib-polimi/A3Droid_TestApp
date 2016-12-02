@@ -1,5 +1,7 @@
 package it.polimi.greenhouse.a3.roles;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -10,6 +12,7 @@ import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
+import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.util.AppConstants;
 
 
@@ -59,7 +62,6 @@ public class ControlFollowerRole extends A3FollowerRole {
 			break;
 			
 		case AppConstants.START_EXPERIMENT:
-			postUIEvent(0, "wrong place to start experiment control follower role");
 
 		case AppConstants.LONG_RTT:		
 		case AppConstants.SET_PARAMS:
@@ -100,6 +102,12 @@ public class ControlFollowerRole extends A3FollowerRole {
 			launchedGroups.clear();
 			//showOnScreen("--- ESPERIMENTO TERMINATO ---");
 			break;
+
+			case  AppConstants.SUPERVISOR_LEFT:
+                postUIEvent(0, "Test new supervisor election: Supervisor left the group");
+                EventBus.getDefault().post(new TestEvent(AppConstants.SUPERVISOR_LEFT,"control",message));
+
+				break;
 			
 		default:
 			break;

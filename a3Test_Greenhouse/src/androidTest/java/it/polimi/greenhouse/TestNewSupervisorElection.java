@@ -6,6 +6,7 @@ package it.polimi.greenhouse;
 
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.support.test.espresso.IdlingPolicies;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
@@ -53,7 +55,7 @@ public class TestNewSupervisorElection extends TestBase{
 
     private final String TAG = "NewSupervisorElection";
 
-    private static final int DEVICES_NUMBER = 2;
+    private static final int DEVICES_NUMBER = 3;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -64,14 +66,19 @@ public class TestNewSupervisorElection extends TestBase{
 
     public final static String SUPERVISOR_MODEL = "Nexus 9";
     //public final static String SUPERVISOR_MODEL = "SM-P605";
-
     // public final static String SUPERVISOR_MODEL = "XT1052";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00795";
+
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
-    private long groupInitializationStart = 0;
+    private long supervisorDisconnectionStart = 0;
+    private long newSupervisorElectionEnd=0;
+    private long groupReactivationByNewSupervisor=0;
+    private int supervisorElectionCounter=0;
+
     private int jointNodes = 0;
 
     @Rule
@@ -100,7 +107,7 @@ public class TestNewSupervisorElection extends TestBase{
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -116,8 +123,10 @@ public class TestNewSupervisorElection extends TestBase{
         Log.i(TAG, "Starting the test: New Supervisor Election");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
-        mainActivity.createAppNode();
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        //mainActivity.createAppNode();
+
+
+        if(Build.MODEL.equals(SUPERVISOR_MODEL) && Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -162,23 +171,14 @@ public class TestNewSupervisorElection extends TestBase{
 
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
-        //onView(withId(startServerButton)).perform(click());
-        try {
-            mainActivity.getAppNode().connect("control");
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        }
 
-        try {
-            mainActivity.getAppNode().connect("monitoring_1");
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        }
 
-        groupInitializationStart = System.currentTimeMillis();
-        Log.i(TAG, "GroupInitialization started at: " + groupInitializationStart);
+        //all the nodes have joint test_control
+        //supervisor node starts to create  control and monitoring groups and becomes their supervisor
+        onView(withId(startSensorButton)).perform(click());
+
+       // groupInitializationStart = System.currentTimeMillis();
+       // Log.i(TAG, "GroupInitialization started at: " + groupInitializationStart);
 
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
@@ -188,19 +188,36 @@ public class TestNewSupervisorElection extends TestBase{
         //checkGroupAccession();
 
         //End of Group Initialization
-        Log.i(TAG, "First GroupInitialization ended at: " + System.currentTimeMillis() );
+        //Log.i(TAG, "First GroupInitialization ended at: " + System.currentTimeMillis() );
+
+        //at this moment all the followers should be joint to both control and monitoring group
+        //we disconnect the supervisor of monitoring group, and we measure the time that is required by the remaining nodes
+        // (n-1) to decide about their new supervisor of monitoring Group.
+        //Log.i(TAG, "Disconnect current Supervisor from group");
+        //supervisorDisconnectionStart=System.currentTimeMillis();
+        //Log.i(TAG, "AppNode Disconnected from Monitoring_1 at: "+supervisorDisconnectionStart);
+
+       // mainActivity.getAppNode().sendBroadcast(
+       //         new A3Message(AppConstants.SUPERVISOR_LEFT,String.valueOf(System.currentTimeMillis())),"control");
+
+       // EventBus.getDefault().post(new TestEvent(AppConstants.SUPERVISOR_LEFT,"control",String.valueOf(System.currentTimeMillis())));
 
 
-        Log.i(TAG, "Disconnect current Supervisor from group");
+
         try {
+            //Disconnect supervisor
             mainActivity.getAppNode().disconnect("monitoring_1");
+            //mainActivity.getAppNode().disconnect("control");
+            //record the time of begining
+
+            //now we have to look at application events to see when a new supervisor is elected
         } catch (A3ChannelNotFoundException e) {
             Log.i(TAG,e.getMessage());
             return;
         }
 
         //wait for another supervisor to be elected between other devices
-        waitFor(startTime*10);
+        waitFor(experimentTime+stopStime);
 
 
 
@@ -273,27 +290,20 @@ public class TestNewSupervisorElection extends TestBase{
 
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
-        // Now we wait 1x START_TIME for the supervisor to start
-        waitFor(startTime);
+        //waite for the supervisor device to push the sensor button first
+        waitFor(startTime*2);
 
         // We start the sensor by pressing the button
         Log.i(TAG, "Follower: starting");
-        //onView(withId(startSensorButton)).perform(click());
-        try {
-            groupInitializationStart = System.currentTimeMillis();
-            mainActivity.getAppNode().connect("control");
-            mainActivity.getAppNode().connect("monitoring_1");
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        }
+        onView(withId(startSensorButton)).perform(click());
+
 
         // Now we wait 1x START_TIME for this node to start as a follower
         waitFor(startTime);
 
 
         //wait for monitoring_1 supervisor disconnect to happen and a follower be replaced by old supervisor
-        waitFor(startTime*12);
+        waitFor(experimentTime*2);
 
         // Checks if this node has joint the group
         checkGroupAccession();
@@ -304,9 +314,9 @@ public class TestNewSupervisorElection extends TestBase{
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void handleGroupEvent(A3GroupEvent event) {
 
-        if(event.groupName.equals("control")) {
+       /* if(event.groupName.equals("control")) {
             switch (event.eventType) {
-                case GROUP_STATE_CHANGED:
+                ase GROUP_STATE_CHANGED:
                     if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE) {
                         Log.i(TAG, "Group " + event.groupName + " is Active!");
                     }
@@ -315,7 +325,8 @@ public class TestNewSupervisorElection extends TestBase{
                 case SUPERVISOR_ELECTED:
                      if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE)
                          if(!Build.MODEL.equals(SUPERVISOR_MODEL))
-                             logResult(System.currentTimeMillis() - groupInitializationStart);
+                             //time that a new supervisor is elected
+                            // logResult(System.currentTimeMillis() - groupInitializationStart);
                     break;
 
 
@@ -323,19 +334,31 @@ public class TestNewSupervisorElection extends TestBase{
                 default:
                     break;
             }
-        }
+        }   */
+
+        //since this event happens two times (first time is when we run the test, and the second happens after
+        //supervisor re-election), we ignor the first event and record the second one.
         if(event.groupName.equals("monitoring_1")) {
             switch (event.eventType) {
                 case GROUP_STATE_CHANGED:
-                    if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE) {
+                    //may be the same node gets elected as supervisor of monitoring group again
+                    if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE )
+
+                    {
                         Log.i(TAG, "Group " + event.groupName + " is Active!");
+                        newSupervisorElectionEnd= System.currentTimeMillis();
+                        Log.i(TAG, "Group " + event.groupName +" Re-Active in : "+ (newSupervisorElectionEnd- supervisorDisconnectionStart));
+
                     }
                     break;
 
-                case SUPERVISOR_ELECTED:
+                case SUPERVISOR_ELECTED://event when followers receive info about new elected supervisor
                     if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE)
-                        if(!Build.MODEL.equals(SUPERVISOR_MODEL))
-                            logResult(System.currentTimeMillis() - groupInitializationStart);
+                        //here we want to check the time at each follower which gets informed about its new supervisor
+                        // should we eliminate the supervisor itslef?
+                       // if(!Build.MODEL.equals(SUPERVISOR_MODEL)  && !Build.SERIAL.equals(SUPERVISOR_SERIAL))
+                           // logResult(System.currentTimeMillis() - groupInitializationStart);
+                        Log.i(TAG, "Group "+ event.groupName +" followers received info of Supervisor message "+System.currentTimeMillis());
                     break;
 
 
@@ -353,12 +376,19 @@ public class TestNewSupervisorElection extends TestBase{
             switch (event.eventType){
                 case AppConstants.NEW_SUPERVISOR_ELECTED:
                     Log.i(TAG, event.groupName+" new Supervisor Elected");
+                    break;
+                case AppConstants.SUPERVISOR_LEFT:
+                   // long followerMessageReceivedTime=Long.valueOf((String) event.object);
+                    Log.i(TAG, event.groupName+"Supervisor left: "+ event.object);
+                    break;
 
             }
+
+
         }else if(event.groupName.equals("monitoring_1")){
             switch (event.eventType){
                 case AppConstants.NEW_SUPERVISOR_ELECTED:
-                    Log.i(TAG, event.groupName+" new Supervisor Elected");
+                    Log.i(TAG, event.groupName+" new Supervisor Elected at Test Event subscription");
 
             }
 

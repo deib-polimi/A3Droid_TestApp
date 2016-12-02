@@ -100,8 +100,6 @@ public class MainActivity extends A3DroidActivity {
         fromGUIThread.start();
         fromGuiHandler = new Handler(fromGUIThread.getLooper()) {
 
-            it.polimi.deepse.a3droid.a3.A3Node nodeV2;
-
             @Override
             public void handleMessage(Message msg) {
 
@@ -115,7 +113,7 @@ public class MainActivity extends A3DroidActivity {
                     case AppConstants.STOP_EXPERIMENT_COMMAND:
                         if (experimentRunning) {
                             try {
-                                nodeV2.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
+                                appNode.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
                             } catch (A3SupervisorNotElectedException e) {
                                 e.printStackTrace();
                             }
@@ -126,22 +124,22 @@ public class MainActivity extends A3DroidActivity {
 
                         if (!experimentRunning) {
                             experimentRunning = true;
-                            if (nodeV2.isConnected("server_0"))
+                            if (appNode.isConnected("server_0"))
                                 try {
-                                    nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A." + actuatorsFrequency.getText().toString() + "." + actuatorsPayload.getText().toString()),
+                                    appNode.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "A." + actuatorsFrequency.getText().toString() + "." + actuatorsPayload.getText().toString()),
                                             "control");
                                 } catch (A3SupervisorNotElectedException e) {
                                     e.printStackTrace();
                                 }
-                            if (nodeV2.isConnected("monitoring_" + experiment.getText().toString()))
+                            if (appNode.isConnected("monitoring_" + experiment.getText().toString()))
                                 try {
-                                    nodeV2.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + sensorsFrequency.getText().toString() + "." + sensorsPayload.getText().toString()),
+                                    appNode.sendToSupervisor(new A3Message(AppConstants.SET_PARAMS_COMMAND, "S." + sensorsFrequency.getText().toString() + "." + sensorsPayload.getText().toString()),
                                             "control");
                                 } catch (A3SupervisorNotElectedException e) {
                                     e.printStackTrace();
                                 }
                             try {
-                                nodeV2.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
+                                appNode.sendToSupervisor(new A3Message(AppConstants.START_EXPERIMENT_USER_COMMAND, ""), "control");
                             } catch (A3SupervisorNotElectedException e) {
                                 e.printStackTrace();
                             }
@@ -161,12 +159,12 @@ public class MainActivity extends A3DroidActivity {
                         });
                         groupDescriptors.add(new ServerDescriptor());
 
-                        nodeV2 = ((A3Application) getApplication()).createNode(
+                        appNode = ((A3Application) getApplication()).createNode(
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connectAndWaitForActivation("control");
-                            nodeV2.connectAndWaitForActivation("monitoring_" + experiment.getText().toString());
+                            appNode.connectAndWaitForActivation("control");
+                            appNode.connectAndWaitForActivation("monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3ChannelNotFoundException e) {
@@ -185,12 +183,12 @@ public class MainActivity extends A3DroidActivity {
                         roles.add(ServerFollowerRole.class.getName());
                         groupDescriptors.add(new ActuatorsDescriptor());
                         groupDescriptors.add(new ServerDescriptor());
-                        nodeV2 = ((A3Application) getApplication()).createNode(
+                        appNode = ((A3Application) getApplication()).createNode(
                         groupDescriptors,
                         roles);
                         try {
-                            nodeV2.merge("control", "monitoring_" + experiment.getText().toString());
-                            nodeV2.connect("actuators_" + experiment.getText().toString());
+                            appNode.merge("control", "monitoring_" + experiment.getText().toString());
+                            appNode.connect("actuators_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException a3NoGroupDescriptionException) {
                             a3NoGroupDescriptionException.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
@@ -216,12 +214,12 @@ public class MainActivity extends A3DroidActivity {
                             }
 
                         });
-                        nodeV2 = ((A3Application) getApplication()).createNode(
+                        appNode = ((A3Application) getApplication()).createNode(
                                 groupDescriptors,
                                 roles);
                         try {
-                            nodeV2.connectAndWaitForActivation("control");
-                            nodeV2.connectAndWaitForActivation("server_0");
+                            appNode.connectAndWaitForActivation("control");
+                            appNode.connectAndWaitForActivation("server_0");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3ChannelNotFoundException e) {
@@ -230,7 +228,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_MERGE:
                         try {
-                            nodeV2.merge("monitoring_" + experiment.getText().toString(), "server_0");
+                            appNode.merge("monitoring_" + experiment.getText().toString(), "server_0");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
@@ -243,7 +241,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_SPLIT:
                         try {
-                            nodeV2.split("monitoring_" + experiment.getText().toString(), 1);
+                            appNode.split("monitoring_" + experiment.getText().toString(), 1);
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
@@ -256,7 +254,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_STACK:
                         try {
-                            nodeV2.stack("server_0", "monitoring_" + experiment.getText().toString());
+                            appNode.stack("server_0", "monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
@@ -269,7 +267,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_REVERSE_STACK:
                         try {
-                            nodeV2.reverseStack("server_0", "monitoring_" + experiment.getText().toString());
+                            appNode.reverseStack("server_0", "monitoring_" + experiment.getText().toString());
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
