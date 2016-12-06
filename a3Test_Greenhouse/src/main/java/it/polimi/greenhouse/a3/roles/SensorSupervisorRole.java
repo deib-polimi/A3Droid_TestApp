@@ -63,6 +63,11 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
     }
 
     @Override
+    public void onDeactivation() {
+        postUIEvent(0, "[" + getGroupName() + "_SupRole] deactivated");
+    }
+
+    @Override
     public void receiveApplicationMessage(A3Message message) {
 
         switch (message.reason) {
