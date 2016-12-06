@@ -48,10 +48,12 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         try {
             if(node.isConnected("control") && node.waitForActivation("control"))
                 node.sendToSupervisor(
-                new A3Message(AppConstants.JOINED, getGroupName() +
+                new A3Message(AppConstants.JOINED,
+                        getGroupName() +
                     "_" + currentExperiment +
                     "_" + node.getUID() +
-                    "_" + getChannelId()
+                    "_" + getChannelId()+
+                    "_" + System.currentTimeMillis()+"_"
                 ), "control"
             );
         } catch (A3SupervisorNotElectedException e) {

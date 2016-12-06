@@ -30,6 +30,7 @@ import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimit.greenhouse.R;
@@ -37,6 +38,7 @@ import it.polimit.greenhouse.R;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
@@ -47,7 +49,9 @@ public class TestGroupSplit extends TestBase{
     private final String TAG = "TestGroupSplit";
 
     private static final int DEVICES_NUMBER = 3;
+    private static final int NUMBER_DEVICES_TO_SPLIT=1;
     //private static final int DEVICES_TO
+
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -56,7 +60,11 @@ public class TestGroupSplit extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "SM-P605";
+    //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
+    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
+
+    //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
@@ -64,6 +72,8 @@ public class TestGroupSplit extends TestBase{
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
     private long groupInitializationStart = 0;
+    private long groupSplitStart=0;
+    private long lastFollowerJoin=0;
     private int jointNodes = 0;
 
     @Rule
@@ -88,11 +98,15 @@ public class TestGroupSplit extends TestBase{
         startSensorButton = R.id.button2;
         startExpertimentButton = R.id.button10;
         stopExpertimentButton = R.id.button9;
+        startSplitButton=R.id.button5;
+
+        splitNumberofNodesEditText=R.id.editTextSplitNumber;
+
     }
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL) && Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -105,16 +119,17 @@ public class TestGroupSplit extends TestBase{
 
     @Test
     public void testDevice(){
-        Log.i(TAG, "Starting the test GroupAccession");
+        Log.i(TAG, "Starting the test Group Split");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
         mainActivity.createAppNode();
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
                     DateUtils.SECOND_IN_MILLIS * EXPERIMENT_TIME,
-                    DateUtils.SECOND_IN_MILLIS * STOP_TIME);
+                    DateUtils.SECOND_IN_MILLIS * STOP_TIME,
+                    NUMBER_DEVICES_TO_SPLIT);
         else
             initFollowerAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
@@ -125,15 +140,19 @@ public class TestGroupSplit extends TestBase{
 
 
 
-    public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopStime) {
-        // Type text and then press the button.
-        //onView(withId(R.id.editText1))
-        //        .perform(typeText(roleStringOutput), closeSoftKeyboard());
+    public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime,
+                                      long startTime, long experimentTime, long stopStime, int numberDevicesToSplit) {
+
+
+        //changes the number of devices that should be departure from the original group to a secondary one
+        onView(withId(splitNumberofNodesEditText)).perform(replaceText(String.valueOf(numberDevicesToSplit)));
 
 
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
+
+
 
         checkModel();
 
@@ -154,32 +173,29 @@ public class TestGroupSplit extends TestBase{
 
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
-        //onView(withId(startSensorButton)).perform(click());
-        try {
-            mainActivity.getAppNode().connectAndWaitForActivation("control");
-            mainActivity.getAppNode().connect("monitoring_1");
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        } catch (A3ChannelNotFoundException e) {
-            Log.e(TAG, e.getMessage());;
-        }
 
-        groupInitializationStart = System.currentTimeMillis();
-        Log.i(TAG, "GroupInitialization started at: " + groupInitializationStart);
-
+        //all the nodes have joint
+        //supervisor node starts to create  control and monitoring groups and becomes their supervisor
+        onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*5);
-
-        // Checks if this node has joint the group
-        //checkGroupAccession();
-
+        waitFor(startTime*4);
         //End of Group Initialization
         Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
 
+        //now we are sure that all the followers are in the control group and we can ask them to start sending packets to this supervisor
+        // Start the experiment by pressing the start button
+        onView(withId(startSplitButton)).perform(click());
+        //groupSplitStart=System.currentTimeMillis();
+        EventBus.getDefault().post(new TestEvent(AppConstants.START_SPLIT,"control",System.currentTimeMillis()));
+        Log.i(TAG, "Splitting group into "+numberDevicesToSplit+" groups started");
 
-        Log.i(TAG,"Split Group Starting");
+        // Now we wait EXPERIMENT_TIME for the experiment to run
+        Log.i(TAG, "Server: waiting for the experiment to run");
+        waitFor(experimentTime);
+
+
+        Log.i(TAG,"Split Group Ended");
 
         /* Start the experiment by pressing the start button
         Log.i(TAG, "Server: starting experiment");
@@ -221,8 +237,8 @@ public class TestGroupSplit extends TestBase{
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime) {
         // Type text and then press the button.
-        //onView(withId(R.id.editText1))
-        // .perform(typeText(roleStringOutput), closeSoftKeyboard());
+        //changes the number of devices that should be departure from the original group to a secondary one
+        //onView(withId(splitNumberofNodesEditText)).perform(replaceText(String.valueOf(numberDevicesToSplit)));
 
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
@@ -251,24 +267,17 @@ public class TestGroupSplit extends TestBase{
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
         // Now we wait 1x START_TIME for the supervisor to start
-        waitFor(startTime);
+        waitFor(startTime*2);
 
         // We start the sensor by pressing the button
         Log.i(TAG, "Follower: starting");
-        //onView(withId(startSensorButton)).perform(click());
-        try {
-            groupInitializationStart = System.currentTimeMillis();
-            mainActivity.getAppNode().connectAndWaitForActivation("control");
-            mainActivity.getAppNode().connect("monitoring_1");
-        } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
-        } catch (A3ChannelNotFoundException e) {
-            e.printStackTrace();
-        }
+        onView(withId(startSensorButton)).perform(click());
 
         // Now we wait 1x START_TIME for this node to start as a follower
         waitFor(startTime);
+
+        //wait for monitoring_1 supervisor disconnect to happen and a follower be replaced by old supervisor
+        waitFor(experimentTime+stopTime);
 
         // Checks if this node has joint the group
         checkGroupAccession();
@@ -278,7 +287,6 @@ public class TestGroupSplit extends TestBase{
     // This method will be called when a MessageEvent is posted
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void handleGroupEvent(A3GroupEvent event) {
-
         if(event.groupName.equals("control")) {
             switch (event.eventType) {
                 case GROUP_STATE_CHANGED:
@@ -291,6 +299,25 @@ public class TestGroupSplit extends TestBase{
                     break;
 
                 default:
+                    break;
+            }
+        }
+    }
+
+    //TestEvent
+    @Subscribe (threadMode = ThreadMode.POSTING)
+    public void handleTestEvent(TestEvent event){
+        if (event.groupName.equals("control")) {
+            switch (event.eventType){
+                case AppConstants.START_SPLIT:
+                    groupSplitStart=(long) event.object;
+                    Log.i(TAG, event.groupName+" Split Group at: "+ event.object);
+                    break;
+                case AppConstants.JOINED:
+                    //lastFollowerJoin=(long) event.object;
+                    String[] message=event.object.toString().split("_");
+                    lastFollowerJoin=Long.valueOf(message[6]);
+                    Log.i(TAG,"group reshaped again after milliseconds: "+(lastFollowerJoin-groupSplitStart)+" node: "+message[4]);
                     break;
             }
         }

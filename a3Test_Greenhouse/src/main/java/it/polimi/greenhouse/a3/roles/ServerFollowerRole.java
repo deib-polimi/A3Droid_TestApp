@@ -1,8 +1,11 @@
 package it.polimi.greenhouse.a3.roles;
 
+import org.greenrobot.eventbus.EventBus;
+
 import it.polimi.deepse.a3droid.a3.A3FollowerRole;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
+import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.util.AppConstants;
 
 public class ServerFollowerRole extends A3FollowerRole {
@@ -18,6 +21,7 @@ public class ServerFollowerRole extends A3FollowerRole {
 		} catch (A3SupervisorNotElectedException e) {
 			e.printStackTrace();
 		}
+
 		postUIEvent(0, "[" + getGroupName() + "_FolRole]");
 	}
 	@Override

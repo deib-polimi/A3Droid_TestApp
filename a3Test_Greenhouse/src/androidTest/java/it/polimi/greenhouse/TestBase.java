@@ -12,6 +12,9 @@ import org.hamcrest.Matcher;
 
 import java.util.regex.Pattern;
 
+
+
+
 import it.polimi.greenhouse.activities.MainActivity;
 
 import static org.hamcrest.Matchers.is;
@@ -22,8 +25,12 @@ public abstract class TestBase {
     protected int startExpertimentButton;
     protected int stopExpertimentButton;
     protected int startSensorButton;
+    protected int startSplitButton;
+    protected int startMergeButton;
     protected int followerMsgFrequencyEditText;
     protected int followerMsgPayloadEditText;
+    protected int splitNumberofNodesEditText;
+    protected int groupIdEditText;
 
 
     public abstract void initialize();

@@ -60,12 +60,14 @@ public class ControlSupervisorRole extends SupervisorRole {
 
 		try {
 			switch(message.reason){
-
 				case AppConstants.JOINED:
+					//get what is given by the follower
+					EventBus.getDefault().post(new TestEvent(AppConstants.JOINED,"control",message));
 					message.reason = AppConstants.ADD_MEMBER;
 					message.object += "_" + message.senderAddress;
 					node.sendBroadcast(message, "control");
 					sendToConnectedSupervisors(message);
+
 					break;
 
 				case AppConstants.ADD_MEMBER:
@@ -85,7 +87,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 				case AppConstants.NEW_PHONE:
 					vmIds.add(message.object);
 					numberOfTrials = 1;
-					//showOnScreen("Telefoni connessi: " + vmIds.size());
+					//postUIEvent(0,"Telefoni connessi: " + vmIds.size());
 					break;
 
 				case AppConstants.SET_PARAMS_COMMAND:

@@ -46,14 +46,17 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		avgRTT = 0;
 		listRTT=new ArrayList<>();
 		try {
-			if(node.isConnected("control") && node.waitForActivation("control"))
-				node.sendToSupervisor(
-						new A3Message(AppConstants.JOINED, getGroupName() +
-								"_" + currentExperiment +
-								"_" + node.getUID() +
-								"_" + getChannelId()
-						), "control"
-				);
+			if(node.isConnected("control") && node.waitForActivation("control")) {
+                node.sendToSupervisor(
+                        new A3Message(AppConstants.JOINED,
+                                getGroupName() +
+                                        "_" + currentExperiment +
+                                        "_" + node.getUID() +
+                                        "_" + getChannelId() +
+                                        "_" + System.currentTimeMillis() + "_"
+                        ), "control"
+                );
+            }
 		} catch (A3SupervisorNotElectedException e) {
 			e.printStackTrace();
 		} catch (A3ChannelNotFoundException e) {

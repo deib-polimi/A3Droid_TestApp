@@ -228,7 +228,7 @@ public class MainActivity extends A3DroidActivity {
                         break;
                     case AppConstants.START_MERGE:
                         try {
-                            appNode.merge("monitoring_" + experiment.getText().toString(), "server_0");
+                            appNode.merge("monitoring_" + experiment.getText().toString(), "monitoring_2");
                         } catch (A3NoGroupDescriptionException e) {
                             e.printStackTrace();
                         } catch (A3InvalidOperationParameters a3InvalidOperationParameters) {
