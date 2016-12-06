@@ -66,6 +66,11 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	}
 
 	@Override
+	public void onDeactivation() {
+		postUIEvent(0, "[" + getGroupName() + "_FolRole] deactivated");
+	}
+
+	@Override
 	public void receiveApplicationMessage(A3Message message) {
 
 		double rtt;
