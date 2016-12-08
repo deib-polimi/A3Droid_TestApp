@@ -31,6 +31,7 @@ public abstract class TestBase {
     protected int followerMsgPayloadEditText;
     protected int splitNumberofNodesEditText;
     protected int groupIdEditText;
+    protected int inEditText;
 
 
     public abstract void initialize();

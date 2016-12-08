@@ -13,6 +13,11 @@ android {
         jackOptions {
             enabled false
         }
+
+       // dexOptions {
+          //  maxProcessCount 10 // 4 is the default value
+           // javaMaxHeapSize "3g"
+       // }
     }
 
 
@@ -51,15 +56,50 @@ dependencies {
     // Espresso-web for WebView support
     //androidTestCompile 'com.android.support.test.espresso:espresso-web:2.2.2'
     // Optional -- UI testing with UI Automator
-    androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.1'
+    androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
 
-
-
-
+    // Espresso-idling-resource for synchronization with background jobs
+    androidTestCompile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
 
 
 
 }
+
+//spoon test runner
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.stanfy.spoon:spoon-gradle-plugin:1.2.2'
+    }
+}
+
+apply plugin: 'spoon'
+
+// This section is optional
+spoon {
+    // for debug output
+    debug = false
+
+    // To run a single test class
+    className = 'it.polimi.greenhouse.TestGroupMerge'
+
+    // To run a single method in TestCase
+   // methodName = 'testMyApp'
+
+    // To execute the tests device by device */
+    sequential = false
+
+
+    // To grant permissions to Android M >= devices */
+    grantAllPermissions = true
+}
+
+
+
+
 
 
 

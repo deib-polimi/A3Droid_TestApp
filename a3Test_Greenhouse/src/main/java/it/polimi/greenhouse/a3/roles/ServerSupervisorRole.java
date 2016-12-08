@@ -60,6 +60,7 @@ public class ServerSupervisorRole extends SupervisorRole implements TimerInterfa
 			case AppConstants.MEMBER_ADDED:
 				resetCount();
 				break;
+
 				
 			case AppConstants.MEMBER_REMOVED:				
 				removeGroupMember(retrieveGroupMemberUuid(message.object));

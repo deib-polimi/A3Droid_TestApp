@@ -106,9 +106,11 @@ public class ControlSupervisorRole extends SupervisorRole {
 					break;
 
 				case AppConstants.START_EXPERIMENT_USER_COMMAND:
-
 					startExperiment(message);
 					break;
+				case AppConstants.START_MERGE:
+                    postUIEvent(0,"[-- Start of Group Merge --]");
+                    break;
 
 				case AppConstants.LONG_RTT:
 
@@ -158,7 +160,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 		if(experimentIsRunning)
 			return;
 
-		postUIEvent(0, "--- Start of Expriment " + numberOfTrials + "---");
+		postUIEvent(0, "--- Start of Experiment " + numberOfTrials + "---");
 
 		experimentIsRunning = true;
 		result = "";
@@ -235,7 +237,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 			}
 			Log.i(TAG,result);
 
-			postUIEvent(0,"--- End of Expriment with  " + numberOfTrials + " Trials  ---");
+
 			numberOfTrials ++;
         }
     }

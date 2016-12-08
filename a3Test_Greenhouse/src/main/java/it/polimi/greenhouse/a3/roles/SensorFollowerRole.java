@@ -157,6 +157,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 			}
 			break;
+
 			
 		default:
 			break;

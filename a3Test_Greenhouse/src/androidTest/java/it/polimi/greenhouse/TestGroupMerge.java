@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3Role;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
@@ -39,8 +40,13 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+
+
+import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
+
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -66,15 +72,16 @@ public class TestGroupMerge extends TestBase{
 
     //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
-    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
-    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
-    private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
-    private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
+    private final static String SPV_MRG_STARTED_OUTPUT =  "Start of Group Merge";
+    private final static String SPV_MRG_STOPPED_OUTPUT =  "End of Group Merge";
+    //private final static String FLW_MRG_STARTED_OUTPUT ="Merge has started";
+    //private final static String FLW_MRG_STOPPED_OUTPUT = "Merge has stopped";
 
-    private long groupInitializationStart = 0;
+
     private long groupMergeStart=0;
     private long lastFollowerJoin=0;
-    private int jointNodes = 0;
+    private int expectedNumberOfMergedFollowers=0;
+
 
 
     @Rule
@@ -95,13 +102,10 @@ public class TestGroupMerge extends TestBase{
     }
 
     public void initIds(){
-        startServerButton = R.id.button4;
         startSensorButton = R.id.button2;
-        startExpertimentButton = R.id.button10;
-        stopExpertimentButton = R.id.button9;
-        startMergeButton=R.id.button6;
-        //group ID edit text
-        groupIdEditText=R.id.editText1;
+        startMergeButton=R.id.button6;   //merge button
+        groupIdEditText=R.id.editText1;//group ID edit text
+        inEditText=R.id.oneInEditText;
     }
 
     public void initValidString() {
@@ -119,10 +123,10 @@ public class TestGroupMerge extends TestBase{
 
     @Test
     public void testDevice(){
-        Log.i(TAG, "Starting the test Group Merge");
+        Log.i(TAG, "Starting GroupMerge Test");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
-        mainActivity.createAppNode();
+        //mainActivity.createAppNode();
         if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
@@ -134,7 +138,8 @@ public class TestGroupMerge extends TestBase{
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
                     DateUtils.SECOND_IN_MILLIS * EXPERIMENT_TIME,
-                    DateUtils.SECOND_IN_MILLIS * STOP_TIME,SECONDARY_GROUP_ID);
+                    DateUtils.SECOND_IN_MILLIS * STOP_TIME,
+                    SECONDARY_GROUP_ID);
     }
 
 
@@ -153,7 +158,6 @@ public class TestGroupMerge extends TestBase{
 
         int counter = WAITING_COUNT;
         do{
-            //checkModel();
             //suspends the main thread of application, but not the Espresso thread
             waitFor(waitingTime);
         }while(--counter > 0 && !mainActivity.isTestGroupReady());
@@ -162,23 +166,21 @@ public class TestGroupMerge extends TestBase{
             Log.w(TAG, "Supervisor: counter reached 0, test cancelled");
             return;
         }
-
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
 
         //all the nodes have joint
-        //supervisor node starts to create  control and monitoring groups and becomes their supervisor
+        //supervisor node starts to create control and monitoring groups and becomes their supervisor
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
         waitFor(startTime*4);
-        //End of Group Initialization
-        Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
 
-        //now we are sure that all the followers are in the control group and we can ask them to start sending packets to this supervisor
-        // Start the experiment by pressing the start button
+
+        //now we are sure that all the followers are in the control group and monitoring_1 and monitoring_2 groups
+        //we can start to merge all the members of monitoring_2 to be the followers of monitoring_2 group
         onView(withId(startMergeButton)).perform(click());
-        //groupSplitStart=System.currentTimeMillis();
+        //an Event but to save the time that merge requested by control supervisor
         EventBus.getDefault().post(new TestEvent(AppConstants.START_MERGE,"control",System.currentTimeMillis()));
         Log.i(TAG, "Merging groups started");
 
@@ -186,46 +188,25 @@ public class TestGroupMerge extends TestBase{
         Log.i(TAG, "Server: waiting for the experiment to run");
         waitFor(experimentTime);
 
-
-        Log.i(TAG,"Merge Group Ended");
-
-        /* Start the experiment by pressing the start button
-        Log.i(TAG, "Server: starting experiment");
-        onView(withId(startExpertimentButton)).perform(click());
-
-        // Now we wait EXPERIMENT_TIME for the experiment to run
-        Log.i(TAG, "Server: waiting for the experiment to run");
-        waitFor(experimentTime);
+        //Now, the merge process should be ended, checking test results
 
         // Check for the right role according to the device model
-        Log.i(TAG, "Server: check the role");
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(ROLE_OUTPUT)));
 
-        // Stop the experiment by pressing the stop button
-        Log.i(TAG, "Server: stopping experiment");
-        onView(withId(stopExpertimentButton)).perform(click());
 
-        // Now we wait STOP_TIME for the experiment to be terminated
-        IdlingResource idlingResource4 = new ElapsedTimeIdlingResource(stopStime);
-        Espresso.registerIdlingResources(idlingResource4);
 
-        // Check for the start experiment output in the log
-        Log.i(TAG, "Server: check for experiment start");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STARTED_OUTPUT)));
 
-        // Check for the stop experiment output in the log
-        Log.i(TAG, "Server: check for experiment stop");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STOPPED_OUTPUT)));
 
-        */
+        //Check for the start merge output in the log
+        checkGroupMergeAccession();
 
-        // Clean up
-        // Espresso.unregisterIdlingResources(idlingResource3);
-        //Espresso.unregisterIdlingResources(idlingResource4);
+        checkGroupMergeEnd();
+
+
     }
+
+
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime,
                                     long experimentTime, long stopTime, int secondaryGroupId) {
@@ -269,12 +250,14 @@ public class TestGroupMerge extends TestBase{
         // Now we wait 1x START_TIME for this node to start as a follower
         waitFor(startTime);
 
-        //wait for monitoring_1 supervisor disconnect to happen and a follower be replaced by old supervisor
+        //wait for monitoring_1 supervisor merge to happen and this node merges to monitoring_1
         waitFor(experimentTime+stopTime);
 
-        // Checks if this node has joint the group
-        checkGroupAccession();
+        // Checks if this node has moved from monitoring_1 to monitoring_2
+         checkFollowerGroupMerge();
     }
+
+
 
 
     // This method will be called when a MessageEvent is posted
@@ -291,12 +274,21 @@ public class TestGroupMerge extends TestBase{
                 case AppConstants.START_MERGE:
                     groupMergeStart=(long) event.object;
                     Log.i(TAG, event.groupName+" merge Group start at: "+ event.object);
+                    expectedNumberOfMergedFollowers=DEVICES_NUMBER-1;
                     break;
                 case AppConstants.JOINED:
-                    //lastFollowerJoin=(long) event.object;
                     String[] message=event.object.toString().split("_");
-                    lastFollowerJoin=Long.valueOf(message[5]);
-                    Log.i(TAG,message[0]+"_"+message[1]+" group merge ended after milliseconds: "+(lastFollowerJoin-groupMergeStart)+" node: "+message[3]);
+                    String GroupID=message[1];
+                    if(GroupID.equals("1")) {
+                        lastFollowerJoin = Long.valueOf(message[5]);
+                        Log.i(TAG, message[0] + "_" + message[1] + " group merge ended after milliseconds: " + (lastFollowerJoin - groupMergeStart) + " node: " + message[3]);
+                        expectedNumberOfMergedFollowers--;
+                        if(expectedNumberOfMergedFollowers ==0){
+                            //this means all the expected followers have merged monitoring_1, write to CSV file
+                            logResult(lastFollowerJoin - groupMergeStart);
+                            EventBus.getDefault().post(new A3UIEvent(0, SPV_MRG_STOPPED_OUTPUT));
+                        }
+                    }
                     break;
             }
         }
@@ -307,7 +299,7 @@ public class TestGroupMerge extends TestBase{
     private void logResult(long result){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
-        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupAccessionTime_" + DEVICES_NUMBER + ".csv");
+        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupMergeTime_" + DEVICES_NUMBER + ".csv");
         try {
             FileWriter fw = new FileWriter(resultFile, true);
             BufferedWriter bw = new BufferedWriter(fw);
@@ -323,9 +315,16 @@ public class TestGroupMerge extends TestBase{
                 .check(matches(withPat(Build.MANUFACTURER)));
     }
 
-    private void checkGroupAccession(){
+    private void checkGroupMergeAccession(){
+        onView(withId(R.id.oneInEditText)).check(matches(withPat(SPV_MRG_STARTED_OUTPUT)));
+    }
 
-        onView(withId(R.id.oneInEditText)).check(matches(withPat("Ctrl")));
+    private void checkFollowerGroupMerge() {
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_FolRole")));
+    }
+
+    private void checkGroupMergeEnd() {
+        onView(withId(R.id.oneInEditText)).check(matches(withPat(SPV_MRG_STOPPED_OUTPUT)));
     }
 
 
