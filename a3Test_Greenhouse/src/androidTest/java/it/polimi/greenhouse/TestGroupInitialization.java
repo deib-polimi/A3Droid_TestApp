@@ -61,8 +61,11 @@ public class TestGroupInitialization extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 5;
     private static final int STOP_TIME = 40;
 
-    //public final static String SUPERVISOR_MODEL = "SM-P605";
-    public final static String SUPERVISOR_MODEL = "XT1052";
+   // public final static String SUPERVISOR_MODEL = "SM-P605";
+    //public final static String SUPERVISOR_MODEL = "XT1052";
+    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
+
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
@@ -96,7 +99,7 @@ public class TestGroupInitialization extends TestBase{
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -113,7 +116,7 @@ public class TestGroupInitialization extends TestBase{
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
         mainActivity.createAppNode();
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -124,9 +127,7 @@ public class TestGroupInitialization extends TestBase{
 
 
     public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopStime) {
-        // Type text and then press the button.
-        //onView(withId(R.id.editText1))
-        //        .perform(typeText(roleStringOutput), closeSoftKeyboard());
+
 
 
         // Make sure Espresso does not time out
@@ -185,6 +186,7 @@ public class TestGroupInitialization extends TestBase{
     }
 
     private void logResult(long result){
+        Log.i(TAG,"logResult: " +result);
         File resultFolder = Environment.getExternalStorageDirectory();
         File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupInitializationTime_" + DEVICES_NUMBER + ".csv");
         try {
