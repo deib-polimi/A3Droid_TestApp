@@ -36,4 +36,5 @@ public class AppConstants {
 	public static final int TEST_GROUP_READY = 80;
 	public static final int NEW_SUPERVISOR_ELECTED = 81;
 	public static final int SUPERVISOR_LEFT = 82;
+	public static final int FOLLOWER_ACCESSION=83;
 }

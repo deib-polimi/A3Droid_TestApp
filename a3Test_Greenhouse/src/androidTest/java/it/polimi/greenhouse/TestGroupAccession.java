@@ -27,8 +27,12 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
+import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
+import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
+import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimit.greenhouse.R;
@@ -39,13 +43,15 @@ import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
+//this test measures the time for each follower to join the group's supervisor
+//by increasing the number simultaneous joining followers from one to ten to study its impact
+
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 
 public class TestGroupAccession extends TestBase{
 
     private final String TAG = "TestGroupAccession";
-
     private static final int DEVICES_NUMBER = 3;
 
     private static String ROLE_OUTPUT;
@@ -55,15 +61,19 @@ public class TestGroupAccession extends TestBase{
     private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "SM-P605";
-   // public final static String SUPERVISOR_MODEL = "XT1052";
-    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
-    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
-    private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
-    private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
+    //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
+    // public final static String SUPERVISOR_MODEL = "XT1052";
+    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
+
+    private final static String FLW_GA_STARTED_OUTPUT =  "Start of Group Accession";
+    private final static String FLW_GA_STOPPED_OUTPUT = "End of Group Accession";
+    //private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
+    //private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
     private long groupInitializationStart = 0;
-    private int jointNodes = 0;
+    MainActivity mainActivity;
+
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(
@@ -83,15 +93,12 @@ public class TestGroupAccession extends TestBase{
     }
 
     public void initIds(){
-        startServerButton = R.id.button4;
         startSensorButton = R.id.button2;
-        startExpertimentButton = R.id.button10;
-        stopExpertimentButton = R.id.button9;
     }
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -104,11 +111,11 @@ public class TestGroupAccession extends TestBase{
 
     @Test
     public void testDevice(){
-        Log.i(TAG, "Starting the test GroupAccession");
+        Log.i(TAG, "Starting Group Accession Test");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
-        MainActivity mainActivity = mActivityRule.getActivity();
+        mainActivity = mActivityRule.getActivity();
         mainActivity.createAppNode();
-        if(Build.MODEL.equals(SUPERVISOR_MODEL))
+        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -125,9 +132,6 @@ public class TestGroupAccession extends TestBase{
 
 
     public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopStime) {
-        // Type text and then press the button.
-        //onView(withId(R.id.editText1))
-        //        .perform(typeText(roleStringOutput), closeSoftKeyboard());
 
 
         // Make sure Espresso does not time out
@@ -141,7 +145,6 @@ public class TestGroupAccession extends TestBase{
 
         int counter = WAITING_COUNT;
         do{
-            //checkModel();
             //suspends the main thread of application, but not the Espresso thread
             waitFor(waitingTime);
         }while(--counter > 0 && !mainActivity.isTestGroupReady());
@@ -150,10 +153,9 @@ public class TestGroupAccession extends TestBase{
             Log.w(TAG, "Supervisor: counter reached 0, test cancelled");
             return;
         }
-
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
-        //onView(withId(startSensorButton)).perform(click());
+        //Connect this node to Control group, this node would be the supervisor of Control group
         try {
             mainActivity.getAppNode().connect("control");
         } catch (A3NoGroupDescriptionException e) {
@@ -161,61 +163,17 @@ public class TestGroupAccession extends TestBase{
             return;
         }
 
-        groupInitializationStart = System.currentTimeMillis();
-        Log.i(TAG, "GroupInitialization started at: " + groupInitializationStart);
+
 
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
         waitFor(startTime*5);
 
-        // Checks if this node has joint the group
-        //checkGroupAccession();
-
-        //End of Group Initialization
-        Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
-
-        /* Start the experiment by pressing the start button
-        Log.i(TAG, "Server: starting experiment");
-        onView(withId(startExpertimentButton)).perform(click());
-
-        // Now we wait EXPERIMENT_TIME for the experiment to run
-        Log.i(TAG, "Server: waiting for the experiment to run");
-        waitFor(experimentTime);
-
-        // Check for the right role according to the device model
-        Log.i(TAG, "Server: check the role");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(ROLE_OUTPUT)));
-
-        // Stop the experiment by pressing the stop button
-        Log.i(TAG, "Server: stopping experiment");
-        onView(withId(stopExpertimentButton)).perform(click());
-
-        // Now we wait STOP_TIME for the experiment to be terminated
-        IdlingResource idlingResource4 = new ElapsedTimeIdlingResource(stopStime);
-        Espresso.registerIdlingResources(idlingResource4);
-
-        // Check for the start experiment output in the log
-        Log.i(TAG, "Server: check for experiment start");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STARTED_OUTPUT)));
-
-        // Check for the stop experiment output in the log
-        Log.i(TAG, "Server: check for experiment stop");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STOPPED_OUTPUT)));
-
-        */
-
-        // Clean up
-       // Espresso.unregisterIdlingResources(idlingResource3);
-        //Espresso.unregisterIdlingResources(idlingResource4);
+        //check if this node has became a supervisor
+        checkSuprvisorGroupAccession();
     }
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime) {
-        // Type text and then press the button.
-        //onView(withId(R.id.editText1))
-        // .perform(typeText(roleStringOutput), closeSoftKeyboard());
 
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
@@ -250,6 +208,8 @@ public class TestGroupAccession extends TestBase{
         Log.i(TAG, "Follower: starting");
         //onView(withId(startSensorButton)).perform(click());
         try {
+            EventBus.getDefault().post(new A3UIEvent(0, FLW_GA_STARTED_OUTPUT));
+            //we record the time when this follower starts to join the control group
             groupInitializationStart = System.currentTimeMillis();
             mainActivity.getAppNode().connect("control");
         } catch (A3NoGroupDescriptionException e) {
@@ -258,10 +218,10 @@ public class TestGroupAccession extends TestBase{
         }
 
         // Now we wait 1x START_TIME for this node to start as a follower
-        waitFor(startTime);
+        waitFor(startTime*3);
 
-        // Checks if this node has joint the group
-        checkGroupAccession();
+        // Checks if this node has became a follower
+        checkFollowerGroupAccession();
     }
 
 
@@ -273,8 +233,19 @@ public class TestGroupAccession extends TestBase{
             switch (event.eventType) {
                 case GROUP_STATE_CHANGED:
                     if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE)
-                        if(!Build.MODEL.equals(SUPERVISOR_MODEL))
-                            logResult(System.currentTimeMillis() - groupInitializationStart);
+                        if(!Build.SERIAL.equals(SUPERVISOR_SERIAL)) {
+                            //follower received the confirmation of Control supervisor about its membership to group
+                            //follower sends data to supervisor to be written in a CSV file at Supervisor
+                            EventBus.getDefault().post(new A3UIEvent(0, FLW_GA_STOPPED_OUTPUT));
+                            long result = System.currentTimeMillis() - groupInitializationStart;
+                            try {
+                                mainActivity.getAppNode().sendToSupervisor(
+                                        new A3Message(AppConstants.FOLLOWER_ACCESSION,String.valueOf(result))
+                                        ,"control");
+                            } catch (A3SupervisorNotElectedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     break;
 
                 case GROUP_JOINED:
@@ -286,6 +257,21 @@ public class TestGroupAccession extends TestBase{
         }
     }
 
+
+    @Subscribe(threadMode = ThreadMode.POSTING)
+    public void handleTestEvent(TestEvent event){
+        if(event.groupName.equals("control")){
+            switch (event.eventType){
+                case AppConstants.FOLLOWER_ACCESSION:
+                    //log the time that follower joined the control group to supervisor device
+                    logResult(Long.valueOf(event.object.toString()));
+                    break;
+            }
+
+        }
+    }
+
+//logs the test results on supervisor device
     private void logResult(long result){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
@@ -300,14 +286,22 @@ public class TestGroupAccession extends TestBase{
         }
     }
 
+
+
+
+
+
     private void checkModel(){
         onView(withId(R.id.oneInEditText))
                 .check(matches(withPat(Build.MANUFACTURER)));
     }
 
-    private void checkGroupAccession(){
+    private void checkSuprvisorGroupAccession(){
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlSupRole")));
+    }
 
-        onView(withId(R.id.oneInEditText)).check(matches(withPat("Ctrl")));
+    private void checkFollowerGroupAccession(){
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlFolRole")));
     }
 
 

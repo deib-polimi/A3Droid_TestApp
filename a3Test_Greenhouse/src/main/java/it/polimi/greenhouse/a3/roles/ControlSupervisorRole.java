@@ -118,7 +118,6 @@ public class ControlSupervisorRole extends SupervisorRole {
 					break;
 
 				case AppConstants.DATA:
-
 					receiveData(message);
 					break;
 
@@ -130,6 +129,9 @@ public class ControlSupervisorRole extends SupervisorRole {
 					String groupName = message.object;
 					EventBus.getDefault().post(new TestEvent(AppConstants.NEW_SUPERVISOR_ELECTED, groupName));
 					break;
+				case AppConstants.FOLLOWER_ACCESSION:
+					String followerAccetionTime=message.object;
+					EventBus.getDefault().post(new TestEvent(AppConstants.FOLLOWER_ACCESSION,"control",followerAccetionTime));
 
 				default:
 					break;

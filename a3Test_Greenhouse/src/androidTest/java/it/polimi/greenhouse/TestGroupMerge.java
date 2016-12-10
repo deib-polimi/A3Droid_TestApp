@@ -26,11 +26,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
-import it.polimi.deepse.a3droid.a3.A3Role;
+
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
-import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
-import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
@@ -40,13 +37,16 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.replaceText;
-import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
 
 import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 
+
+//this test measures the time for merging all the members of a source group to a destination group.
+// the result is time form the sending a request of the supervisor to the time that all members of the source group
+//join the destination group (this would be the worst case scenario)
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest

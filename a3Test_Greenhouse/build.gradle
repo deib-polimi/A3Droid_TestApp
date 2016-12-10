@@ -84,7 +84,7 @@ spoon {
     debug = false
 
     // To run a single test class
-    className = 'it.polimi.greenhouse.TestGroupMerge'
+    className = 'it.polimi.greenhouse.TestGroupAccession'
 
     // To run a single method in TestCase
    // methodName = 'testMyApp'
