@@ -11,6 +11,8 @@ import android.test.suitebuilder.annotation.LargeTest;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import junit.framework.AssertionFailedError;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -28,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
+import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.a3.events.TestEvent;
@@ -49,7 +52,7 @@ public class TestGroupSplit extends TestBase{
     private final String TAG = "TestGroupSplit";
 
     private static final int DEVICES_NUMBER = 3;
-    private static final int NUMBER_DEVICES_TO_SPLIT=1;
+    private static final int NUMBER_DEVICES_TO_SPLIT=2;
     //private static final int DEVICES_TO
 
 
@@ -90,8 +93,9 @@ public class TestGroupSplit extends TestBase{
 
     @After
     public void finalize(){
-        EventBus.getDefault().unregister(this);
+               EventBus.getDefault().unregister(this);
     }
+
 
     public void initIds(){
         startServerButton = R.id.button4;
@@ -161,8 +165,6 @@ public class TestGroupSplit extends TestBase{
 
         int counter = WAITING_COUNT;
         do{
-            //checkModel();
-            //suspends the main thread of application, but not the Espresso thread
             waitFor(waitingTime);
         }while(--counter > 0 && !mainActivity.isTestGroupReady());
 
@@ -174,19 +176,17 @@ public class TestGroupSplit extends TestBase{
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
 
-        //all the nodes have joint
+
         //supervisor node starts to create  control and monitoring groups and becomes their supervisor
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
         waitFor(startTime*4);
-        //End of Group Initialization
-        Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
 
-        //now we are sure that all the followers are in the control group and we can ask them to start sending packets to this supervisor
-        // Start the experiment by pressing the start button
+
+        //now we are sure that all the followers are in the control group and we can split the gorup
         onView(withId(startSplitButton)).perform(click());
-        //groupSplitStart=System.currentTimeMillis();
+
         EventBus.getDefault().post(new TestEvent(AppConstants.START_SPLIT,"control",System.currentTimeMillis()));
         Log.i(TAG, "Splitting group into "+numberDevicesToSplit+" groups started");
 
@@ -197,48 +197,21 @@ public class TestGroupSplit extends TestBase{
 
         Log.i(TAG,"Split Group Ended");
 
-        /* Start the experiment by pressing the start button
-        Log.i(TAG, "Server: starting experiment");
-        onView(withId(startExpertimentButton)).perform(click());
+        try {
+            checkPrimarySupGroup();
+            //test passed -> log result
+            Log.i(TAG, "After test, loging results:"+(lastFollowerJoin - groupSplitStart));
+            logResult(lastFollowerJoin - groupSplitStart);
 
-        // Now we wait EXPERIMENT_TIME for the experiment to run
-        Log.i(TAG, "Server: waiting for the experiment to run");
-        waitFor(experimentTime);
+        }catch (AssertionFailedError error){
+            //test failed
+            return;
+        }
 
-        // Check for the right role according to the device model
-        Log.i(TAG, "Server: check the role");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(ROLE_OUTPUT)));
 
-        // Stop the experiment by pressing the stop button
-        Log.i(TAG, "Server: stopping experiment");
-        onView(withId(stopExpertimentButton)).perform(click());
-
-        // Now we wait STOP_TIME for the experiment to be terminated
-        IdlingResource idlingResource4 = new ElapsedTimeIdlingResource(stopStime);
-        Espresso.registerIdlingResources(idlingResource4);
-
-        // Check for the start experiment output in the log
-        Log.i(TAG, "Server: check for experiment start");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STARTED_OUTPUT)));
-
-        // Check for the stop experiment output in the log
-        Log.i(TAG, "Server: check for experiment stop");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STOPPED_OUTPUT)));
-
-        */
-
-        // Clean up
-        // Espresso.unregisterIdlingResources(idlingResource3);
-        //Espresso.unregisterIdlingResources(idlingResource4);
     }
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime) {
-        // Type text and then press the button.
-        //changes the number of devices that should be departure from the original group to a secondary one
-        //onView(withId(splitNumberofNodesEditText)).perform(replaceText(String.valueOf(numberDevicesToSplit)));
 
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
@@ -277,31 +250,17 @@ public class TestGroupSplit extends TestBase{
         waitFor(startTime);
 
         //wait for monitoring_1 supervisor disconnect to happen and a follower be replaced by old supervisor
-        waitFor(experimentTime+stopTime);
+        waitFor(experimentTime);
 
         // Checks if this node has joint the group
-        checkGroupAccession();
+        checkGroupSplit();
     }
 
 
     // This method will be called when a MessageEvent is posted
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void handleGroupEvent(A3GroupEvent event) {
-        if(event.groupName.equals("control")) {
-            switch (event.eventType) {
-                case GROUP_STATE_CHANGED:
-                    if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE)
-                        if(!Build.MODEL.equals(SUPERVISOR_MODEL))
-                            logResult(System.currentTimeMillis() - groupInitializationStart);
-                    break;
 
-                case GROUP_JOINED:
-                    break;
-
-                default:
-                    break;
-            }
-        }
     }
 
     //TestEvent
@@ -316,8 +275,12 @@ public class TestGroupSplit extends TestBase{
                 case AppConstants.JOINED:
                     //lastFollowerJoin=(long) event.object;
                     String[] message=event.object.toString().split("_");
-                    lastFollowerJoin=Long.valueOf(message[6]);
-                    Log.i(TAG,"group reshaped again after milliseconds: "+(lastFollowerJoin-groupSplitStart)+" node: "+message[4]);
+                    if(("monitoring_"+message[1]+"_"+message[2]+"_"+message[3]).equals("monitoring_1_1_1")) {
+                        lastFollowerJoin = System.currentTimeMillis();
+                        EventBus.getDefault().post(new A3UIEvent(0,"monitoring_1_1_"+message[7]+"_Arrived"));
+                        Log.i(TAG, "group reshaped again after milliseconds: " + (lastFollowerJoin - groupSplitStart) +
+                                " node: " + message[4]+" Role: "+message[7]);
+                    }
                     break;
             }
         }
@@ -326,7 +289,7 @@ public class TestGroupSplit extends TestBase{
     private void logResult(long result){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
-        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupAccessionTime_" + DEVICES_NUMBER + ".csv");
+        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupSplitTime_" + DEVICES_NUMBER + ".csv");
         try {
             FileWriter fw = new FileWriter(resultFile, true);
             BufferedWriter bw = new BufferedWriter(fw);
@@ -342,10 +305,17 @@ public class TestGroupSplit extends TestBase{
                 .check(matches(withPat(Build.MANUFACTURER)));
     }
 
-    private void checkGroupAccession(){
-
-        onView(withId(R.id.oneInEditText)).check(matches(withPat("Ctrl")));
+    private void checkPrimarySupGroup(){
+            onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlSupRole")));
+            onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_SupRole")));
+            onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_1_SupRole")));
+        if(NUMBER_DEVICES_TO_SPLIT>=2)
+            onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_1_FolRole")));
     }
 
-
+    private void checkGroupSplit(){
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlFolRole")));
+        //onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_FolRole] deactivated")));
+        //onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_1")));
+    }
 }

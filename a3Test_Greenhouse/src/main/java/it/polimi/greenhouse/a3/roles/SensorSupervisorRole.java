@@ -53,7 +53,8 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                     "_" + currentExperiment +
                     "_" + node.getUID() +
                     "_" + getChannelId()+
-                    "_" + System.currentTimeMillis()+"_"
+                    "_" + System.currentTimeMillis()+
+                    "_" + "SupRole"
                 ), "control"
             );
         } catch (A3SupervisorNotElectedException e) {

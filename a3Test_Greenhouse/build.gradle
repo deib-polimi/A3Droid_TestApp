@@ -84,7 +84,7 @@ spoon {
     debug = false
 
     // To run a single test class
-    className = 'it.polimi.greenhouse.TestGroupInitialization'
+    className = 'it.polimi.greenhouse.TestGroupSplit'
 
     // To run a single method in TestCase
    // methodName = 'testMyApp'

@@ -49,11 +49,12 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			if(node.isConnected("control") && node.waitForActivation("control")) {
                 node.sendToSupervisor(
                         new A3Message(AppConstants.JOINED,
-                                getGroupName() +
+								        getGroupName() +
                                         "_" + currentExperiment +
                                         "_" + node.getUID() +
                                         "_" + getChannelId() +
-                                        "_" + System.currentTimeMillis() + "_"
+                                        "_" + System.currentTimeMillis() + // shouldn't be here, clocks are different
+                                        "_" + "FolRole"
                         ), "control"
                 );
             }
@@ -67,6 +68,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	@Override
 	public void onDeactivation() {
+
 		postUIEvent(0, "[" + getGroupName() + "_FolRole] deactivated");
 	}
 
