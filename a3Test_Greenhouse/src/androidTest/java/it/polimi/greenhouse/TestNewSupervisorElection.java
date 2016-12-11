@@ -406,7 +406,7 @@ public class TestNewSupervisorElection extends TestBase{
                 case AppConstants.JOINED:
                     //lastFollowerJoin=(long) event.object;
                     String[] message=event.object.toString().split("_");
-                    lastFollowerJoin=Long.valueOf(message[5]);
+                    lastFollowerJoin=System.currentTimeMillis();//Long.valueOf(message[5]);
                     Log.i(TAG,"group reshaped again after milliseconds: "+(lastFollowerJoin-supervisorDisconnectionStart)+" node: "+
                             message[3]);
                     //Log.i(TAG,"this should be " +event.object.toString());

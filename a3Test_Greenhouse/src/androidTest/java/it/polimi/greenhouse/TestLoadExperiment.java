@@ -68,14 +68,17 @@ public class TestLoadExperiment extends TestBase{
     private static final int STOP_TIME = 40;
 //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
     public final static String SUPERVISOR_MODEL = "Nexus 9";
-    public final static String SUPERVISOR_SERIAL= "HT4BBJT00795";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
     //public final static String SUPERVISOR_MODEL = "OnePlus3";
     //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
-    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
-    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
+    private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Experiment";
+    private final static String SPV_EXP_STOPPED_OUTPUT = "End of Experiment";
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
+
+    private volatile int  dataToWaitFor;
+    private volatile String result;
 
     private long groupInitializationStart = 0;
     private int jointNodes = 0;
@@ -160,6 +163,9 @@ public class TestLoadExperiment extends TestBase{
         onView(withId(followerMsgFrequencyEditText)).perform(replaceText(String.valueOf(followerMsgFreq)));
         //changes the follower PAYLOAD SIZE in bytes to send messages to its supervisor
         onView(withId(followerMsgPayloadEditText)).perform(replaceText(String.valueOf(followerMsgPayload)));
+        //waiting for X number of followers to send their RTT
+        dataToWaitFor=DEVICES_NUMBER;
+        result="";
 
 
         // Make sure Espresso does not time out
@@ -201,7 +207,7 @@ public class TestLoadExperiment extends TestBase{
 
         // Now we wait EXPERIMENT_TIME for the experiment to run
         Log.i(TAG, "Server: waiting for the experiment to run");
-        waitFor(experimentTime);
+        waitFor(experimentTime-(1/2*experimentTime));
 
 
 
@@ -219,15 +225,13 @@ public class TestLoadExperiment extends TestBase{
 
         // Check for the start experiment output in the log
         Log.i(TAG, "Supervisor: check for experiment start");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STARTED_OUTPUT)));
+        checkSuperExperimentStarted();
+        checkSuperExperimentStopped();
 
-        // Check for the stop experiment output in the log
-        Log.i(TAG, "Supervisor: check for experiment stop");
-        onView(withId(R.id.oneInEditText))
-                .check(matches(withPat(SPV_EXP_STOPPED_OUTPUT)));
 
     }
+
+
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime,
                                     int followerMsgFreq, int followerMsgPayload) {
@@ -265,7 +269,7 @@ public class TestLoadExperiment extends TestBase{
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
         // Now we wait 1x START_TIME for the supervisor to start
-        waitFor(startTime);
+        waitFor(startTime*2);
 
         // We start the sensor by pressing the sensor button, then each follower starts to connect to
         // the existing groups, in this case they are control and Monitoring_1 groups as a follower
@@ -276,7 +280,8 @@ public class TestLoadExperiment extends TestBase{
         waitFor(experimentTime+ stopTime*2);
 
         // Checks if this node has joint the group
-        checkGroupAccession();
+        checkFollowerAccession();
+        checkFollowerSendRTTtoSupervisor();
     }
 
 
@@ -284,58 +289,46 @@ public class TestLoadExperiment extends TestBase{
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void handleGroupEvent(A3GroupEvent event) {
 
-        if(event.groupName.equals("control")) {
-            switch (event.eventType) {
-                case GROUP_STATE_CHANGED:
-                    if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE)
-                        if(!Build.MODEL.equals(SUPERVISOR_MODEL))
-                            //this means on of the followers has became the new supervisor of control group
-                                //Each follower receives this event, telling it that the group is active again
-                            //Log the results in each follower's sdCard
-                           // logResult(System.currentTimeMillis() - groupInitializationStart);
-                    break;
-                default:
-                    break;
-            }
-        }
 
-        if(event.groupName.equals("monitoring_1")) {
-            switch (event.eventType) {
-                case GROUP_STATE_CHANGED:
-                    if(event.object == A3GroupDescriptor.A3GroupState.ACTIVE)
-                        if(!Build.MODEL.equals(SUPERVISOR_MODEL))
-                            //this means on of the followers has became the new supervisor of control group
-                            //Each follower receives this event, telling it that the group is active again
-                            //Log the results in each follower's sdCard
-                            // logResult(System.currentTimeMillis() - groupInitializationStart);
-                        Log.i(TAG, "Monitoring_1 is active Group Event");
-                            break;
-                default:
-                    break;
-            }
-        }
+
 
 
 
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING)
-    public void handleGroupEvent(TestEvent event) {
+    public void handleTestEvent(TestEvent event) {
         if (event.groupName.equals("control")){
             switch (event.eventType){
                 case AppConstants.START_EXPERIMENT:
                     Log.i(TAG, event.groupName+"test event: Start of Experiment");
                     experimentRunning=true;
                     break;
+                case AppConstants.DATA:
+                    //average RTT from follower received log the results to supervisor
+
+                    dataToWaitFor--;
+                    parsMessage(event.object);
+                    if(dataToWaitFor ==0) {
+                        Log.i(TAG,"dataToWaitFor: "+dataToWaitFor);
+                        //write to csv file
+                        logResult(result);
+                    }
+                    break;
             }
         }
     }
 
+    private void parsMessage(Object object) {
+         String objectValue[] =  String.valueOf(object).split("\t");
+         result+=objectValue[0]+","+objectValue[1]+","+objectValue[2]+","+objectValue[3]+","+objectValue[4].split(" ")[0]+"\n";
+    }
 
-    private void logResult(long result){
+
+    private void logResult(String result){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
-        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupAccessionTime_" + DEVICES_NUMBER + ".csv");
+        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupLoadExperiment_" + DEVICES_NUMBER + ".csv");
         try {
             FileWriter fw = new FileWriter(resultFile, true);
             BufferedWriter bw = new BufferedWriter(fw);
@@ -353,9 +346,23 @@ public class TestLoadExperiment extends TestBase{
                 .check(matches(withPat(Build.MANUFACTURER)));
     }
 
-    private void checkGroupAccession(){
+    private void checkFollowerAccession(){
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlFolRole")));
+    }
+    private void checkFollowerSendRTTtoSupervisor(){
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("Average RTT of follower sent to Control supervisor")));
+    }
 
-        onView(withId(R.id.oneInEditText)).check(matches(withPat("Ctrl")));
+    private void checkSuperExperimentStopped() {
+
+       // onView(withId(R.id.oneInEditText)).check(matches(withPat(SPV_EXP_STOPPED_OUTPUT)));
+    }
+
+    private void checkSuperExperimentStarted() {
+        onView(withId(R.id.oneInEditText))
+                .check(matches(withPat(SPV_EXP_STARTED_OUTPUT)));
+
+
     }
 
 

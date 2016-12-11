@@ -113,12 +113,13 @@ public class ControlSupervisorRole extends SupervisorRole {
                     break;
 
 				case AppConstants.LONG_RTT:
-
 					stopExperiment(message);
 					break;
 
 				case AppConstants.DATA:
-					receiveData(message);
+					//send loadTesting results to test
+                    EventBus.getDefault().post(new TestEvent(AppConstants.DATA,"control",message));
+					//receiveData(message);
 					break;
 
 				case AppConstants.STOP_EXPERIMENT:

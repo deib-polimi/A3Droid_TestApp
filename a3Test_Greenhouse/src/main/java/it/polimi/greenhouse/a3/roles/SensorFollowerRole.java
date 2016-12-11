@@ -149,6 +149,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
                 }
 */
 				try {
+
 					node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower:"+ "\t" + sentCont + "\t" +
                             (runningTime) + "\t" + frequency + "\t" + avgRTT), "control");
 					postUIEvent(0, "Average RTT of follower sent to Control supervisor");
