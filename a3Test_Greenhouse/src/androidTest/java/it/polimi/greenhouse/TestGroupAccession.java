@@ -52,7 +52,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 public class TestGroupAccession extends TestBase{
 
     private final String TAG = "TestGroupAccession";
-    private static final int DEVICES_NUMBER = 3;
+    private static final int DEVICES_NUMBER = 6;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -72,6 +72,8 @@ public class TestGroupAccession extends TestBase{
     //private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
     private long groupInitializationStart = 0;
+    private volatile int expectedNumberofFolArrivals;
+    private volatile String result;
     MainActivity mainActivity;
 
 
@@ -137,6 +139,8 @@ public class TestGroupAccession extends TestBase{
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
+        expectedNumberofFolArrivals=DEVICES_NUMBER-1;
+        result="";
 
         checkModel();
 
@@ -167,7 +171,7 @@ public class TestGroupAccession extends TestBase{
 
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*5);
+        waitFor(startTime*6);
 
         //check if this node has became a supervisor
         checkSuprvisorGroupAccession();
@@ -218,7 +222,7 @@ public class TestGroupAccession extends TestBase{
         }
 
         // Now we wait 1x START_TIME for this node to start as a follower
-        waitFor(startTime*3);
+        waitFor(startTime*5);
 
         // Checks if this node has became a follower
         checkFollowerGroupAccession();
@@ -263,8 +267,13 @@ public class TestGroupAccession extends TestBase{
         if(event.groupName.equals("control")){
             switch (event.eventType){
                 case AppConstants.FOLLOWER_ACCESSION:
-                    //log the time that follower joined the control group to supervisor device
-                    logResult(Long.valueOf(event.object.toString()));
+                    expectedNumberofFolArrivals--;
+                    result+=event.object.toString()+"\n";
+                    if(expectedNumberofFolArrivals == 0 && !result.equals("")) {
+                        //log the time that follower joined the control group
+                        EventBus.getDefault().post(new A3UIEvent(0,"All Expected Fols arrived"));
+                        logResult();
+                    }
                     break;
             }
 
@@ -272,7 +281,7 @@ public class TestGroupAccession extends TestBase{
     }
 
 //logs the test results on supervisor device
-    private void logResult(long result){
+    private void logResult(){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
         File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupAccessionTime_" + DEVICES_NUMBER + ".csv");
@@ -298,6 +307,7 @@ public class TestGroupAccession extends TestBase{
 
     private void checkSuprvisorGroupAccession(){
         onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlSupRole")));
+        onView(withId(R.id.oneInEditText)).check(matches(withPat("All Expected Fols arrived")));
     }
 
     private void checkFollowerGroupAccession(){
