@@ -59,7 +59,7 @@ public class TestNewSupervisorElection extends TestBase{
 
     private final String TAG = "NewSupervisorElection";
 
-    private static final int DEVICES_NUMBER = 3;
+    private static final int DEVICES_NUMBER =6;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
