@@ -10,8 +10,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.support.test.espresso.IdlingPolicies;
 import android.support.test.rule.ActivityTestRule;
-import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.LargeTest;
 import android.text.format.DateUtils;
 import android.util.Log;
 
@@ -22,7 +20,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,13 +27,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
-import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
-import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
-import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.a3.events.TestEvent;
-import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimit.greenhouse.R;
@@ -63,11 +55,9 @@ public class TestLoadExperiment extends TestBase{
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
-    private static final int START_TIME = 10;
+    private static final int START_TIME = 20;
     private static final int EXPERIMENT_TIME = 60 * 2;
-    private static final int STOP_TIME = 40;
-//// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
-    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    private static final int STOP_TIME = 20;
     public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
     //public final static String SUPERVISOR_MODEL = "OnePlus3";
     //public final static String SUPERVISOR_MODEL = "SM-P605";
@@ -83,6 +73,7 @@ public class TestLoadExperiment extends TestBase{
     private long groupInitializationStart = 0;
     private int jointNodes = 0;
     private boolean experimentRunning = false;
+    private boolean allMessagesProcessed = false;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(
@@ -112,10 +103,7 @@ public class TestLoadExperiment extends TestBase{
     }
 
     public void initValidString() {
-        // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL)
-                )
-
+        if(Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -134,7 +122,7 @@ public class TestLoadExperiment extends TestBase{
         mainActivity.createAppNode();
         
          
-        if(Build.MODEL.equals(SUPERVISOR_MODEL)  && Build.SERIAL.equals(SUPERVISOR_SERIAL))
+        if(Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -155,7 +143,7 @@ public class TestLoadExperiment extends TestBase{
 
 
 
-    public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stoptime,
+    public void initSupervisorAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime,
                                       int followerMsgFreq,int followerMsgPayload) {
 
 
@@ -164,7 +152,7 @@ public class TestLoadExperiment extends TestBase{
         //changes the follower PAYLOAD SIZE in bytes to send messages to its supervisor
         onView(withId(followerMsgPayloadEditText)).perform(replaceText(String.valueOf(followerMsgPayload)));
         //waiting for X number of followers to send their RTT
-        dataToWaitFor=DEVICES_NUMBER;
+        dataToWaitFor=DEVICES_NUMBER - 1;
         result="";
 
 
@@ -196,9 +184,9 @@ public class TestLoadExperiment extends TestBase{
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*5);
+        waitFor(startTime);
         //End of Group Initialization
-        Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis() );
+        Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis());
 
         //now we are sure that all the followers are in the control group and we can ask them to start sending packets to this supervisor
         // Start the experiment by pressing the start button
@@ -207,16 +195,16 @@ public class TestLoadExperiment extends TestBase{
 
         // Now we wait EXPERIMENT_TIME for the experiment to run
         Log.i(TAG, "Server: waiting for the experiment to run");
-        waitFor(experimentTime-(1/2*experimentTime));
-
-
+        waitFor(experimentTime);
 
         // Stop the experiment by pressing the stop button, supervisor broad cast to followers to send back their final results
         Log.i(TAG, "Supervisor: stopping experiment");
         onView(withId(stopExpertimentButton)).perform(click());
 
+        waitForAllMessages();
+
         // Now we wait STOP_TIME for the experiment to be terminated
-        waitFor(stoptime*2);
+        waitFor(stopTime);
 
         // Check for the right role according to the device model
         Log.i(TAG, "Supervisor: check the role");
@@ -227,11 +215,7 @@ public class TestLoadExperiment extends TestBase{
         Log.i(TAG, "Supervisor: check for experiment start");
         checkSuperExperimentStarted();
         checkSuperExperimentStopped();
-
-
     }
-
-
 
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime, long experimentTime, long stopTime,
                                     int followerMsgFreq, int followerMsgPayload) {
@@ -269,7 +253,7 @@ public class TestLoadExperiment extends TestBase{
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
         // Now we wait 1x START_TIME for the supervisor to start
-        waitFor(startTime*2);
+        waitFor(startTime);
 
         // We start the sensor by pressing the sensor button, then each follower starts to connect to
         // the existing groups, in this case they are control and Monitoring_1 groups as a follower
@@ -277,23 +261,27 @@ public class TestLoadExperiment extends TestBase{
         onView(withId(startSensorButton)).perform(click());
 
         //wait for sensors to send message to supervisor and experiment to be completed
-        waitFor(experimentTime+ stopTime*2);
+        waitFor(experimentTime);
+
+        waitForAllMessages();
+
+        // Now we wait STOP_TIME for the experiment to be terminated
+        waitFor(stopTime);
 
         // Checks if this node has joint the group
         checkFollowerAccession();
         checkFollowerSendRTTtoSupervisor();
     }
 
+    private void waitForAllMessages() {
+        while (!allMessagesProcessed){
+            waitFor(DateUtils.SECOND_IN_MILLIS * 5);
+        }
+    }
 
     // This method will be called when a MessageEvent is posted
     @Subscribe(threadMode = ThreadMode.POSTING)
     public void handleGroupEvent(A3GroupEvent event) {
-
-
-
-
-
-
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING)
@@ -306,20 +294,25 @@ public class TestLoadExperiment extends TestBase{
                     break;
                 case AppConstants.DATA:
                     //average RTT from follower received log the results to supervisor
-
                     dataToWaitFor--;
-                    parsMessage(event.object);
-                    if(dataToWaitFor ==0) {
+                    parseMessage(event.object);
+                    if(dataToWaitFor == 0) {
                         Log.i(TAG,"dataToWaitFor: "+dataToWaitFor);
                         //write to csv file
                         logResult(result);
                     }
                     break;
+                case AppConstants.ALL_MESSAGES_RECEIVED:
+                case AppConstants.ALL_MESSAGES_REPLIED:
+                    allMessagesProcessed = true;
+                    break;
+                default:
+                    break;
             }
         }
     }
 
-    private void parsMessage(Object object) {
+    private void parseMessage(Object object) {
          String objectValue[] =  String.valueOf(object).split("\t");
          result+=objectValue[0]+","+objectValue[1]+","+objectValue[2]+","+objectValue[3]+","+objectValue[4].split(" ")[0]+"\n";
     }

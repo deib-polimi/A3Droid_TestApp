@@ -2,27 +2,26 @@ package it.polimi.greenhouse.a3.roles;
 
 import android.util.Log;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.A3SupervisorRole;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
-import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
-import it.polimi.deepse.a3droid.pattern.Timer;
-import it.polimi.deepse.a3droid.pattern.TimerInterface;
+import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
-import it.polimi.greenhouse.util.StringTimeUtil;
 
-public class SensorSupervisorRole extends A3SupervisorRole implements TimerInterface {
+public class SensorSupervisorRole extends A3SupervisorRole{
 
     private boolean startExperiment;
     private boolean experimentIsRunning;
     private boolean paramsSet = false;
     private int currentExperiment;
-    private int sentCont;
+    private int receivedCont, repliedCount;
     private double avgRTT;
     private byte sPayLoad[];
     private String startTimestamp;
@@ -43,7 +42,7 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         startExperiment = true;
         listRTT=new ArrayList<>();
         experimentIsRunning = false;
-        sentCont = 0;
+        receivedCont = repliedCount = 0;
         avgRTT = 0;
         try {
             if(node.isConnected("control") && node.waitForActivation("control"))
@@ -97,39 +96,8 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 break;
 
             case AppConstants.SENSOR_PING:
-                //sensorPing(message);
+                receivedCont++;
                 sensorPingBack(message);
-                break;
-
-            case AppConstants.SENSOR_PONG:
-                String sensorAddress = ((String) message.object).split("#")[0];
-               // String experiment = ((String)message.object).split("#")[1];
-                String sendTime = ((String) message.object).split("#")[1];
-                message.object = sendTime;
-
-                if (!sensorAddress.equals(getChannelId())) {
-                    sendUnicast(message, sensorAddress);
-                } else {
-                    postUIEvent(0, "Server response received");
-                    sentCont++;
-                    double rtt = StringTimeUtil.roundTripTime(((String) message.object), StringTimeUtil.getTimestamp()) / 1000;
-                    listRTT.add(rtt);
-                    avgRTT = (avgRTT * (sentCont - 1) + rtt) / sentCont;
-
-                    if (rtt > TIMEOUT && experimentIsRunning) {
-                        experimentIsRunning = false;
-                        try {
-                            node.sendToSupervisor(new A3Message(AppConstants.LONG_RTT, ""), "control");
-                        } catch (A3SupervisorNotElectedException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
-                    }
-
-                    if (sentCont % 50 == 0)
-                        postUIEvent(0, sentCont + " mex spediti.");
-                }
                 break;
 
             case AppConstants.START_EXPERIMENT:
@@ -139,11 +107,6 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                         experimentIsRunning = true;
                         postUIEvent(0, "Experiment has started");
                         sendBroadcast(message);
-                        startTimestamp = StringTimeUtil.getTimestamp();
-                        sentCont = 0;
-                        allFollowerRTTs="";
-                        sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
-                        sendMessage();
                     }
                 } else
                     startExperiment = true;
@@ -151,47 +114,18 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
                 break;
 
             case AppConstants.LONG_RTT:
-
                 Log.i(MainActivity.TAG, "Stopping the experiment");
                 sendBroadcast(new A3Message(AppConstants.STOP_EXPERIMENT_COMMAND, ""));
-
                 if (experimentIsRunning) {
                     paramsSet = false;
                     experimentIsRunning = false;
                     postUIEvent(0, "Experiment has stopped");
-                    double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
-                    float frequency = sentCont / (float) (runningTime);
-
-                    for (double indiRTT: listRTT
-                            ) {
-                        allFollowerRTTs+=String.valueOf(indiRTT)+" ";
-                    }
-
-                    try {
-                        node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_Supervisor:"+ "\t"+ sentCont +"\t"+
-                                runningTime +"\t"+ frequency + "\t" + avgRTT), "control");
-                    } catch (A3SupervisorNotElectedException e) {
-                        e.printStackTrace();
-                    }
+                    checkOutBound();
                 }
                 break;
 
             default:
                 break;
-        }
-    }
-
-    private void sendMessage() {
-        if (experimentIsRunning)
-            sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
-    }
-
-    private void sensorPing(A3Message message) {
-        message.object = message.senderAddress + "#" + (String) message.object;
-        try {
-            node.sendToSupervisor(message, "server_0");
-        } catch (A3SupervisorNotElectedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -204,10 +138,20 @@ public class SensorSupervisorRole extends A3SupervisorRole implements TimerInter
         postUIEvent(0, "Sensor data received");
     }
 
-    @Override
-    public void handleTimeEvent(int reason, Object object) {
-        sendMessage();
+    private void checkOutBound(){
+        while(!getChannel().isOutboundEmpty()) {
+            try {
+                synchronized (this) {
+                    this.wait(WAIT_TIME);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        EventBus.getDefault().post(new TestEvent(AppConstants.ALL_MESSAGES_RECEIVED, "control", null));
     }
+
+    private final int WAIT_TIME = 1000;
 
     public void memberAdded(String name) {
         postUIEvent(0, "Entered: " + name);

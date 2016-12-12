@@ -96,10 +96,6 @@ public abstract class TestBase {
         }
     }
 
-
-
-
-
     class ElapsedTimeIdlingResource implements IdlingResource {
         private final long startTime;
         private final long waitingTime;
