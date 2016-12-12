@@ -109,7 +109,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 					startExperiment(message);
 					break;
 				case AppConstants.START_MERGE:
-                    postUIEvent(0,"[-- Start of Group Merge --]");
+                    postUIEvent(0, "[-- Start of Group Merge --]");
                     break;
 
 				case AppConstants.LONG_RTT:
@@ -118,12 +118,8 @@ public class ControlSupervisorRole extends SupervisorRole {
 
 				case AppConstants.DATA:
 					//send loadTesting results to test
-                    EventBus.getDefault().post(new TestEvent(AppConstants.DATA,"control",message));
+                    EventBus.getDefault().post(new TestEvent(AppConstants.DATA, "control", message));
 					//receiveData(message);
-					break;
-
-				case AppConstants.STOP_EXPERIMENT:
-					stopExperimentOld(message);
 					break;
 
 				case AppConstants.NEW_SUPERVISOR_ELECTED:
@@ -137,7 +133,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 				default:
 					break;
 			}
-		} catch (A3ChannelNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -179,72 +175,12 @@ public class ControlSupervisorRole extends SupervisorRole {
 			return;
 
 		experimentIsRunning = false;
-		sd = Environment.getExternalStorageDirectory();
-		f = new File(sd, AppConstants.EXPERIMENT_PREFIX + "Greenhouse_" + vmIds.size() + ".csv");
-
-		try {
-			postUIEvent(0,"writing to the csv log file ");
-			fw = new FileWriter(f, true);
-			bw = new BufferedWriter(fw);
-		} catch (IOException e) {
-			postUIEvent(0,"cannot write the log file "+e.getLocalizedMessage());
-		}
 		message.object = getChannelId();
 		sendBroadcast(message);
 		sendToConnectedSupervisors(message);
 	}
 
-    @Deprecated
-    /**
-     * This method is never actually called
-     * TODO: To check if its behaviour must not go into the stopExperiment method
-     */
-    private void stopExperimentOld(A3Message message) throws A3ChannelNotFoundException {
-        //showOnScreen("--- STOP_EXPERIMENT: ATTENDERE 10s CIRCA ---");
 
-        sendBroadcast(message);
-        for(String gType : launchedGroups.keySet())
-            for(int i : launchedGroups.get(gType).keySet())
-                if(node.isConnected(gType + "_" + i) && !node.isSupervisor(gType + "_" + i))
-                    node.disconnect(gType + "_" + i);
-
-        synchronized(this){
-            try {
-                wait(10000);
-            } catch (InterruptedException e) {}
-        }
-
-        for(String gType : launchedGroups.keySet())
-            for(int i : launchedGroups.get(gType).keySet())
-                if(node.isConnected(gType + "_" + i))
-                    node.disconnect(gType + "_" + i);
-
-        launchedGroups.clear();
-        //showOnScreen("--- ESPERIMENTO TERMINATO ---");
-    }
-
-    private void receiveData(A3Message message){
-        if(dataToWaitFor == 0)
-            Log.i(MainActivity.TAG, "###EXPERIMENT RESULTS###");
-        Log.i(MainActivity.TAG, ((String)message.object).replace(".", ",") + "\n");
-
-        result =  ((String)message.object).replace(".", ",") + "\n";
-        dataToWaitFor --;
-
-        if(dataToWaitFor <= 0){
-			try {
-			    bw.write(result);
-				bw.flush();
-			} catch (IOException e) {
-				postUIEvent(0, "ECCEZIONE IN CtrlSupRole [bw.flush()]: " + e.getLocalizedMessage());
-			}
-			Log.i(TAG,result);
-
-
-			numberOfTrials ++;
-        }
-    }
-	
 	@Override
 	protected void removeGroupMember(String uuid) {
 		super.removeGroupMember(uuid);

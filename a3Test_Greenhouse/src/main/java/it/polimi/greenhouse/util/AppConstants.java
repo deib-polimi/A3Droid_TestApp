@@ -37,4 +37,6 @@ public class AppConstants {
 	public static final int NEW_SUPERVISOR_ELECTED = 81;
 	public static final int SUPERVISOR_LEFT = 82;
 	public static final int FOLLOWER_ACCESSION=83;
+	public static final int ALL_MESSAGES_RECEIVED=84;
+	public static final int ALL_MESSAGES_REPLIED=85;
 }
