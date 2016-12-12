@@ -65,7 +65,7 @@ public class TestNewSupervisorElection extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 1;
+    private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 40;
 
     public final static String SUPERVISOR_MODEL = "Nexus 9";

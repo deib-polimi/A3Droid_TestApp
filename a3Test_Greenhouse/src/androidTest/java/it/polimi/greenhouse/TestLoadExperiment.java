@@ -46,7 +46,7 @@ public class TestLoadExperiment extends TestBase{
 
     private final String TAG = "TestLoadExperiment";
 
-    private static final int DEVICES_NUMBER = 2;
+    private static final int DEVICES_NUMBER = 6;
     private static final int MESSAGES_PER_MINUTE_NUMBER=100;
     private static final int MESSAGE_PAYLOAD_SIZE_BYTE=512;
 
@@ -58,8 +58,8 @@ public class TestLoadExperiment extends TestBase{
     private static final int START_TIME = 30;
     private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 20;
-    //public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
-    public final static String SUPERVISOR_SERIAL= "TA1760AS2G";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
+    //public final static String SUPERVISOR_SERIAL= "TA1760AS2G";
     //public final static String SUPERVISOR_MODEL = "OnePlus3";
     //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
@@ -185,7 +185,7 @@ public class TestLoadExperiment extends TestBase{
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime * 2);
+        waitFor(startTime * 3);
         //End of Group Initialization
         Log.i(TAG, "GroupInitialization ended at: " + System.currentTimeMillis());
 

@@ -118,6 +118,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 
 				case AppConstants.DATA:
 					//send loadTesting results to test
+					Log.i(TAG,"saeed data arrived from");
                     EventBus.getDefault().post(new TestEvent(AppConstants.DATA, "control", message));
 					//receiveData(message);
 					break;

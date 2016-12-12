@@ -84,7 +84,7 @@ spoon {
     debug = true
 
     // To run a single test class
-    className = 'it.polimi.greenhouse.TestLoadExperiment'
+    className = 'it.polimi.greenhouse.TestNewSupervisorElection'
 
     // To run a single method in TestCase
    // methodName = 'testMyApp'

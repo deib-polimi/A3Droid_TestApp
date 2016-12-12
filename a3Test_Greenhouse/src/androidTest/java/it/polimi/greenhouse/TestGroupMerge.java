@@ -54,7 +54,7 @@ public class TestGroupMerge extends TestBase{
 
     private final String TAG = "TestGroupMerge";
     private static final int SECONDARY_GROUP_ID=2;
-    private static final int DEVICES_NUMBER = 3;
+    private static final int DEVICES_NUMBER = 6;
 
 
 
@@ -278,9 +278,10 @@ public class TestGroupMerge extends TestBase{
                     break;
                 case AppConstants.JOINED:
                     String[] message=event.object.toString().split("_");
+                    Log.i(TAG,"befarma "+message[3]);
                     String GroupID=message[1];
                     if(GroupID.equals("1")) {
-                        lastFollowerJoin = Long.valueOf(message[5]);
+                        lastFollowerJoin =System.currentTimeMillis(); //Long.valueOf(message[5]);
                         Log.i(TAG, message[0] + "_" + message[1] + " group merge ended after milliseconds: " + (lastFollowerJoin - groupMergeStart) + " node: " + message[3]);
                         expectedNumberOfMergedFollowers--;
                         if(expectedNumberOfMergedFollowers ==0){

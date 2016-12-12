@@ -51,8 +51,8 @@ public class TestGroupSplit extends TestBase{
 
     private final String TAG = "TestGroupSplit";
 
-    private static final int DEVICES_NUMBER = 3;
-    private static final int NUMBER_DEVICES_TO_SPLIT=2;
+    private static final int DEVICES_NUMBER = 6;
+    private static final int NUMBER_DEVICES_TO_SPLIT=5;
     //private static final int DEVICES_TO
 
 
