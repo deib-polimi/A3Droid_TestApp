@@ -104,15 +104,10 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			rtt = StringTimeUtil.roundTripTime(date, StringTimeUtil.getTimestamp()) / 1000;
 			avgRTT = (avgRTT * (receivedCount - 1) + rtt) / receivedCount;
 
-			if(!experimentIsRunning && receivedCount == sentCont) {
-				sendResults();
-				EventBus.getDefault().post(new TestEvent(AppConstants.ALL_MESSAGES_REPLIED, "control", null));
-			}else {
-				new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
-				if (receivedCount % 100 == 0)
-					postUIEvent(0, receivedCount + " mex spediti.");
-			}
-			
+			checkAllMessages();
+			new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
+			if (receivedCount % 100 == 0)
+				postUIEvent(0, receivedCount + " mex spediti.");
 			break;
 
 		case AppConstants.START_EXPERIMENT:
@@ -133,6 +128,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			Log.i(MainActivity.TAG, "Stopping the experiment");
 			if(experimentIsRunning){
 				experimentIsRunning = false;
+				checkAllMessages();
 				postUIEvent(0, "Experiment has stopped");
 			}
 			break;
@@ -142,6 +138,13 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			break;
 		}
 		
+	}
+
+	private void checkAllMessages(){
+		if(!experimentIsRunning && receivedCount == sentCont) {
+			sendResults();
+			EventBus.getDefault().post(new TestEvent(AppConstants.ALL_MESSAGES_REPLIED, "control", null));
+		}
 	}
 
 	private void sendResults(){
