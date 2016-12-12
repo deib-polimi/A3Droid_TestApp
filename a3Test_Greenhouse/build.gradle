@@ -81,10 +81,10 @@ apply plugin: 'spoon'
 // This section is optional
 spoon {
     // for debug output
-    debug = false
+    debug = true
 
     // To run a single test class
-    className = 'it.polimi.greenhouse.TestNewSupervisorElection'
+    className = 'it.polimi.greenhouse.TestLoadExperiment'
 
     // To run a single method in TestCase
    // methodName = 'testMyApp'
