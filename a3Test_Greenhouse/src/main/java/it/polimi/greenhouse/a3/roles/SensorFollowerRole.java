@@ -55,8 +55,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
                                         "_" + currentExperiment +
                                         "_" + node.getUID() +
                                         "_" + getChannelId() +
-                                        "_" + System.currentTimeMillis() + // shouldn't be here, clocks are different
-                                        "_" + "FolRole"
+                                        "_" + "#FolRole#"
                         ), "control"
                 );
             }

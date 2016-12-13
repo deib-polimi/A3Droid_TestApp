@@ -65,7 +65,7 @@ public class TestNewSupervisorElection extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 2;
+    private static final int EXPERIMENT_TIME = 60 * 1;
     private static final int STOP_TIME = 40;
 
     public final static String SUPERVISOR_MODEL = "Nexus 9";
@@ -78,13 +78,11 @@ public class TestNewSupervisorElection extends TestBase{
     private final static String FLW_EXP_STARTED_OUTPUT ="Experiment has started";
     private final static String FLW_EXP_STOPPED_OUTPUT = "Experiment has stopped";
 
-    private long supervisorDisconnectionStart = 0;
+    private volatile long  supervisorDisconnectionStart;
     private long lastFollowerJoin=0;
     private volatile int ignorFirstNodeJoinEvents;
-    private long groupReactivationByNewSupervisor=0;
-    private int supervisorElectionCounter=0;
+    private volatile int minNumberOfExpectedFollowers;
 
-    private int jointNodes = 0;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityRule = new ActivityTestRule<>(
@@ -155,6 +153,7 @@ public class TestNewSupervisorElection extends TestBase{
         IdlingPolicies.setMasterPolicyTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
         ignorFirstNodeJoinEvents=DEVICES_NUMBER;
+        minNumberOfExpectedFollowers=DEVICES_NUMBER-2;
 
         checkModel();
 
@@ -193,8 +192,8 @@ public class TestNewSupervisorElection extends TestBase{
             //Disconnect supervisor
             mainActivity.getAppNode().disconnect("monitoring_1");
             supervisorDisconnectionStart=System.currentTimeMillis();
-           // EventBus.getDefault().post(new TestEvent(AppConstants.SUPERVISOR_LEFT,"control",supervisorDisconnectionStart));
-            Log.i(TAG,"Disconnecting Supervisor from Monitoring_1 at: "+supervisorDisconnectionStart);
+            EventBus.getDefault().post(new A3UIEvent(0,"disconnected from monitoring_1"));
+            //Log.i(TAG,"Disconnecting Supervisor from Monitoring_1 at: "+supervisorDisconnectionStart);
 
             //now we have to look at test events to see when a new supervisor is elected
         } catch (A3ChannelNotFoundException e) {
@@ -212,6 +211,7 @@ public class TestNewSupervisorElection extends TestBase{
             checkGroupReactivation();
             //test passed -> log result
             //Log.i(TAG, "After test, log results:"+(lastFollowerJoin - supervisorDisconnectionStart));
+            if(minNumberOfExpectedFollowers <=0)
             logResult(lastFollowerJoin - supervisorDisconnectionStart);
 
         }catch (AssertionFailedError error){
@@ -266,7 +266,7 @@ public class TestNewSupervisorElection extends TestBase{
 
 
         //wait for monitoring_1 supervisor disconnect happen and a follower be replaced by old supervisor
-        waitFor(experimentTime+stopTime);
+        waitFor(experimentTime);
 
         // Checks if this node has joint the group
         checkFirstFollowersAccession();
@@ -285,7 +285,7 @@ public class TestNewSupervisorElection extends TestBase{
 
    //Test Events
     @Subscribe(threadMode = ThreadMode.POSTING)
-    public void handlleTestEvent(TestEvent event){
+    public void handleTestEvent(TestEvent event){
         if (event.groupName.equals("control")){
             switch (event.eventType){
                 case AppConstants.NEW_SUPERVISOR_ELECTED:
@@ -294,17 +294,21 @@ public class TestNewSupervisorElection extends TestBase{
                 case AppConstants.SUPERVISOR_LEFT:
                    // long followerMessageReceivedTime=Long.valueOf((String) event.object);
                     Log.i(TAG, event.groupName+" Supervisor left: "+ event.object);
-                    supervisorDisconnectionStart=(long) event.object;
+                    //supervisorDisconnectionStart=(long) event.object;
                     break;
                 case AppConstants.JOINED:
                     ignorFirstNodeJoinEvents--;
                     //Log.i(TAG,"SAeed:1 "+ignorFirstNodeJoinEvents);
                     if(ignorFirstNodeJoinEvents < 0) {
                         String[] message = event.object.toString().split("_");
+                        String givenRole = event.object.toString().split("#")[1];
                         lastFollowerJoin = System.currentTimeMillis();//Long.valueOf(message[5]);
-                        EventBus.getDefault().post(new A3UIEvent(0,  message[6].split(" ")[0] + " arrived"));
+                        EventBus.getDefault().post(new A3UIEvent(0,  givenRole + " arrived"));
                         Log.i(TAG, "group reshaped again after milliseconds: " + (lastFollowerJoin - supervisorDisconnectionStart) + " node: " +
-                                message[3] + "role: " + message[6] + " arrived");
+                                message[3] + " role: " +givenRole + "  group: "+message[0]+"_"+message[1]);
+                        if(givenRole.equals("FolRole")){
+                            minNumberOfExpectedFollowers--;
+                        }
                     }
                     break;
             }

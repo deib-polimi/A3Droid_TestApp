@@ -52,8 +52,7 @@ public class SensorSupervisorRole extends A3SupervisorRole{
                     "_" + currentExperiment +
                     "_" + node.getUID() +
                     "_" + getChannelId()+
-                    "_" + System.currentTimeMillis()+
-                    "_" + "SupRole"
+                    "_" + "#SupRole#"
                 ), "control"
             );
         } catch (A3SupervisorNotElectedException e) {

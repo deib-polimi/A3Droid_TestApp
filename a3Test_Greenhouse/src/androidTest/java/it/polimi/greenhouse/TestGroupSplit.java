@@ -275,11 +275,12 @@ public class TestGroupSplit extends TestBase{
                 case AppConstants.JOINED:
                     //lastFollowerJoin=(long) event.object;
                     String[] message=event.object.toString().split("_");
-                    if(("monitoring_"+message[1]+"_"+message[2]+"_"+message[3]).equals("monitoring_1_1_1")) {
+                    String givenRole = event.object.toString().split("#")[1];
+                    if(("monitoring_"+message[1]+"_"+message[2]).equals("monitoring_1_1")) {
                         lastFollowerJoin = System.currentTimeMillis();
-                        EventBus.getDefault().post(new A3UIEvent(0,"monitoring_1_1_"+message[7]+"_Arrived"));
+                        EventBus.getDefault().post(new A3UIEvent(0,"monitoring_1_1_"+givenRole+"_Arrived"));
                         Log.i(TAG, "group reshaped again after milliseconds: " + (lastFollowerJoin - groupSplitStart) +
-                                " node: " + message[4]+" Role: "+message[7]);
+                                " node: " + message[4]+" Role: "+givenRole);
                     }
                     break;
             }

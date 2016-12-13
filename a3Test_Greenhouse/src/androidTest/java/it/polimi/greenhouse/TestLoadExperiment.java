@@ -322,7 +322,8 @@ public class TestLoadExperiment extends TestBase{
     private void logResult(String result){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
-        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupLoadExperiment_" + DEVICES_NUMBER + ".csv");
+        File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupLoadExperiment_" + DEVICES_NUMBER+"_"+
+                MESSAGES_PER_MINUTE_NUMBER+"_"+MESSAGE_PAYLOAD_SIZE_BYTE+ ".csv");
         try {
             FileWriter fw = new FileWriter(resultFile, true);
             BufferedWriter bw = new BufferedWriter(fw);
