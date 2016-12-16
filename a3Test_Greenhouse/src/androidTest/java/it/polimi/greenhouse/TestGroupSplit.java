@@ -51,8 +51,8 @@ public class TestGroupSplit extends TestBase{
 
     private final String TAG = "TestGroupSplit";
 
-    private static final int DEVICES_NUMBER = 6;
-    private static final int NUMBER_DEVICES_TO_SPLIT=5;
+    private static final int DEVICES_NUMBER = 8;
+    private static final int NUMBER_DEVICES_TO_SPLIT=7;
     //private static final int DEVICES_TO
 
 
@@ -60,7 +60,7 @@ public class TestGroupSplit extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 2;
+    private static final int EXPERIMENT_TIME = 60 * 3;
     private static final int STOP_TIME = 40;
 
     //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
@@ -181,7 +181,7 @@ public class TestGroupSplit extends TestBase{
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*4);
+        waitFor(startTime*9);
 
 
         //now we are sure that all the followers are in the control group and we can split the gorup
@@ -246,11 +246,10 @@ public class TestGroupSplit extends TestBase{
         Log.i(TAG, "Follower: starting");
         onView(withId(startSensorButton)).perform(click());
 
-        // Now we wait 1x START_TIME for this node to start as a follower
-        waitFor(startTime);
+
 
         //wait for monitoring_1 supervisor disconnect to happen and a follower be replaced by old supervisor
-        waitFor(experimentTime);
+        waitFor(startTime * 4 + experimentTime);
 
         // Checks if this node has joint the group
         checkGroupSplit();

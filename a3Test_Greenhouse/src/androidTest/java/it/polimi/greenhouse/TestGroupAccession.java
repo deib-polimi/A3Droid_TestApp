@@ -52,13 +52,13 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 public class TestGroupAccession extends TestBase{
 
     private final String TAG = "TestGroupAccession";
-    private static final int DEVICES_NUMBER = 6;
+    private static final int DEVICES_NUMBER = 10;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 2;
+    private static final int EXPERIMENT_TIME =60*2 ;
     private static final int STOP_TIME = 40;
 
     //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
@@ -171,7 +171,7 @@ public class TestGroupAccession extends TestBase{
 
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*6);
+        waitFor(experimentTime);
 
         //check if this node has became a supervisor
         checkSuprvisorGroupAccession();
@@ -186,9 +186,9 @@ public class TestGroupAccession extends TestBase{
         checkModel();
 
         //Waits for a 0 - 10 seconds to avoid too many simultaneous devices joining the same group
-        Log.i(TAG, "Follower: random wait to connect");
-        long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 2);
-        waitFor(randomWait);
+        Log.i(TAG, "Follower:  wait to connect to test_control");
+        //long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 2);
+        waitFor(5*1000);
 
         Log.i(TAG, "Follower: waiting for others");
         mainActivity.createTestControlNode(DEVICES_NUMBER, false);
@@ -206,7 +206,7 @@ public class TestGroupAccession extends TestBase{
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
         // Now we wait 1x START_TIME for the supervisor to start
-        waitFor(startTime);
+        waitFor(startTime*2);
 
         // We start the sensor by pressing the button
         Log.i(TAG, "Follower: starting");
@@ -222,7 +222,7 @@ public class TestGroupAccession extends TestBase{
         }
 
         // Now we wait 1x START_TIME for this node to start as a follower
-        waitFor(startTime*5);
+        waitFor(experimentTime);
 
         // Checks if this node has became a follower
         checkFollowerGroupAccession();
@@ -288,7 +288,7 @@ public class TestGroupAccession extends TestBase{
         try {
             FileWriter fw = new FileWriter(resultFile, true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(result + "\n");
+            bw.write(result);
             bw.flush();
         } catch (IOException e) {
             Log.e(TAG, "cannot write the log file "+e.getLocalizedMessage());

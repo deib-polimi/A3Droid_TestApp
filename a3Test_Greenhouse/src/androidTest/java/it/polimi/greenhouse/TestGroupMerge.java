@@ -247,11 +247,10 @@ public class TestGroupMerge extends TestBase{
         Log.i(TAG, "Follower: starting");
         onView(withId(startSensorButton)).perform(click());
 
-        // Now we wait 1x START_TIME for this node to start as a follower
-        waitFor(startTime);
+
 
         //wait for monitoring_1 supervisor merge to happen and this node merges to monitoring_1
-        waitFor(experimentTime+stopTime);
+        waitFor(experimentTime);
 
         // Checks if this node has moved from monitoring_1 to monitoring_2
          checkFollowerGroupMerge();
@@ -278,7 +277,7 @@ public class TestGroupMerge extends TestBase{
                     break;
                 case AppConstants.JOINED:
                     String[] message=event.object.toString().split("_");
-                    Log.i(TAG,"befarma "+message[3]);
+                    //Log.i(TAG,"befarma "+message[3]);
                     String GroupID=message[1];
                     if(GroupID.equals("1")) {
                         lastFollowerJoin =System.currentTimeMillis(); //Long.valueOf(message[5]);
