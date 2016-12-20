@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
+import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
@@ -54,7 +55,7 @@ public class TestGroupMerge extends TestBase{
 
     private final String TAG = "TestGroupMerge";
     private static final int SECONDARY_GROUP_ID=2;
-    private static final int DEVICES_NUMBER = 6;
+    private static final int DEVICES_NUMBER = 10;
 
 
 
@@ -63,7 +64,7 @@ public class TestGroupMerge extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 1;
+    private static final int EXPERIMENT_TIME = 120 * 1;
     private static final int STOP_TIME = 40;
 
     //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
@@ -152,6 +153,7 @@ public class TestGroupMerge extends TestBase{
         IdlingPolicies.setIdlingResourceTimeout(1000 * 1000, TimeUnit.MILLISECONDS);
 
         checkModel();
+        waitFor(10*1000);
 
         mainActivity.createTestControlNode(DEVICES_NUMBER, true);
         Log.i(TAG, "Test_Supervisor: waiting for others");
@@ -169,12 +171,18 @@ public class TestGroupMerge extends TestBase{
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
 
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
         //all the nodes have joint
         //supervisor node starts to create control and monitoring groups and becomes their supervisor
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*4);
+        waitFor(startTime*9);
 
 
         //now we are sure that all the followers are in the control group and monitoring_1 and monitoring_2 groups
@@ -240,6 +248,12 @@ public class TestGroupMerge extends TestBase{
 
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
         // Now we wait 1x START_TIME for the supervisor to start
         waitFor(startTime*2);
 
@@ -271,9 +285,11 @@ public class TestGroupMerge extends TestBase{
         if (event.groupName.equals("control")) {
             switch (event.eventType){
                 case AppConstants.START_MERGE:
-                    groupMergeStart=(long) event.object;
-                    Log.i(TAG, event.groupName+" merge Group start at: "+ event.object);
+                    groupMergeStart=System.currentTimeMillis();//(long) event.object;
+                    Log.i(TAG, event.groupName+" merge Group start at: "+ event.object+" "+groupMergeStart);
                     expectedNumberOfMergedFollowers=DEVICES_NUMBER-1;
+                    EventBus.getDefault().post(new A3UIEvent(0, "merge started"));
+
                     break;
                 case AppConstants.JOINED:
                     String[] message=event.object.toString().split("_");

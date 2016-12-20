@@ -59,13 +59,13 @@ public class TestNewSupervisorElection extends TestBase{
 
     private final String TAG = "NewSupervisorElection";
 
-    private static final int DEVICES_NUMBER =6;
+    private static final int DEVICES_NUMBER =10;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 1;
+    private static final int EXPERIMENT_TIME = 60 * 2;
     private static final int STOP_TIME = 40;
 
     public final static String SUPERVISOR_MODEL = "Nexus 9";
@@ -171,9 +171,15 @@ public class TestNewSupervisorElection extends TestBase{
             return;
         }
 
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
-
+        waitFor(startTime*2);
 
         //all the nodes have joint test_control
         //supervisor node starts to create  control and monitoring groups and becomes their supervisor

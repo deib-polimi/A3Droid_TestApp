@@ -330,7 +330,7 @@ public class MainActivity extends A3DroidActivity {
         ArrayList<A3GroupDescriptor> groupDescriptors = new ArrayList<A3GroupDescriptor>();
         groupDescriptors.add(new TestControlDescriptor());
         testNode = new TestControlNode((A3Application) getApplication(), server, size, toGuiHandler, getUUID(), roles, groupDescriptors);
-        try {
+       try {
             testNode.connect(TestControlDescriptor.TEST_GROUP_NAME);
         } catch (A3NoGroupDescriptionException e) {
             e.printStackTrace();
@@ -406,6 +406,10 @@ public class MainActivity extends A3DroidActivity {
 
     public A3Node getAppNode(){
         return appNode;
+    }
+
+    public A3Node getTestAppNode(){
+        return testNode;
     }
 
     public boolean isTestGroupReady() {

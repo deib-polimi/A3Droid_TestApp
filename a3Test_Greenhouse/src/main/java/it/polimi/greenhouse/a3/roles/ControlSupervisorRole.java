@@ -87,7 +87,7 @@ public class ControlSupervisorRole extends SupervisorRole {
 				case AppConstants.NEW_PHONE:
 					vmIds.add(message.object);
 					numberOfTrials = 1;
-					//postUIEvent(0,"Telefoni connessi: " + vmIds.size());
+					postUIEvent(0,"new phone: " + vmIds.size());
 					break;
 
 				case AppConstants.SET_PARAMS_COMMAND:

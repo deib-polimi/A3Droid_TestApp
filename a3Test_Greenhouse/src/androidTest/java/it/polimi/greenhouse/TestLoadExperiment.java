@@ -46,9 +46,9 @@ public class TestLoadExperiment extends TestBase{
 
     private final String TAG = "TestLoadExperiment";
 
-    private static final int DEVICES_NUMBER = 6;
-    private static final int MESSAGES_PER_MINUTE_NUMBER=40;
-    private static final int MESSAGE_PAYLOAD_SIZE_BYTE=512*1000;
+    private static final int DEVICES_NUMBER =10;
+    private static final int MESSAGES_PER_MINUTE_NUMBER=6;
+    private static final int MESSAGE_PAYLOAD_SIZE_BYTE=32;
 
 
 

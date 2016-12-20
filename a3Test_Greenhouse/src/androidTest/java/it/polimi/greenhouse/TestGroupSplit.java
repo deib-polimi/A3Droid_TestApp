@@ -51,8 +51,8 @@ public class TestGroupSplit extends TestBase{
 
     private final String TAG = "TestGroupSplit";
 
-    private static final int DEVICES_NUMBER = 8;
-    private static final int NUMBER_DEVICES_TO_SPLIT=7;
+    private static final int DEVICES_NUMBER = 7;
+    private static final int NUMBER_DEVICES_TO_SPLIT=6;
     //private static final int DEVICES_TO
 
 
@@ -60,14 +60,16 @@ public class TestGroupSplit extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 3;
+    private static final int EXPERIMENT_TIME = 90 * 1;
     private static final int STOP_TIME = 40;
 
     //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
+   // public final static String SUPERVISOR_MODEL = "Nexus 9";
+  //  public final static String SUPERVISOR_SERIAL= "17e29a96";
+  //  public final static String SUPERVISOR_MODEL = "SM-P605";
+
     public final static String SUPERVISOR_MODEL = "Nexus 9";
     public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
-
-    //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
@@ -175,13 +177,21 @@ public class TestGroupSplit extends TestBase{
 
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+        waitFor(startTime*2);
+
+
 
 
         //supervisor node starts to create  control and monitoring groups and becomes their supervisor
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
-        waitFor(startTime*9);
+        waitFor(startTime*6);
 
 
         //now we are sure that all the followers are in the control group and we can split the gorup
@@ -238,6 +248,13 @@ public class TestGroupSplit extends TestBase{
         }
 
         Log.i(TAG, "Follower: starting test with counter=" + counter);
+
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+        waitFor(startTime*2);
 
         // Now we wait 1x START_TIME for the supervisor to start
         waitFor(startTime*2);

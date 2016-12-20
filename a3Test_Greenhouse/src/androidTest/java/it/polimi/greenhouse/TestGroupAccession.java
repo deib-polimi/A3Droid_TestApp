@@ -30,9 +30,11 @@ import it.polimi.deepse.a3droid.a3.A3GroupDescriptor;
 import it.polimi.deepse.a3droid.a3.A3Message;
 import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
+import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.a3.events.TestEvent;
+import it.polimi.greenhouse.a3.groups.TestControlDescriptor;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
 import it.polimit.greenhouse.R;
@@ -52,7 +54,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 public class TestGroupAccession extends TestBase{
 
     private final String TAG = "TestGroupAccession";
-    private static final int DEVICES_NUMBER = 10;
+    private static final int DEVICES_NUMBER =10;
 
     private static String ROLE_OUTPUT;
     private static final int WAITING_TIME = 5;
@@ -145,6 +147,8 @@ public class TestGroupAccession extends TestBase{
         checkModel();
 
         mainActivity.createTestControlNode(DEVICES_NUMBER, true);
+        //connect to testcontrol group as its supervisor
+
         Log.i(TAG, "Supervisor: waiting for others");
 
         int counter = WAITING_COUNT;
@@ -159,14 +163,22 @@ public class TestGroupAccession extends TestBase{
         }
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
-        //Connect this node to Control group, this node would be the supervisor of Control group
         try {
-            mainActivity.getAppNode().connect("control");
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        //Connect this node to Control group, this node would be the supervisor of Control group
+        waitFor(startTime);
+        try {
+            mainActivity.getAppNode().connectAndWaitForActivation("control");
         } catch (A3NoGroupDescriptionException e) {
             Log.e(TAG, e.getMessage());
             return;
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
         }
-
 
 
         // Now we wait START_TIME for all the sensors to be connected
@@ -187,11 +199,14 @@ public class TestGroupAccession extends TestBase{
 
         //Waits for a 0 - 10 seconds to avoid too many simultaneous devices joining the same group
         Log.i(TAG, "Follower:  wait to connect to test_control");
-        //long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 2);
-        waitFor(5*1000);
+       // long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 20);
+        //waitFor(randomWait);
+        waitFor(20*1000);
 
         Log.i(TAG, "Follower: waiting for others");
         mainActivity.createTestControlNode(DEVICES_NUMBER, false);
+        //connect to testcontrol group as its follower
+
 
         int counter = WAITING_COUNT;
         do{
@@ -205,8 +220,15 @@ public class TestGroupAccession extends TestBase{
 
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
         // Now we wait 1x START_TIME for the supervisor to start
-        waitFor(startTime*2);
+        waitFor(startTime*3);
 
         // We start the sensor by pressing the button
         Log.i(TAG, "Follower: starting");
@@ -215,7 +237,11 @@ public class TestGroupAccession extends TestBase{
             EventBus.getDefault().post(new A3UIEvent(0, FLW_GA_STARTED_OUTPUT));
             //we record the time when this follower starts to join the control group
             groupInitializationStart = System.currentTimeMillis();
-            mainActivity.getAppNode().connect("control");
+            try {
+                mainActivity.getAppNode().connectAndWaitForActivation("control");
+            } catch (A3ChannelNotFoundException e) {
+                e.printStackTrace();
+            }
         } catch (A3NoGroupDescriptionException e) {
             Log.e(TAG, e.getMessage());
             return;
