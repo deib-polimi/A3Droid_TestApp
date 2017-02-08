@@ -127,14 +127,16 @@ public class TestGroupMerge extends TestBase{
         Log.i(TAG, "Starting GroupMerge Test");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
-        //mainActivity.createAppNode();
+
         if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
+            //this is the destination group (monitoring_1) of merge operation
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
                     DateUtils.SECOND_IN_MILLIS * EXPERIMENT_TIME,
                     DateUtils.SECOND_IN_MILLIS * STOP_TIME);
         else
+            //this is the source group (monitoring_2) of merge operation
             initFollowerAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -178,10 +180,11 @@ public class TestGroupMerge extends TestBase{
         }
 
         //all the nodes have joint
-        //supervisor node starts to create control and monitoring groups and becomes their supervisor
+        //supervisor node starts to create control and monitoring_1 groups and becomes their supervisor
         onView(withId(startSensorButton)).perform(click());
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
+        //waiting for other gourp (monitoring_2) to be stablized.
         waitFor(startTime*9);
 
 
@@ -219,7 +222,7 @@ public class TestGroupMerge extends TestBase{
     public void initFollowerAndWait(MainActivity mainActivity, long waitingTime, long startTime,
                                     long experimentTime, long stopTime, int secondaryGroupId) {
 
-        //changes the group id that this node belongs to
+        //changes the group id that this node belongs to (monitoring_2)
         onView(withId(groupIdEditText)).perform(replaceText(String.valueOf(secondaryGroupId)));
 
         // Make sure Espresso does not time out
@@ -257,8 +260,11 @@ public class TestGroupMerge extends TestBase{
         // Now we wait 1x START_TIME for the supervisor to start
         waitFor(startTime*2);
 
-        // We start the sensor by pressing the button
+        // We start the sensor by pressing the button to shape the monitoring_2 group (one supervisor and and others are
+        //followers of the monitoring_2
         Log.i(TAG, "Follower: starting");
+
+        //if there is no supervisor in Monitoring_2 the node would be the supervisor, otherwise it becomes the follower of monitoring_2
         onView(withId(startSensorButton)).perform(click());
 
 

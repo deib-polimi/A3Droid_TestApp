@@ -60,7 +60,7 @@ public class TestGroupSplit extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 90 * 1;
+    private static final int EXPERIMENT_TIME = 30 * 1;
     private static final int STOP_TIME = 40;
 
     //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device

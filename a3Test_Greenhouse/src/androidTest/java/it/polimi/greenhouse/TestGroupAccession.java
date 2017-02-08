@@ -65,8 +65,8 @@ public class TestGroupAccession extends TestBase{
 
     //// TODO: 11/29/2016 in a device farm, we have to decide about model and serial of supervisor device
     // public final static String SUPERVISOR_MODEL = "XT1052";
-    public final static String SUPERVISOR_MODEL = "Nexus 9";
-    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
+   // public final static String SUPERVISOR_MODEL = "Nexus 9";
+    public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";//a71
 
     private final static String FLW_GA_STARTED_OUTPUT =  "Start of Group Accession";
     private final static String FLW_GA_STOPPED_OUTPUT = "End of Group Accession";
@@ -102,7 +102,7 @@ public class TestGroupAccession extends TestBase{
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
+        if( Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -119,7 +119,7 @@ public class TestGroupAccession extends TestBase{
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         mainActivity = mActivityRule.getActivity();
         mainActivity.createAppNode();
-        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
+        if( Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -162,12 +162,14 @@ public class TestGroupAccession extends TestBase{
             return;
         }
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
-
         try {
             mainActivity.getTestAppNode().disconnect("test_control");
         } catch (A3ChannelNotFoundException e) {
             e.printStackTrace();
         }
+        waitFor(10*1000);
+
+
 
         //Connect this node to Control group, this node would be the supervisor of Control group
         waitFor(startTime);
@@ -199,9 +201,9 @@ public class TestGroupAccession extends TestBase{
 
         //Waits for a 0 - 10 seconds to avoid too many simultaneous devices joining the same group
         Log.i(TAG, "Follower:  wait to connect to test_control");
-       // long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 20);
-        //waitFor(randomWait);
-        waitFor(20*1000);
+        long randomWait = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 2);
+        waitFor(randomWait);
+
 
         Log.i(TAG, "Follower: waiting for others");
         mainActivity.createTestControlNode(DEVICES_NUMBER, false);
@@ -225,27 +227,34 @@ public class TestGroupAccession extends TestBase{
         } catch (A3ChannelNotFoundException e) {
             e.printStackTrace();
         }
+        waitFor(10*1000);
 
 
         // Now we wait 1x START_TIME for the supervisor to start
         waitFor(startTime*3);
 
+        long randomWait2 = (long) (DateUtils.SECOND_IN_MILLIS * Math.random() * WAITING_TIME * 2);
+        waitFor(randomWait2);
+
         // We start the sensor by pressing the button
         Log.i(TAG, "Follower: starting");
         //onView(withId(startSensorButton)).perform(click());
-        try {
+
+
             EventBus.getDefault().post(new A3UIEvent(0, FLW_GA_STARTED_OUTPUT));
             //we record the time when this follower starts to join the control group
+
             groupInitializationStart = System.currentTimeMillis();
-            try {
-                mainActivity.getAppNode().connectAndWaitForActivation("control");
-            } catch (A3ChannelNotFoundException e) {
-                e.printStackTrace();
-            }
+
+        try {
+            mainActivity.getAppNode().connectAndWaitForActivation("control");
+        } catch (A3ChannelNotFoundException e) {
+            Log.i(TAG," saeed connection to control failed");
+            e.printStackTrace();
         } catch (A3NoGroupDescriptionException e) {
-            Log.e(TAG, e.getMessage());
-            return;
+            e.printStackTrace();
         }
+
 
         // Now we wait 1x START_TIME for this node to start as a follower
         waitFor(experimentTime);

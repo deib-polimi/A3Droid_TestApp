@@ -39,4 +39,5 @@ public class AppConstants {
 	public static final int FOLLOWER_ACCESSION=83;
 	public static final int ALL_MESSAGES_RECEIVED=84;
 	public static final int ALL_MESSAGES_REPLIED=85;
+	public static final int ROLE_DEACTIVATED=86;
 }

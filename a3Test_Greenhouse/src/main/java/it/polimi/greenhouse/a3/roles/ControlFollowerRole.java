@@ -1,5 +1,7 @@
 package it.polimi.greenhouse.a3.roles;
 
+import android.util.Log;
+
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.Collections;
@@ -31,10 +33,14 @@ public class ControlFollowerRole extends A3FollowerRole {
 
 	@Override
 	public void onActivation() {
+
 		launchedGroups = new ConcurrentHashMap<String, Set<Integer>>();
 		try {
+            postUIEvent(0, "[sending to sup on Activation]");
 			node.sendToSupervisor(new A3Message(AppConstants.NEW_PHONE, node.getUID()), "control");
+
 		} catch (A3SupervisorNotElectedException e) {
+            Log.i(TAG,"Saeed cannot sent to control sup"+ e.getStackTrace());
 			e.printStackTrace();
 		}
 		postUIEvent(0, "[CtrlFolRole]");

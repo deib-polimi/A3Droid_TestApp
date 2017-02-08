@@ -38,6 +38,7 @@ import it.polimi.deepse.a3droid.a3.events.A3GroupEvent;
 import it.polimi.deepse.a3droid.a3.events.A3UIEvent;
 import it.polimi.deepse.a3droid.a3.exceptions.A3ChannelNotFoundException;
 import it.polimi.deepse.a3droid.a3.exceptions.A3NoGroupDescriptionException;
+import it.polimi.deepse.a3droid.a3.exceptions.A3SupervisorNotElectedException;
 import it.polimi.greenhouse.a3.events.TestEvent;
 import it.polimi.greenhouse.activities.MainActivity;
 import it.polimi.greenhouse.util.AppConstants;
@@ -65,13 +66,14 @@ public class TestNewSupervisorElection extends TestBase{
     private static final int WAITING_TIME = 5;
     private static final int WAITING_COUNT = 60;
     private static final int START_TIME = 10;
-    private static final int EXPERIMENT_TIME = 60 * 2;
+    private static final int EXPERIMENT_TIME = 70 * 2;
     private static final int STOP_TIME = 40;
 
-    public final static String SUPERVISOR_MODEL = "Nexus 9";
+    //public final static String SUPERVISOR_MODEL = "Nexus 9";
     //public final static String SUPERVISOR_MODEL = "SM-P605";
     // public final static String SUPERVISOR_MODEL = "XT1052";
     public final static String SUPERVISOR_SERIAL= "HT4BBJT00970";
+    public final static String CONTROL_SUPERVISOR_SERIAL="HT4BVJT00109";
 
     private final static String SPV_EXP_STARTED_OUTPUT =  "Start of Expriment";
     private final static String SPV_EXP_STOPPED_OUTPUT = "End of Expriment";
@@ -80,6 +82,7 @@ public class TestNewSupervisorElection extends TestBase{
 
     private volatile long  supervisorDisconnectionStart;
     private long lastFollowerJoin=0;
+    private long supervisorLostTimeout=0;
     private volatile int ignorFirstNodeJoinEvents;
     private volatile int minNumberOfExpectedFollowers;
 
@@ -110,7 +113,7 @@ public class TestNewSupervisorElection extends TestBase{
 
     public void initValidString() {
         // Specify a valid string for the test based on the model
-        if(Build.MODEL.equals(SUPERVISOR_MODEL)&& Build.SERIAL.equals(SUPERVISOR_SERIAL))
+        if( Build.SERIAL.equals(SUPERVISOR_SERIAL))
             ROLE_OUTPUT = "CtrlSupRole";
         else
             ROLE_OUTPUT = "CtrlFolRole";
@@ -126,10 +129,10 @@ public class TestNewSupervisorElection extends TestBase{
         Log.i(TAG, "Starting the test: New Supervisor Election");
         onView(withId(R.id.editText1)).perform(closeSoftKeyboard());
         MainActivity mainActivity = mActivityRule.getActivity();
-        //mainActivity.createAppNode();
+        mainActivity.createAppNode();
 
 
-        if(Build.MODEL.equals(SUPERVISOR_MODEL) && Build.SERIAL.equals(SUPERVISOR_SERIAL))
+        if( Build.SERIAL.equals(SUPERVISOR_SERIAL))
             initSupervisorAndWait(mainActivity,
                     DateUtils.SECOND_IN_MILLIS * WAITING_TIME,
                     DateUtils.SECOND_IN_MILLIS * START_TIME,
@@ -179,54 +182,55 @@ public class TestNewSupervisorElection extends TestBase{
 
         Log.i(TAG, "Supervisor: starting test with counter=" + counter);
 
-        waitFor(startTime*2);
+
 
         //all the nodes have joint test_control
         //supervisor node starts to create  control and monitoring groups and becomes their supervisor
-        onView(withId(startSensorButton)).perform(click());
+        //onView(withId(startSensorButton)).perform(click());
+
+        waitFor(startTime);
+
+        try {
+            //mainActivity.getAppNode().connectAndWaitForActivation("control");
+            mainActivity.getAppNode().connectAndWaitForActivation("monitoring_1");
+
+        } catch (A3NoGroupDescriptionException e) {
+            e.printStackTrace();
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        waitFor(startTime);
+        try {
+            //mainActivity.getAppNode().connectAndWaitForActivation("control");
+            mainActivity.getAppNode().connectAndWaitForActivation("control");
+
+        } catch (A3NoGroupDescriptionException e) {
+            e.printStackTrace();
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
 
 
 
         // Now we wait START_TIME for all the sensors to be connected
         Log.i(TAG, "Supervisor: wait for followers");
         waitFor(startTime*5);
-
-
-
-
         try {
-            //Disconnect supervisor
-            mainActivity.getAppNode().disconnect("monitoring_1");
-            supervisorDisconnectionStart=System.currentTimeMillis();
-            EventBus.getDefault().post(new A3UIEvent(0,"disconnected from monitoring_1"));
-            //Log.i(TAG,"Disconnecting Supervisor from Monitoring_1 at: "+supervisorDisconnectionStart);
-
-            //now we have to look at test events to see when a new supervisor is elected
-        } catch (A3ChannelNotFoundException e) {
-            Log.i(TAG,e.getMessage());
-            return;
+            mainActivity.getAppNode().sendToSupervisor(new A3Message(AppConstants.SUPERVISOR_LEFT, ""), "control");
+        } catch (A3SupervisorNotElectedException e) {
+            e.printStackTrace();
         }
 
 
         //wait for another supervisor to be elected between other devices
-        waitFor(experimentTime);
+       /* waitFor(experimentTime);
 
 
-        try {
-            //Log.i(TAG,"saeed3 ");
-            checkGroupReactivation();
-            //test passed -> log result
-            //Log.i(TAG, "After test, log results:"+(lastFollowerJoin - supervisorDisconnectionStart));
-            if(minNumberOfExpectedFollowers <=0)
-            logResult(lastFollowerJoin - supervisorDisconnectionStart);
 
-        }catch (AssertionFailedError error){
-            //test failed
-            //Log.i(TAG,"saeed4 ");
-
-            return;
-        }
-
+*/
 
 
     }
@@ -259,23 +263,79 @@ public class TestNewSupervisorElection extends TestBase{
             return;
         }
 
+        try {
+            mainActivity.getTestAppNode().disconnect("test_control");
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
+
         Log.i(TAG, "Follower: starting test with counter=" + counter);
 
+
+        if(Build.SERIAL.equals(CONTROL_SUPERVISOR_SERIAL)) {
+            try {
+                mainActivity.getAppNode().connectAndWaitForActivation("control");
+
+            } catch (A3NoGroupDescriptionException e) {
+                e.printStackTrace();
+            } catch (A3ChannelNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
         //waite for the supervisor device to push the sensor button first
-        waitFor(startTime*2);
+        waitFor(startTime);
+
+        if(!Build.SERIAL.equals(CONTROL_SUPERVISOR_SERIAL)) {
+            try {
+                mainActivity.getAppNode().connectAndWaitForActivation("control");
+
+            } catch (A3NoGroupDescriptionException e) {
+                e.printStackTrace();
+            } catch (A3ChannelNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        waitFor(startTime);
 
         // We start the sensor by pressing the button
         Log.i(TAG, "Follower: starting");
-        onView(withId(startSensorButton)).perform(click());
+        //onView(withId(startSensorButton)).perform(click());
+        try {
+            mainActivity.getAppNode().connectAndWaitForActivation("monitoring_1");
+
+        } catch (A3NoGroupDescriptionException e) {
+            e.printStackTrace();
+        } catch (A3ChannelNotFoundException e) {
+            e.printStackTrace();
+        }
 
 
 
 
         //wait for monitoring_1 supervisor disconnect happen and a follower be replaced by old supervisor
         waitFor(experimentTime);
+        waitFor(startTime*3);
 
         // Checks if this node has joint the group
         checkFirstFollowersAccession();
+
+
+        try {
+            //Log.i(TAG,"saeed3 ");
+            checkGroupReactivation();
+            //test passed -> log result
+            //Log.i(TAG, "After test, log results:"+(lastFollowerJoin - supervisorDisconnectionStart));
+            if(minNumberOfExpectedFollowers <=0)
+                logResult((supervisorLostTimeout-supervisorDisconnectionStart)+","+(lastFollowerJoin - supervisorLostTimeout));
+
+        }catch (AssertionFailedError error){
+            //test failed
+            //Log.i(TAG,"saeed4 ");
+
+            return;
+        }
     }
 
 
@@ -299,19 +359,24 @@ public class TestNewSupervisorElection extends TestBase{
                     break;
                 case AppConstants.SUPERVISOR_LEFT:
                    // long followerMessageReceivedTime=Long.valueOf((String) event.object);
-                    Log.i(TAG, event.groupName+" Supervisor left: "+ event.object);
-                    //supervisorDisconnectionStart=(long) event.object;
+                    Log.i(TAG, event.groupName+" Supervisor left: ");
+                    supervisorDisconnectionStart=System.currentTimeMillis();
+                    break;
+                case AppConstants.ROLE_DEACTIVATED:
+                    if(event.object.toString().equals("monitoring_1") && supervisorLostTimeout== 0){
+                        supervisorLostTimeout=System.currentTimeMillis();
+                    }
                     break;
                 case AppConstants.JOINED:
                     ignorFirstNodeJoinEvents--;
-                    //Log.i(TAG,"SAeed:1 "+ignorFirstNodeJoinEvents);
+                    Log.i(TAG,"SAeed:1 "+ignorFirstNodeJoinEvents);
                     if(ignorFirstNodeJoinEvents < 0) {
                         String[] message = event.object.toString().split("_");
                         String givenRole = event.object.toString().split("#")[1];
                         lastFollowerJoin = System.currentTimeMillis();//Long.valueOf(message[5]);
                         EventBus.getDefault().post(new A3UIEvent(0,  givenRole + " arrived"));
-                        Log.i(TAG, "group reshaped again after milliseconds: " + (lastFollowerJoin - supervisorDisconnectionStart) + " node: " +
-                                message[3] + " role: " +givenRole + "  group: "+message[0]+"_"+message[1]);
+                        Log.i(TAG, "group reshaped again : " + (lastFollowerJoin - supervisorLostTimeout) + " node: " +
+                                message[3] + " role: " +givenRole + "  group: "+message[0]+"_"+message[1]+" SupTimeout:"+ (supervisorLostTimeout-supervisorDisconnectionStart));
                         if(givenRole.equals("FolRole")){
                             minNumberOfExpectedFollowers--;
                         }
@@ -323,7 +388,7 @@ public class TestNewSupervisorElection extends TestBase{
 
 
 
-    private void logResult(long result){
+    private void logResult(String result){
         Log.i(TAG, "logResult: " + result);
         File resultFolder = Environment.getExternalStorageDirectory();
         File resultFile = new File(resultFolder, AppConstants.EXPERIMENT_PREFIX + "_GroupNewSupervisorElection_" + DEVICES_NUMBER + ".csv");
@@ -343,7 +408,11 @@ public class TestNewSupervisorElection extends TestBase{
     }
 
     private void checkFirstFollowersAccession(){
-        onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlFolRole")));
+        if(Build.SERIAL.equals(CONTROL_SUPERVISOR_SERIAL)) {
+            onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlSupRole")));
+        }else{
+            onView(withId(R.id.oneInEditText)).check(matches(withPat("CtrlFolRole")));
+        }
         onView(withId(R.id.oneInEditText)).check(matches(withPat("monitoring_1_Fol")));
     }
 

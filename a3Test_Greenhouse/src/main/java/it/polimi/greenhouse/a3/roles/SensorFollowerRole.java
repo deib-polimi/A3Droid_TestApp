@@ -33,6 +33,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	private final static long TIMEOUT = 60 * 1000;
 	private long MAX_INTERNAL = 10 * 1000;
 	private int PAYLOAD_SIZE = 32;
+    private int NUMBER_PACKETS_TO_SEND=0;
 	
 	public SensorFollowerRole() {
 		super();		
@@ -71,6 +72,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	public void onDeactivation() {
 
 		postUIEvent(0, "[" + getGroupName() + "_FolRole] deactivated");
+		EventBus.getDefault().post(new TestEvent(AppConstants.ROLE_DEACTIVATED, "control",getGroupName()));
 	}
 
 	@Override
@@ -86,6 +88,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			long freq = Long.valueOf(params[1]);
 			this.MAX_INTERNAL = 60 * 1000 / freq;
 			this.PAYLOAD_SIZE = Integer.valueOf(params[2]);
+            this.NUMBER_PACKETS_TO_SEND=(int)freq*1;
 			postUIEvent(0, "Params set to: " + freq + " Mes/min and " + PAYLOAD_SIZE + " Bytes");
 			break;
 			
@@ -104,7 +107,10 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 			avgRTT = (avgRTT * (receivedCount - 1) + rtt) / receivedCount;
 
 			checkAllMessages();
-			new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
+			//new Timer(this, 0, (int) (Math.random() * MAX_INTERNAL)).start();
+           // if(experimentIsRunning) {
+              //  new Timer(this, 0, (int) (MAX_INTERNAL)).start();
+            //}
 			if (receivedCount % 100 == 0)
 				postUIEvent(0, receivedCount + " mex spediti.");
 			break;
@@ -118,13 +124,14 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 				sentCont = receivedCount = 0;
                 allFollowerRTTs="";
 				sPayLoad = StringTimeUtil.createPayload(PAYLOAD_SIZE);
+                new Timer(this, 0, (int) (MAX_INTERNAL)).start();
 				sendMessage();
 			}
 			break;
 
 		case AppConstants.STOP_EXPERIMENT_COMMAND:
 
-			Log.i(MainActivity.TAG, "Stopping the experiment");
+			//Log.i(MainActivity.TAG, "Stopping the experiment");
 			if(experimentIsRunning){
 				experimentIsRunning = false;
 				checkAllMessages();
@@ -141,7 +148,9 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	private void checkAllMessages(){
 		if(!experimentIsRunning && receivedCount == sentCont) {
+        //if(!experimentIsRunning) {
 			sendResults();
+            Log.i(TAG,"recievie sent:"+receivedCount +" "+ sentCont);
 			EventBus.getDefault().post(new TestEvent(AppConstants.ALL_MESSAGES_REPLIED, "control", null));
 		}
 	}
@@ -150,6 +159,7 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 		double runningTime = StringTimeUtil.roundTripTime(startTimestamp, StringTimeUtil.getTimestamp()) / 1000;
 		float frequency = receivedCount / ((float)runningTime);
 		try {
+
 			node.sendToSupervisor(new A3Message(AppConstants.DATA, "StoS_SensorFollower:"+ "\t" + receivedCount + "\t" +
 					(runningTime) + "\t" + frequency + "\t" + avgRTT), "control");
 			postUIEvent(0, "Average RTT of follower sent to Control supervisor");
@@ -160,8 +170,9 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 
 	private void sendMessage() {
 		if(experimentIsRunning) {
-			sentCont++;
 			sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad));
+            sentCont++;
+
 			//node.sendToSupervisor(new A3Message(AppConstants.SENSOR_PING, channel.getChannelId() + "#" + currentExperiment + "#" + StringTimeUtil.getTimestamp(), sPayLoad), "_" + currentExperiment);
 		}
 	}
@@ -169,5 +180,11 @@ public class SensorFollowerRole extends A3FollowerRole implements TimerInterface
 	@Override
 	public void handleTimeEvent(int reason, Object object) {
 		sendMessage();
+        Log.i(TAG,"SAEED message sent to supervisor");
+        if(experimentIsRunning && sentCont!=NUMBER_PACKETS_TO_SEND) {
+            new Timer(this, 0, (int) (MAX_INTERNAL)).start();
+        }else if( sentCont==NUMBER_PACKETS_TO_SEND){
+            experimentIsRunning=false;
+        }
 	}	
 }

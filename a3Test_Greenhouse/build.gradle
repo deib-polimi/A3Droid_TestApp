@@ -81,10 +81,10 @@ apply plugin: 'spoon'
 // This section is optional
 spoon {
     // for debug output
-    debug = true
+    debug = false
 
     // To run a single test class
-    className = 'it.polimi.greenhouse.TestGroupAccession'
+    className = 'it.polimi.greenhouse.TestGroupSplit'
 
     // To run a single method in TestCase
    // methodName = 'testMyApp'

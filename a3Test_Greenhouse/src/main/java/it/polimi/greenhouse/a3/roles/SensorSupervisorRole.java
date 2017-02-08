@@ -118,8 +118,8 @@ public class SensorSupervisorRole extends A3SupervisorRole{
                 if (experimentIsRunning) {
                     paramsSet = false;
                     experimentIsRunning = false;
-                    postUIEvent(0, "Experiment has stopped");
                     checkOutBound();
+                    postUIEvent(0, "Experiment has stopped");
                 }
                 break;
 
@@ -134,7 +134,7 @@ public class SensorSupervisorRole extends A3SupervisorRole{
         message.reason = AppConstants.SENSOR_PONG;
         message.object = message.senderAddress + "#" + sendTime;
         sendUnicast(message, message.senderAddress);
-        postUIEvent(0, "Sensor data received");
+        postUIEvent(0, "Sensor data replied");
     }
 
     private void checkOutBound(){
